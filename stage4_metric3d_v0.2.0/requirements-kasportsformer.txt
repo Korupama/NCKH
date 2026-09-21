@@ -1,0 +1,4 @@
+# Install a PyTorch build suitable for the machine first.
+# The stage4-rtmw3d environment already provides torch on the reference host.
+timm>=0.9,<2
+PyYAML>=6

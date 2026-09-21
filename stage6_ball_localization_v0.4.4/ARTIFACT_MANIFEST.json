@@ -1,0 +1,35 @@
+{
+  "artifact": "stage6_ball_localization_v0.4.4",
+  "version": "0.5.1",
+  "stage6_version": "stage6-ball-localization-0.5.1",
+  "schema_notes": {
+    "contact_aware": "ball-trajectory-state-1.2",
+    "legacy_geometry": "ball-trajectory-state-1.1"
+  },
+  "validation": {
+    "pytest": "65 passed, 0 skipped (STAGE1_ROOT configured)",
+    "accuracy": "NOT_VALIDATED",
+    "research_accuracy_frozen": false
+  },
+  "patch_files": [
+    "V051_PATCH_NOTES.md",
+    "validate_stage6_v051.py",
+    "tests/test_contact_v051.py",
+    "ball_localization/camera.py",
+    "ball_localization/contact.py",
+    "ball_localization/providers/fusion.py",
+    "ball_localization/evaluation/contact_metrics.py",
+    "ball_localization/pipeline.py",
+    "ball_localization/version.py",
+    "run_stage6_ball.py",
+    "refine_ball_contact.py",
+    "validate_stage6_v050.py",
+    "tests/test_contact_v050.py",
+    "README.md",
+    "STAGE6_SPEC.md",
+    "BENCHMARK.md",
+    "IMPLEMENTATION_STATUS.md",
+    "V050_PATCH_NOTES.md"
+  ],
+  "scope": "Local source patch; historical v040 inventory superseded, datasets and previous outputs preserved"
+}

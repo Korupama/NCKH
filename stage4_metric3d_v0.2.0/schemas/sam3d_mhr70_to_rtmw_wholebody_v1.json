@@ -1,0 +1,34 @@
+{
+  "schema_version": "sam3d-mhr70-to-stage4-pose23-1.0",
+  "source": "facebookresearch/sam-3d-body sam_3d_body/metadata/mhr70.py",
+  "target": "Stage4 Pose23 / RTMW WholeBody first 23",
+  "notes": [
+    "SAM3D toe-tip semantics are mapped to the corresponding RTMW toe landmark.",
+    "SAM3D wrists are MHR70 indices 62 (left) and 41 (right), not adjacent to elbows."
+  ],
+  "mapping": {
+    "nose": 0,
+    "left_eye": 1,
+    "right_eye": 2,
+    "left_ear": 3,
+    "right_ear": 4,
+    "left_shoulder": 5,
+    "right_shoulder": 6,
+    "left_elbow": 7,
+    "right_elbow": 8,
+    "left_wrist": 62,
+    "right_wrist": 41,
+    "left_hip": 9,
+    "right_hip": 10,
+    "left_knee": 11,
+    "right_knee": 12,
+    "left_ankle": 13,
+    "right_ankle": 14,
+    "left_big_toe": 15,
+    "left_small_toe": 16,
+    "left_heel": 17,
+    "right_big_toe": 18,
+    "right_small_toe": 19,
+    "right_heel": 20
+  }
+}

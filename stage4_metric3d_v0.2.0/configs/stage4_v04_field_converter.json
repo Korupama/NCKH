@@ -1,0 +1,13 @@
+{
+  "backend": "field-converter-tcn",
+  "stage4_version": "0.4.0",
+  "target_fps": 50.0,
+  "world_alignment": "auto",
+  "sam3d_sign": 1,
+  "include_roles": ["player", "goalkeeper"],
+  "camera_projection_compatibility_p95_px": 2.0,
+  "camera_projection_compatibility_fail_px": 5.0,
+  "catastrophic_xy_span_m": 4.0,
+  "catastrophic_z_span_m": 4.0,
+  "research_accuracy_frozen": false
+}

@@ -1,0 +1,96 @@
+# Local Python environments and generated package metadata
+.venv/
+.venv-*/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test/tool caches and temporary files
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+pytest_tmp*/
+pytest-cache-files-*/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+*.tmp
+*.bak
+
+# Downloaded datasets, weights and external runtime checkouts
+# D:/GSR, D:/SoccerNet and other external roots are outside this repository.
+/third_party/
+/weights/
+/stage_1_camera_v12/datasets/
+/stage_1_camera_v12/third_party/
+/stage_1_camera_v12/weights/
+/stage2_sst_rtmw_v1.3/datasets/
+/stage2_sst_rtmw_v1.3/data/
+/stage2_sst_rtmw_v1.3/third_party/
+/stage2_sst_rtmw_v1.3/weights/
+/stage3_pose2d_v0.1/data/
+/stage3_pose2d_v0.1/weights/
+/stage4_metric3d_v0.2.0/benchmark_data/
+/stage4_metric3d_v0.2.0/weights/
+/stage5_team_affiliation_v0.1.0/data/
+/stage5_team_affiliation_v0.1.0/datasets/
+/stage5_team_affiliation_v0.1.0/weights/
+/stage6_ball_localization_v0.4.4/data/
+/stage6_ball_localization_v0.4.4/weights/
+
+# Generated experiment outputs: retained locally, not versioned
+runs/
+outputs/
+benchmark_results/
+validation_reports/
+backups/
+
+# Model binaries and downloadable archives
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.h5
+*.hdf5
+*.engine
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+
+# Video inputs and rendered videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# Existing large notebook (15 MB); other source notebooks remain eligible
+/stage_1_camera_v12/Stage1_Camera_Calibration.ipynb
+
+# Local credentials: never commit login files or private keys
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+.netrc
+_netrc
+
+# OS/editor-local files
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/

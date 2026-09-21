@@ -1,0 +1,6 @@
+{
+  "multiregion_appearance_enabled": true,
+  "multiregion_torso_weight": 0.7,
+  "multiregion_lower_weight": 0.3,
+  "multiregion_require_lower": true
+}

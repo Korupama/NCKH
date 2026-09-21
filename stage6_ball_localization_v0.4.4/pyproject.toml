@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stage6-ball-localization"
+version = "0.4.4"
+description = "Stage 6 soccer ball detection, temporal selection and metric localization"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "opencv-python>=4.8"]
+
+[project.optional-dependencies]
+yolo = ["ultralytics>=8.3"]
+benchmark = ["ultralytics>=8.3"]
+download = ["huggingface_hub>=0.24"]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ball_localization*"]

@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "offside-stage5-team-affiliation"
+version = "0.3.2"
+description = "Stage 5 team affiliation and track-level player state for the offside replay pipeline"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "opencv-python>=4.8",
+  "scikit-learn>=1.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["stage5_team_affiliation*"]

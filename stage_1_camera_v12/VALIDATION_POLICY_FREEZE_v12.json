@@ -1,0 +1,34 @@
+{
+  "policy": {
+    "require_full_no_ransac": true,
+    "max_rep_err_px": 5.0,
+    "min_keypoints": 8,
+    "min_image_quadrants": 3,
+    "min_image_hull_ratio": 0.01,
+    "min_image_x_span_ratio": 0.2,
+    "min_image_y_span_ratio": 0.06,
+    "policy_version": "vertical-3d-v1",
+    "thresholds_frozen": true,
+    "threshold_source": "SoccerNet Calibration-2023 valid",
+    "threshold_source_frames": 3212,
+    "threshold_source_report_schema": "1.0",
+    "validation_ready_count": 1007,
+    "validation_ready_rate": 0.3135118306351183,
+    "validation_mean_frame_accuracy": 0.969977218676229,
+    "validation_p10_frame_accuracy": 0.8888888955116272,
+    "validation_fraction_frame_accuracy_ge_0_9": 0.8828202581926514
+  },
+  "num_frames": 3212,
+  "old_ready_count": 1115,
+  "old_ready_rate": 0.3471357409713574,
+  "v12_ready_count": 1007,
+  "v12_ready_rate": 0.3135118306351183,
+  "demoted_from_old_ready": 108,
+  "promoted_from_old_not_ready": 0,
+  "official_frame_accuracy_on_v12_ready": {
+    "mean": 0.969977218676229,
+    "p10": 0.8888888955116272,
+    "fraction_ge_0_9": 0.8828202581926514
+  },
+  "matches_frozen_validation_reference": true
+}

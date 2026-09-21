@@ -1,0 +1,40 @@
+{
+  "schema_version": "stage4-height-profile-1.0",
+  "profile_id": "canonical-body-height-v1",
+  "description": "Engineering height priors for pose-aware metric body projection. These values are not player-specific ground truth.",
+  "reference_player_height_m": 1.8,
+  "height_fraction_by_keypoint": {
+    "nose": 0.93,
+    "left_eye": 0.95,
+    "right_eye": 0.95,
+    "left_ear": 0.94,
+    "right_ear": 0.94,
+    "left_shoulder": 0.82,
+    "right_shoulder": 0.82,
+    "left_elbow": 0.66,
+    "right_elbow": 0.66,
+    "left_wrist": 0.53,
+    "right_wrist": 0.53,
+    "left_hip": 0.53,
+    "right_hip": 0.53,
+    "left_knee": 0.285,
+    "right_knee": 0.285,
+    "left_ankle": 0.055,
+    "right_ankle": 0.055,
+    "left_big_toe": 0.015,
+    "left_small_toe": 0.015,
+    "left_heel": 0.018,
+    "right_big_toe": 0.015,
+    "right_small_toe": 0.015,
+    "right_heel": 0.018
+  },
+  "provenance": {
+    "kind": "engineering_prior",
+    "claim": "canonical_proxy_only",
+    "not_claimed": [
+      "true_3d_joint_height",
+      "player_specific_anthropometry",
+      "legal_body_membership"
+    ]
+  }
+}

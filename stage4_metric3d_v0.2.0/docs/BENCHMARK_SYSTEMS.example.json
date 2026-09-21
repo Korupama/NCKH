@@ -1,0 +1,54 @@
+{
+  "schema_version": "stage4-benchmark-systems-1.0",
+  "gt": "metric_pose23_gt.json",
+  "attack_sign": 1,
+  "primary_system": "stage4_v020",
+  "bootstrap": {
+    "samples": 2000,
+    "seed": 20260917
+  },
+  "systems": {
+    "stage4_v020": {
+      "pred": "../runs/stage4_v020/metric_pose_3d_state.json",
+      "format": "stage4",
+      "role": "candidate"
+    },
+    "stage4_v016": {
+      "pred": "../runs/stage4_v016/metric_pose_3d_state_fixed.json",
+      "format": "stage4",
+      "role": "legacy"
+    },
+    "kasportsformer": {
+      "pred": "kasportsformer_canonical.json",
+      "format": "canonical",
+      "coordinate_scope": "SCALE_AMBIGUOUS",
+      "role": "third_party"
+    }
+  },
+  "comparisons": [
+    {
+      "name": "v020_vs_v016",
+      "candidate": "stage4_v020",
+      "baseline": "stage4_v016"
+    },
+    {
+      "name": "v020_vs_kasportsformer",
+      "candidate": "stage4_v020",
+      "baseline": "kasportsformer"
+    }
+  ],
+  "gates": [
+    {
+      "name": "no_global_mpjpe_regression",
+      "comparison": "v020_vs_v016",
+      "metric": "GlobalMPJPE_m",
+      "max_delta": 0.0
+    },
+    {
+      "name": "no_gale_regression",
+      "comparison": "v020_vs_v016",
+      "metric": "GALE_m",
+      "max_delta": 0.0
+    }
+  ]
+}

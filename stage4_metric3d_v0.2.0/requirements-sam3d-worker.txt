@@ -1,0 +1,4 @@
+# SAM 3D Body should be installed in a dedicated CUDA environment following
+# facebookresearch/sam-3d-body. This Stage-4 package intentionally does not pin
+# its complex CUDA/vision dependency stack. The worker requires OpenCV, NumPy,
+# PyTorch/CUDA and the official sam_3d_body package.

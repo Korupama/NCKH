@@ -1,0 +1,54 @@
+{
+  "schema_version": "stage4-external-pose-adapter-1.0",
+  "coordinate_scope": "SCALE_AMBIGUOUS",
+  "units": "model",
+  "xyz_field": "xyz",
+  "source_joint_names": [
+    "pelvis",
+    "right_hip",
+    "right_knee",
+    "right_ankle",
+    "left_hip",
+    "left_knee",
+    "left_ankle",
+    "spine",
+    "thorax",
+    "neck",
+    "head",
+    "left_shoulder",
+    "left_elbow",
+    "left_wrist",
+    "right_shoulder",
+    "right_elbow",
+    "right_wrist"
+  ],
+  "joint_map": {
+    "nose": "head",
+    "left_shoulder": "left_shoulder",
+    "right_shoulder": "right_shoulder",
+    "left_elbow": "left_elbow",
+    "right_elbow": "right_elbow",
+    "left_wrist": "left_wrist",
+    "right_wrist": "right_wrist",
+    "left_hip": "left_hip",
+    "right_hip": "right_hip",
+    "left_knee": "left_knee",
+    "right_knee": "right_knee",
+    "left_ankle": "left_ankle",
+    "right_ankle": "right_ankle"
+  },
+  "axis_transform_3x3": [
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0]
+  ],
+  "model": {
+    "name": "KASportsFormer",
+    "variant": "WorldPose detected-2D checkpoint"
+  },
+  "provenance": {
+    "checkpoint_sha256": "REPLACE_WITH_ACTUAL_SHA256",
+    "repository_revision": "REPLACE_WITH_ACTUAL_COMMIT",
+    "dataset_release": "REPLACE_WITH_ACTUAL_DATASET_RELEASE"
+  }
+}

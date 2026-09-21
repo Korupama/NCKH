@@ -1,0 +1,222 @@
+{
+  "artifact": "stage3_pose2d_v0.1",
+  "version": "0.1.0",
+  "stage3_version": "stage3-pose2d-0.1.0",
+  "schema": "tracked-pose-2d-state-1.0",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 74,
+      "sha256": "9ebc40f4e6a724e7eded9131fd8fde0e92e852fc0a23d92ce0089eea75b46730"
+    },
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "bytes": 1894,
+      "sha256": "8c22a180e2d79a93b529b3a7f1b2563af764063c78e585480a8e58eb9aed649c"
+    },
+    {
+      "path": "QUICKSTART.md",
+      "bytes": 2831,
+      "sha256": "7f6db71d2861eb15e40320df7a7619c279abf6fa54393df1fb8d6798fb37faa6"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3055,
+      "sha256": "63407c6e9ef6c373f53a35fa1ee7f51513524442acab09abe41f6fd04ebc742d"
+    },
+    {
+      "path": "Stage3_Tracked_Pose2D_QA.ipynb",
+      "bytes": 5145,
+      "sha256": "590d352605dc59f6094a551eb83808c2f4210372cdbb4f258d8b6c085df4d7b4"
+    },
+    {
+      "path": "benchmark/__init__.py",
+      "bytes": 33,
+      "sha256": "a92b06af23db29fb469e7ba255fd4e6ef87bd278b81c625e296be24ed7d2323f"
+    },
+    {
+      "path": "benchmark/coco_wholebody.py",
+      "bytes": 5356,
+      "sha256": "431826113831dc552c895fe4d991aa457812f16208ebbecf370382c883859eda"
+    },
+    {
+      "path": "benchmark/dsp3_adapter.py",
+      "bytes": 7194,
+      "sha256": "86780ba99e34f5f7b40e053187382725f0d1dd5d3c73d35164e90102a641582c"
+    },
+    {
+      "path": "benchmark/metrics.py",
+      "bytes": 4968,
+      "sha256": "7b8a9686ea1d8aed5cd81e8b15e0894499a9b1848b1229c2e164a9eceefa1cd6"
+    },
+    {
+      "path": "benchmark/pose23.py",
+      "bytes": 2283,
+      "sha256": "8447ae5dcbbcf555ecdc7b6074ffa79912e24ef3da361860c16c4a9ad80e7a14"
+    },
+    {
+      "path": "benchmark_stage3.py",
+      "bytes": 3627,
+      "sha256": "db82d3709279c6a943d9c014728e5ff15da7bff8f5da9309bf5a04e5747cf169"
+    },
+    {
+      "path": "docs/BENCHMARK.md",
+      "bytes": 3840,
+      "sha256": "a0aba30789ef6da1e6d14648b8e15d49e0ab43bea3ecd791b38ecc36a0ba404b"
+    },
+    {
+      "path": "docs/MODEL_PROVENANCE.md",
+      "bytes": 2161,
+      "sha256": "538f90f80722cb2b7e66831541c16886142399b1d2b6e4b6fe7a25504c86e28d"
+    },
+    {
+      "path": "docs/STAGE3_SPEC.md",
+      "bytes": 4068,
+      "sha256": "31478a4d47e19e0dd9197878056559934c7b64dcdb9a4384d70bfeb0deb4238c"
+    },
+    {
+      "path": "download_open_assets.py",
+      "bytes": 2516,
+      "sha256": "5d88e510e57760ea5e196389584f057baa6c14d38a6ea28d9d6e44e2e94616d8"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 581,
+      "sha256": "d8ffc8530f5764415c81df5035da4b0cb3b8b31e333c273dd52f46322175e6b7"
+    },
+    {
+      "path": "requirements-benchmark.txt",
+      "bytes": 110,
+      "sha256": "51bd816b38ba8830d1c5188753dad1fd5feff630742973893ac4c76366630549"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 31,
+      "sha256": "66df686c40b883ccd0357d1fb09cb13e92f76dcda7d2f109185b9e957729bdf7"
+    },
+    {
+      "path": "run_stage3.py",
+      "bytes": 3683,
+      "sha256": "a9ba48b1577ace9d64ef4fa9a7b22725c3b38a51ac6a5bf3dfef2642276834f1"
+    },
+    {
+      "path": "stage3_pose2d/__init__.py",
+      "bytes": 393,
+      "sha256": "da0ca049e5f8bf46c6d04ee32d1dffb099799c0f44e760e98caeb367c7f76ce0"
+    },
+    {
+      "path": "stage3_pose2d/processor.py",
+      "bytes": 14838,
+      "sha256": "a289156b01554630cbaa8ed6cb5b51a796a55b52abdda9ef8f60faef9c18b89e"
+    },
+    {
+      "path": "stage3_pose2d/quality.py",
+      "bytes": 6181,
+      "sha256": "ad22ee30a96dd48b0b4362fdcdc76b7a8b4206967594fd3cea41d61371c0cd60"
+    },
+    {
+      "path": "stage3_pose2d/rtmw_onnx.py",
+      "bytes": 6269,
+      "sha256": "fd61e095589f80397c490180358d2927e3db8d2b4b546aceb84769a5b6a566e7"
+    },
+    {
+      "path": "stage3_pose2d/schemas.py",
+      "bytes": 1241,
+      "sha256": "2a27e371df7cf3abec7139fb75faa2d782e5f976e7941d60f27efd6a0ecad5b2"
+    },
+    {
+      "path": "stage3_pose2d/stage2_adapter.py",
+      "bytes": 8037,
+      "sha256": "4160b7c143ceacdc422209e61009db7ede3a7a4af73832792ed274fb0e2dff93"
+    },
+    {
+      "path": "stage3_pose2d/temporal.py",
+      "bytes": 5697,
+      "sha256": "b4ca762d452a11db4a1d066bdd42a69219bce37aa8d249d399504b5c065f27d9"
+    },
+    {
+      "path": "stage3_pose2d/video.py",
+      "bytes": 584,
+      "sha256": "45828a1a70fa41038d466a52d5cce3da05054623f1aaf392a85d8426b841c5d7"
+    },
+    {
+      "path": "stage3_pose2d/visualization.py",
+      "bytes": 2000,
+      "sha256": "786236a8ce5416f2e73e1d9345ef1d68000e5757a9986ca8ec58c184d716d6be"
+    },
+    {
+      "path": "stage3_pose2d/wholebody133.py",
+      "bytes": 5519,
+      "sha256": "00eb5e3b992cd0401e988c0ae9dd057e455db8c25d65227b4b4bfd356819d389"
+    },
+    {
+      "path": "tests/conftest.py",
+      "bytes": 3876,
+      "sha256": "1ac483957c5263e65561271f64519874affc6b5bafa11aedce9ed1da72fb75e5"
+    },
+    {
+      "path": "tests/test_3dsp_adapter.py",
+      "bytes": 857,
+      "sha256": "3443ba8f56edcc727bcb3d3e417084ff75a36429902c6231acf315b99500f770"
+    },
+    {
+      "path": "tests/test_coco_export.py",
+      "bytes": 418,
+      "sha256": "13c145bffdbfb084590177c85dbb71f056d334476cfc87f0081bfeff8519db50"
+    },
+    {
+      "path": "tests/test_fallback.py",
+      "bytes": 1310,
+      "sha256": "5ddd5b1a3a2db557a948d019063407f5a4f79f948b5ed80daf18c15425fdd666"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "bytes": 1013,
+      "sha256": "a919acc7fdc995aa9a537e4dbcfa24d21d95ff311194b62ceb33b90b82a1b6c8"
+    },
+    {
+      "path": "tests/test_pose23.py",
+      "bytes": 510,
+      "sha256": "951a9a1e6e0f6d2c4c5d5c2b786cbef1cc8036345bec692af425f2cdaf3ee52a"
+    },
+    {
+      "path": "tests/test_processor.py",
+      "bytes": 1068,
+      "sha256": "5dda17e04edfe70638eff215a9588dd22894b468a4299faae98ae23080ec6554"
+    },
+    {
+      "path": "tests/test_quality.py",
+      "bytes": 1177,
+      "sha256": "9fa6d6cf170b0fe16c6686cbf53a62e514034ecf8ededcdbac31de78fc4b4394"
+    },
+    {
+      "path": "tests/test_stage2_adapter.py",
+      "bytes": 890,
+      "sha256": "d562d86851d27f5ef25fd1a207685266424f1ea66a1756af550ff0c4a9a8c758"
+    },
+    {
+      "path": "tests/test_temporal.py",
+      "bytes": 1224,
+      "sha256": "83785d0d2eb85e3bbf7433265f5b892c027375e0b8bd485a737091052283c6f0"
+    },
+    {
+      "path": "tests/test_wholebody133.py",
+      "bytes": 828,
+      "sha256": "f190eb39a5d970af9c642d98e925227711337ef58b5a25465c1fddbea4695224"
+    },
+    {
+      "path": "validation_reports/STAGE3_V01_SMOKE_REPORT.json",
+      "bytes": 1716,
+      "sha256": "ff6d165632668258a13b3292e0a2c6ee44fb52955683be4073f2e8fdea432404"
+    }
+  ],
+  "validation": {
+    "pytest": "21 passed",
+    "real_legacy_stage2_contract_smoke": "passed; 10/10 t0 cache poses structurally accepted; not GT accuracy"
+  },
+  "third_party_bundled": false,
+  "notes": [
+    "RTMW weights are not redistributed.",
+    "3DSP and COCO-WholeBody data are not redistributed."
+  ]
+}

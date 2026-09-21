@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+runs/
+weights/
+datasets/
+third_party/
+*.pth
+*.pt
+*.onnx
+.env
+benchmark_results/

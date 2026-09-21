@@ -1,0 +1,23 @@
+{
+  "backend": "sam3d-pitch-refined",
+  "window_radius_frames": 15,
+  "min_rtmw_joint_weight": 0.25,
+  "reprojection_sigma_px": 8.0,
+  "sam_prior_sigma_xyz_m": [1.5, 1.5, 2.0],
+  "ground_sigma_xyz_m": [0.10, 0.10, 0.10],
+  "grounded_sam_prior_sigma_m": 10.0,
+  "max_ground_refinement_m": 0.75,
+  "temporal_second_difference_sigma_m": 0.5,
+  "max_ground_prior_distance_m": 2.5,
+  "max_translation_correction_m": 5.0,
+  "use_temporal": true,
+  "optimizer_loss": "soft_l1",
+  "optimizer_max_nfev": 300,
+  "camera_convention_pass_p95_px": 2.0,
+  "camera_convention_warn_p95_px": 5.0,
+  "catastrophic_xy_span_m": 3.0,
+  "catastrophic_z_span_m": 3.0,
+  "catastrophic_diameter_m": 3.5,
+  "sanity_reprojection_p95_px": 50.0,
+  "below_pitch_tolerance_m": 0.1
+}

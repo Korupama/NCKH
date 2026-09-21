@@ -1,0 +1,328 @@
+{
+  "schema_version": "1.2",
+  "frame_index": 0,
+  "timestamp_sec": null,
+  "status": "VALID",
+  "image": {
+    "width": 1280,
+    "height": 720,
+    "pixel_space": "original_raw"
+  },
+  "pitch": {
+    "length_m": 105.0,
+    "width_m": 68.0,
+    "goal_width_m": 7.32,
+    "goal_height_m": 2.44,
+    "goal_area_depth_m": 5.5,
+    "penalty_area_depth_m": 16.5,
+    "penalty_mark_m": 11.0,
+    "centre_circle_radius_m": 9.15,
+    "origin": "center",
+    "x_axis": "goal_to_goal",
+    "y_axis": "touchline_to_touchline",
+    "z_axis": "up",
+    "dimension_source": "default_105x68"
+  },
+  "intrinsics": {
+    "K": [
+      [
+        1400.0,
+        0.0,
+        960.0
+      ],
+      [
+        0.0,
+        1400.0,
+        540.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "fx": 1400.0,
+    "fy": 1400.0,
+    "cx": 960.0,
+    "cy": 540.0
+  },
+  "distortion": {
+    "model": "opencv",
+    "radial": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tangential": [
+      0,
+      0
+    ],
+    "thin_prism": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "extrinsics": {
+    "R_world_to_camera": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -0.3205961743168832,
+        -0.9472159695726095
+      ],
+      [
+        0.0,
+        0.9472159695726095,
+        -0.3205961743168832
+      ]
+    ],
+    "camera_center_world_m": [
+      0.0,
+      -65.0,
+      22.0
+    ],
+    "t_world_to_camera": [
+      0.0,
+      4.440892098500626e-16,
+      68.62215385719105
+    ]
+  },
+  "projection": {
+    "P": [
+      [
+        1400.0,
+        909.3273307897051,
+        -307.7723273442079,
+        65877.26770290341
+      ],
+      [
+        0.0,
+        62.661979525572605,
+        -1499.2242915327702,
+        37055.963082883165
+      ],
+      [
+        0.0,
+        0.9472159695726095,
+        -0.3205961743168832,
+        68.62215385719105
+      ]
+    ]
+  },
+  "source": {
+    "backend": "pnlcalib",
+    "backend_world": "soccernet_pitch_centered_z_down",
+    "canonical_world": "pitch_centered_right_handed_z_up",
+    "world_transform_pnl_to_canonical": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        -1.0
+      ]
+    ],
+    "pnl_refine": true
+  },
+  "evidence": {
+    "raw_result_keys": [
+      "cam_params",
+      "evidence",
+      "mode",
+      "pnl_refine",
+      "rep_err",
+      "use_ransac"
+    ],
+    "rep_err_px": 2.8,
+    "mode": "full",
+    "use_ransac": 0,
+    "calib_plane": null,
+    "num_keypoints_used": 14,
+    "num_lines_used": 9,
+    "kp_threshold": 0.3434,
+    "line_threshold": 0.7867,
+    "keypoint_image_convex_hull_area_ratio": 0.12,
+    "keypoint_image_bbox_area_ratio": 0.18,
+    "keypoint_image_x_span_ratio": 0.7,
+    "keypoint_image_y_span_ratio": 0.3,
+    "keypoint_image_quadrants_occupied": 4,
+    "keypoint_world_x_span_m": 46.0,
+    "keypoint_world_y_span_m": 54.0
+  },
+  "audit": {},
+  "diagnostics": {
+    "solver_status": "SOLVED",
+    "raw_cam_params": {
+      "x_focal_length": 1400.0,
+      "y_focal_length": 1400.0,
+      "principal_point": [
+        960.0,
+        540.0
+      ],
+      "position_meters": [
+        0.0,
+        65.0,
+        -22.0
+      ],
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.3205961743168832,
+          0.9472159695726095
+        ],
+        [
+          0.0,
+          -0.9472159695726095,
+          0.3205961743168832
+        ]
+      ],
+      "radial_distortion": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tangential_distortion": [
+        0,
+        0
+      ],
+      "thin_prism_distortion": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "pnl_camera_center_world_m": [
+      0.0,
+      65.0,
+      -22.0
+    ],
+    "pnl_rotation_matrix": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.3205961743168832,
+        0.9472159695726095
+      ],
+      [
+        0.0,
+        -0.9472159695726095,
+        0.3205961743168832
+      ]
+    ],
+    "candidate_diagnostics": {},
+    "line_refinement": {
+      "requested": true,
+      "effective": true,
+      "line_evidence_count": 9,
+      "reason": "line_evidence_available"
+    },
+    "quality_gate": {
+      "invalid_reasons": [],
+      "degraded_reasons": [],
+      "warnings": [],
+      "rotation_orthogonality_error": 3.86267793177421e-17,
+      "rotation_det_error": 0.0,
+      "config": {
+        "preferred_max_rep_err_px": 5.0,
+        "hard_max_rep_err_px": 38.0,
+        "min_keypoints_for_valid": 4,
+        "prefer_full_no_ransac_for_valid": true,
+        "require_spatial_coverage_for_valid": true,
+        "min_image_hull_ratio_for_valid": 0.01,
+        "min_image_x_span_ratio_for_valid": 0.2,
+        "min_image_y_span_ratio_for_valid": 0.06,
+        "min_image_quadrants_for_valid": 2,
+        "coverage_thresholds_provisional": false,
+        "thresholds_frozen": true,
+        "threshold_source": "SoccerNet Calibration-2023 valid review + upstream PnLCalib bounds"
+      }
+    },
+    "capabilities": {
+      "ground_geometry": {
+        "status": "VALID",
+        "reasons": [],
+        "pitch_projection_ready": true,
+        "ground_unprojection_ready": true,
+        "policy_version": "ground-v1"
+      },
+      "vertical_3d": {
+        "status": "VALID",
+        "reasons": [],
+        "vertical_geometry_ready": true,
+        "source": "direct_single_frame",
+        "policy_version": "vertical-3d-v1",
+        "best_full_candidate": null,
+        "full_no_ransac_candidate": null
+      },
+      "offside_3d_ready": true,
+      "policies": {
+        "ground_geometry": {
+          "preferred_max_rep_err_px": 5.0,
+          "hard_max_rep_err_px": 38.0,
+          "min_keypoints": 4,
+          "min_image_hull_ratio": 0.01,
+          "min_image_x_span_ratio": 0.2,
+          "min_image_y_span_ratio": 0.06,
+          "min_image_quadrants": 2,
+          "policy_version": "ground-v1",
+          "thresholds_frozen": true,
+          "threshold_source": "PnLCalib upstream reprojection bounds + Stage-1 engineering spatial safety floors reviewed on SoccerNet Calibration-2023 valid"
+        },
+        "vertical_3d": {
+          "require_full_no_ransac": true,
+          "max_rep_err_px": 5.0,
+          "min_keypoints": 8,
+          "min_image_quadrants": 3,
+          "min_image_hull_ratio": 0.01,
+          "min_image_x_span_ratio": 0.2,
+          "min_image_y_span_ratio": 0.06,
+          "policy_version": "vertical-3d-v1",
+          "thresholds_frozen": true,
+          "threshold_source": "SoccerNet Calibration-2023 valid",
+          "threshold_source_frames": 3212,
+          "threshold_source_report_schema": "1.0",
+          "validation_ready_count": 1007,
+          "validation_ready_rate": 0.3135118306351183,
+          "validation_mean_frame_accuracy": 0.969977218676229,
+          "validation_p10_frame_accuracy": 0.8888888955116272,
+          "validation_fraction_frame_accuracy_ge_0_9": 0.8828202581926514
+        },
+        "fallback_ground_solution_does_not_imply_vertical_3d_ready": true,
+        "calibration_gate_is_not_offside_accuracy": true
+      }
+    }
+  },
+  "temporal": {},
+  "uncertainty": {},
+  "symmetry": {}
+}

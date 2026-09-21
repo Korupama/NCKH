@@ -1,0 +1,19 @@
+# Tested/recommended Windows stack for the optional RTMW3D worker.
+# Create a dedicated Python 3.10 environment; do not install this stack into base.
+#
+# PyTorch is intentionally installed separately because CPU/CUDA wheels use custom indexes.
+# CPU-only (recommended for this user): https://download.pytorch.org/whl/cpu
+#   torch==2.1.2
+#   torchvision==0.16.2
+#
+# MMCV is also installed separately from the matching OpenMMLab wheel index.
+# CPU-only: https://download.openmmlab.com/mmcv/dist/cpu/torch2.1/index.html
+#   mmcv==2.1.0
+#
+numpy==1.26.4
+mmengine==0.10.7
+openmim>=0.3.9
+opencv-python>=4.8
+json-tricks
+# MMPose must be installed from the official v1.3.2 source tree so that
+# projects/rtmpose3d is available. setup_rtmw3d_windows.ps1 handles this.

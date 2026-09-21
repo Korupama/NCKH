@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "offside-stage2-sst-rtmw"
+version = "1.3.0"
+description = "Stage 2 human detection, role filtering and target-window tracking for monocular offside analysis"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "opencv-python>=4.8",
+  "Pillow>=9.5",
+  "torch>=2.0",
+  "torchvision>=0.15",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["stage2_entities*"]
+
+[project.optional-dependencies]
+benchmark = ["matplotlib>=3.7"]

@@ -1,0 +1,5 @@
+# Install in a dedicated Field Converter environment from the official repository.
+# Tested upstream environment (2026-08/09): Python 3.11, PyTorch 2.6.0.
+# Example after cloning KhanSimon/field_converter:
+#   python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+#   python -m pip install -e <FIELD_CONVERTER_REPO>

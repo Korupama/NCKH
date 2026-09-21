@@ -1,0 +1,60 @@
+{
+  "mode": "full",
+  "use_ransac": 0,
+  "rep_err": 2.8,
+  "pnl_refine": true,
+  "evidence": {
+    "num_keypoints_used": 14,
+    "num_lines_used": 9,
+    "kp_threshold": 0.3434,
+    "line_threshold": 0.7867
+  },
+  "cam_params": {
+    "x_focal_length": 1400.0,
+    "y_focal_length": 1400.0,
+    "principal_point": [
+      960.0,
+      540.0
+    ],
+    "position_meters": [
+      0.0,
+      65.0,
+      -22.0
+    ],
+    "rotation_matrix": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.3205961743168832,
+        0.9472159695726095
+      ],
+      [
+        0.0,
+        -0.9472159695726095,
+        0.3205961743168832
+      ]
+    ],
+    "radial_distortion": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tangential_distortion": [
+      0,
+      0
+    ],
+    "thin_prism_distortion": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "offside-stage3-pose2d"
+version = "0.1.0"
+description = "Tracked 2D WholeBody pose normalization and QA for the football offside pipeline"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "opencv-python>=4.8"]
+
+[project.optional-dependencies]
+benchmark = ["matplotlib>=3.8"]
+test = ["pytest>=8"]
+all = ["matplotlib>=3.8", "pytest>=8"]
+
+[tool.setuptools]
+packages = ["stage3_pose2d", "benchmark"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

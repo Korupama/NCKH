@@ -1,0 +1,2 @@
+-e .
+matplotlib>=3.7

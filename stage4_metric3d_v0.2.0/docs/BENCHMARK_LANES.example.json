@@ -1,0 +1,11 @@
+{
+  "schema_version": "stage4-benchmark-lanes-1.0",
+  "gt": "metric_pose23_gt.json",
+  "attack_sign": 1,
+  "lanes": {
+    "GT2D_GTCAMERA": {"pred": "pred_gt2d_gtcamera.json"},
+    "STAGE3_GTCAMERA": {"pred": "pred_stage3_gtcamera.json"},
+    "GT2D_STAGE1CAMERA": {"pred": "pred_gt2d_stage1camera.json"},
+    "STAGE3_STAGE1CAMERA": {"pred": "pred_stage3_stage1camera.json"}
+  }
+}

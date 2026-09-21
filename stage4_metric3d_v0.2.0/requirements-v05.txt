@@ -1,0 +1,5 @@
+# Stage-4 v0.5 host environment. SAM 3D Body remains isolated in its CUDA worker environment.
+numpy>=1.24
+scipy>=1.10
+opencv-python>=4.8
+matplotlib>=3.7

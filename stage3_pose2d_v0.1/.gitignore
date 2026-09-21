@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+weights/
+data/
+runs/
+benchmark_results/

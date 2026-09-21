@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0-test",
+  "video_path": "/nonexistent/football_scene.mp4",
+  "video_id": "legacy_validation",
+  "fps": 25.0,
+  "frame_count": 630,
+  "image_width": 1280,
+  "image_height": 720,
+  "selected_frame": 86,
+  "window_start": 85,
+  "window_end": 87,
+  "shot_start": 0,
+  "shot_end": 629,
+  "coordinate_space": "RAW_DISTORTED_PIXEL"
+}

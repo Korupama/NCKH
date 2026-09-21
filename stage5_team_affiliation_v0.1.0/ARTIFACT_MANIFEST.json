@@ -1,0 +1,20 @@
+{
+  "artifact": "stage5_team_affiliation_v0.1.0",
+  "package_version": "0.3.2",
+  "opt_in_algorithm_version": "stage5-team-affiliation-0.3.2",
+  "role_blind_benchmark_schema": "stage5-role-blind-gsr-3.0",
+  "residual_state_schema": "team-affiliation-state-3.0",
+  "residual_handoff_schema": "stage5-downstream-handoff-3.0",
+  "appearance_descriptor": "opt-in weighted torso+lower-body colour",
+  "default_replay_method": "legacy-v0",
+  "stage5_algorithm_version": "stage5-team-affiliation-0.1.0",
+  "tooling_patch": "stage5-soccernet-gsr-benchmark-1.0",
+  "state_schema": "team-affiliation-state-1.0",
+  "handoff_schema": "stage5-downstream-handoff-1.0",
+  "benchmark_schema": "stage5-soccernet-gsr-benchmark-1.0",
+  "direct_pretrained_model": null,
+  "third_party_runtime": ["numpy", "opencv-python", "scikit-learn"],
+  "stage4_dependency": false,
+  "third_party_benchmark": "SoccerNet-GSR v1.3",
+  "research_accuracy_frozen": false
+}

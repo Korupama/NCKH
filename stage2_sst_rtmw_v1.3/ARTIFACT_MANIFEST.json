@@ -1,0 +1,299 @@
+{
+  "artifact": "stage2_sst_rtmw_v1.3",
+  "version": "1.3.0",
+  "stage": "Stage 2 — Human Entity Detection, Role Recognition & Tracking",
+  "release": "M1 model-facing refinement",
+  "tests": "16 passed, 1 skipped in packaging runtime",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 114,
+      "sha256": "9fddd6d88203363977f31e3b18135b13ac3bfa0b0b4cc37d35685c8592e18fc4"
+    },
+    {
+      "path": "BENCHMARK.md",
+      "bytes": 14701,
+      "sha256": "45b2c6838c8845e473572aaba56b750e1d9eeffde319a462e697125dbbd1549e"
+    },
+    {
+      "path": "CHANGELOG_v1.1.md",
+      "bytes": 1443,
+      "sha256": "1e70aae8b01d523a9050c744ca70addfdf7a3c9221ce61f1bdb8a9b8fbb1f9e1"
+    },
+    {
+      "path": "CHANGELOG_v1.2.md",
+      "bytes": 1125,
+      "sha256": "04b230e93ba42b0438b6f61758feda45cddcaf3613573246026bd7c201fc770e"
+    },
+    {
+      "path": "CHANGELOG_v1.3.md",
+      "bytes": 3031,
+      "sha256": "c65359694cc16a3244c2df5254babdca9c257d17558fa553b7fee95a76470d28"
+    },
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "bytes": 6216,
+      "sha256": "171598da34bfff0b50d0f491ab51aafce94936525246c1b094891948b2f62ea2"
+    },
+    {
+      "path": "MIGRATION_FROM_V04.md",
+      "bytes": 1975,
+      "sha256": "59ad3c687f55706f11b8a0691f3bc329c6e2c6110ec8a1686b040d668187d5b2"
+    },
+    {
+      "path": "MODEL_IMPROVEMENT_M1.md",
+      "bytes": 2710,
+      "sha256": "bc9d2b556a41d28c91242cce249b20c6f5a50743206055f55badddf681fa06d7"
+    },
+    {
+      "path": "QUICKSTART_V13.md",
+      "bytes": 2471,
+      "sha256": "c527399187be133ab68b0e31ab52f805f3fa536127fc3014e1d4b2493fefc7e7"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8476,
+      "sha256": "064e3abb552044ec96fe5a473f4c1f568dab62d612ff1619b3165525c04bb972"
+    },
+    {
+      "path": "STAGE2_SPEC.md",
+      "bytes": 9910,
+      "sha256": "7aacaf14f5579a8729af3d55af5096ab737e7b5f7c13762d936544b6d647f154"
+    },
+    {
+      "path": "Stage2_Benchmark_SoccerNet_GSR.ipynb",
+      "bytes": 6345,
+      "sha256": "6cb3a452a87ab664fe158c73a42543cbadf459c269b8308b409973ae74ac1414"
+    },
+    {
+      "path": "Stage2_SST_RTMW_Human_Entities.executed.ipynb",
+      "bytes": 18110,
+      "sha256": "ed473d0ea1ab5242b113d3e4eee13ab24d28283b6c4a156ceff32efcb0d154f4"
+    },
+    {
+      "path": "Stage2_SST_RTMW_Human_Entities.ipynb",
+      "bytes": 10448,
+      "sha256": "d9aa021136e29a88ae8db1f2fe427376c65bfb76d7c19b1223cd44b04e92ce05"
+    },
+    {
+      "path": "THIRD_PARTY_AND_DATA.md",
+      "bytes": 950,
+      "sha256": "c4c0b6b9ac2661de3747de5fbd36b793148db0b264a1c97c66a5c183533992f2"
+    },
+    {
+      "path": "benchmark_stage2.py",
+      "bytes": 11374,
+      "sha256": "26894e7644f133567ff81ec94d7638c79ebb99bc8637d25be3703198bde9529c"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 573,
+      "sha256": "c6582c52202502cd735ced720fa4bc3d49fca82b44dd2d28d3391ceee8524be2"
+    },
+    {
+      "path": "requirements-benchmark.txt",
+      "bytes": 21,
+      "sha256": "8dd36164ffcc823c1dae7df01a17d3723bb39a81e05ac3fed4a2dcafb154fd25"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 96,
+      "sha256": "be90c7653f981e7efc0f4ac3d5a56b12363ad1739a2d4597066fff2ce2f569c0"
+    },
+    {
+      "path": "run_stage2.py",
+      "bytes": 7453,
+      "sha256": "973133e9d8a226b740f4b9f7ec8d412d752b7ddfc9f67d0103f24c1ecb8b5402"
+    },
+    {
+      "path": "samples/legacy_validation/clip_000_source_00000085_sst_pose.json",
+      "bytes": 486733,
+      "sha256": "791cc3ba0f9d11f5682f68458892e120491271534f0315f5d0035f6457cdf748"
+    },
+    {
+      "path": "samples/legacy_validation/clip_001_source_00000086_sst_pose.json",
+      "bytes": 406240,
+      "sha256": "bfc29725b8a69a0577c99b8c987d718d12b99a0fb90249c0926208eec2fe1f43"
+    },
+    {
+      "path": "samples/legacy_validation/clip_002_source_00000087_sst_pose.json",
+      "bytes": 406114,
+      "sha256": "f47b3e1ce211361153b13ca857bb3623a285c36f7ac8b4dc1b9e4bdf010a495a"
+    },
+    {
+      "path": "samples/replay_context_legacy_validation.json",
+      "bytes": 353,
+      "sha256": "025daddb3377e40d7a127dd6317c35e14dc7128d58c32ab511976486ca9d283d"
+    },
+    {
+      "path": "stage2_entities/__init__.py",
+      "bytes": 331,
+      "sha256": "e1bf9b0a044051454e073c34a1d809ae8379ec47d4aea295b3205b05d45760fd"
+    },
+    {
+      "path": "stage2_entities/backend_core/__init__.py",
+      "bytes": 83,
+      "sha256": "fed97c44b025c066dcc3f722460f7806f1bfd7c44dc9bc9b410f1c4699a4062f"
+    },
+    {
+      "path": "stage2_entities/backend_core/sst_rtmw_pose_pipeline.py",
+      "bytes": 51567,
+      "sha256": "9faeff8bf8f76c49b73a0dd725b5f0aaaedcf3125395a3e52c07db219c969ec9"
+    },
+    {
+      "path": "stage2_entities/backend_core/sst_single_frame_inference.py",
+      "bytes": 19000,
+      "sha256": "d48022154fd37179eaeac76518ce750b801ae1b6a2e2fa9a3f3c6f29f5cbc686"
+    },
+    {
+      "path": "stage2_entities/benchmark/__init__.py",
+      "bytes": 570,
+      "sha256": "573dad3c30b7ab69e9ff6df1bfb3480f0ba3822ab49f7576a96232bdd3247e41"
+    },
+    {
+      "path": "stage2_entities/benchmark/checkpointing.py",
+      "bytes": 14919,
+      "sha256": "bee03d513bc1aefeb60c0988ea31894cc1eacf566b3a833d404137b95ad3717f"
+    },
+    {
+      "path": "stage2_entities/benchmark/metrics_detection.py",
+      "bytes": 15474,
+      "sha256": "500eb4e4f87d4f9c660892013f34ff30ec8e21c3314840406914d486ef3296f3"
+    },
+    {
+      "path": "stage2_entities/benchmark/metrics_tracking.py",
+      "bytes": 13580,
+      "sha256": "447747c0cbfb1ed83750da2afd1c634ee7c0d41686ecd3c75fda3cce2eab5682"
+    },
+    {
+      "path": "stage2_entities/benchmark/protocols.py",
+      "bytes": 2528,
+      "sha256": "8f68fd5ba8b67e4ec6d9b54934295082a5d777f74af7bec11b9216b38652cda0"
+    },
+    {
+      "path": "stage2_entities/benchmark/reporting.py",
+      "bytes": 4755,
+      "sha256": "becda533183ef774fa1cf0e6dd23b561229096e1555af6c0cb623b3227500042"
+    },
+    {
+      "path": "stage2_entities/benchmark/runner.py",
+      "bytes": 56419,
+      "sha256": "1b96279143716d3aad7b5efb1559aaeb4620d7c5cd6dd405f0fd529d5ed024a9"
+    },
+    {
+      "path": "stage2_entities/benchmark/soccernet_gsr.py",
+      "bytes": 15634,
+      "sha256": "25b78aaa3eeaebccd93805a0ed6eb91ffe70d6a516393c79086e6fa6621f7283"
+    },
+    {
+      "path": "stage2_entities/benchmark/threshold_sweep.py",
+      "bytes": 8957,
+      "sha256": "2a3a33a759d61b40942f8f22cbe885d4407db9692d2f9ba78ea33c8d6dbfb013"
+    },
+    {
+      "path": "stage2_entities/consolidation.py",
+      "bytes": 12418,
+      "sha256": "a03fb206adf4e6277807c9f403f0149ba72f88ef7ee61181c084554858a2cbee"
+    },
+    {
+      "path": "stage2_entities/contracts.py",
+      "bytes": 5635,
+      "sha256": "5e35043e1571cc14017fd759d3b91439faac454f847f575fbac0a4fbab987469"
+    },
+    {
+      "path": "stage2_entities/evaluation.py",
+      "bytes": 3330,
+      "sha256": "3a64c3096100a83f5b984e59fc9543b608a3aaface9809d8d884e41d49d5426d"
+    },
+    {
+      "path": "stage2_entities/frame_window.py",
+      "bytes": 2426,
+      "sha256": "2242a8a8c2356973379a1bc50853785527d872b5a51716d77216cc990eed36e7"
+    },
+    {
+      "path": "stage2_entities/legacy_adapter.py",
+      "bytes": 5726,
+      "sha256": "0a76097f536bc3dfd220dbb547545d11f9bc68885e25e298ffa5896e97c02c25"
+    },
+    {
+      "path": "stage2_entities/perception.py",
+      "bytes": 23454,
+      "sha256": "daa0e32aaddeb44551c8cc4d1529d573a64686cd2b78e9c8fa44b819cc527660"
+    },
+    {
+      "path": "stage2_entities/pipeline.py",
+      "bytes": 2058,
+      "sha256": "892c2a463b4c2d8b70adc64b6b1b4735c51721e615f67ac82496c666ba893a07"
+    },
+    {
+      "path": "stage2_entities/stage1_adapter.py",
+      "bytes": 7166,
+      "sha256": "676a78175317bdb51f140b159dc7fc922632c7916c3a9f4e5e553a25e17a15a4"
+    },
+    {
+      "path": "stage2_entities/tracking.py",
+      "bytes": 23174,
+      "sha256": "42d27afa790267bcf94f77826fd2a1161ce306d8c07c92517bc11663bde34451"
+    },
+    {
+      "path": "stage2_entities/visualization.py",
+      "bytes": 4712,
+      "sha256": "47e3257e0cd70711c4d88b2dce23ded2c5db81dea3f7b7ed9bc7787c12e23335"
+    },
+    {
+      "path": "tests/test_benchmark_harness.py",
+      "bytes": 10083,
+      "sha256": "2417c79dd7c10fa197652e60ff9c2f90e7a92086d8dafcf15b298ca15ad5fcca"
+    },
+    {
+      "path": "tests/test_m1_improvements.py",
+      "bytes": 6869,
+      "sha256": "01b73376c5fe4c3c48edf89da87ef13dcb60cd52d23c837e60a85d9fbbf817d0"
+    },
+    {
+      "path": "tests/test_stage1_adapter.py",
+      "bytes": 933,
+      "sha256": "6fb3d0c405539dfb8fc943e2955b882c7317671dcd685ae946a26876b88c7320"
+    },
+    {
+      "path": "tests/test_stage2_core.py",
+      "bytes": 7042,
+      "sha256": "74ffff90aae089c96765a4e59a3f2e12136a86d224831351512bcfa3220e1bb6"
+    },
+    {
+      "path": "validation_reports/BENCHMARK_HARNESS_SMOKE_REPORT.json",
+      "bytes": 1005,
+      "sha256": "564b8d2c8afa1620c0b05160d2252c55d58177efb3e2491ddadeda9e79543db1"
+    },
+    {
+      "path": "validation_reports/CHECKPOINT_RESUME_SMOKE_REPORT.json",
+      "bytes": 721,
+      "sha256": "2310dce5b3257d2914c2bd6df06b036d1b4fbb45bf5f71970cfa548c97b609d8"
+    },
+    {
+      "path": "validation_reports/LEGACY_V04_MIGRATION_REPORT.json",
+      "bytes": 2130,
+      "sha256": "e7f4f6f844f39646f7377d63ef0a31d79dbd694060173b3a6f124f0decbd9fdf"
+    },
+    {
+      "path": "validation_reports/M1_IMPLEMENTATION_SMOKE_REPORT.json",
+      "bytes": 979,
+      "sha256": "e5940c92386fabf7131bb8cb8672fe0563a90d7f49815fd231e795f1a57e31b5"
+    },
+    {
+      "path": "validation_reports/STAGE1_COMPATIBILITY_REPORT.json",
+      "bytes": 535,
+      "sha256": "00a54d750d012306b897bace67f8ce796a0d8ec03242eaff3089b5ceab9e7c72"
+    },
+    {
+      "path": "validation_reports/replay_context.from_supplied_stage1.json",
+      "bytes": 1381,
+      "sha256": "96d6d0a1794db7a8948afc77f55f6352cf8825b79a6ebb07eea0944837b7afd4"
+    },
+    {
+      "path": "validation_reports/stage2_frame86_candidate_view.png",
+      "bytes": 940674,
+      "sha256": "d6a24d506b298508f49d74575f4a8248b9f907d12ce61751cdacf3c38ec5f7cf"
+    }
+  ]
+}

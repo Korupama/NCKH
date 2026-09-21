@@ -1,0 +1,6 @@
+# Stage-4 v0.4 host environment. Field Converter and SAM 3D Body are intentionally
+# isolated external runtimes; do not merge their CUDA stacks into this environment.
+numpy>=1.24
+opencv-python>=4.8
+PyYAML>=6.0
+matplotlib>=3.7
