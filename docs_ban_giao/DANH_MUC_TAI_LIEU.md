@@ -2,7 +2,9 @@
 
 Cập nhật 20/09/2026. Đọc [hướng dẫn bàn giao](../README_BAN_GIAO.md) và [dataset ngoài workspace](DATASET_PATHS.md) trước khi chạy.
 
-Đã xóa 22 file Markdown lịch sử rời (changelog, manifest và patch summary cũ). Có thể khôi phục nguyên đường dẫn từ `tai_lieu_lich_su_20260920.zip`. Giữ QA làm bằng chứng kiểm thử, đặc tả legacy làm tham chiếu ablation; không coi chúng là hướng dẫn phiên bản hiện hành.
+Giữ các tài liệu vận hành, đặc tả và benchmark hiện hành. Tài liệu QA/patch/handoff
+lịch sử được loại khỏi workspace để tránh trùng lặp; mã kiểm thử và benchmark là nguồn
+kiểm chứng chính.
 
 ## stage_1_camera_v12
 
@@ -45,14 +47,9 @@ Cập nhật 20/09/2026. Đọc [hướng dẫn bàn giao](../README_BAN_GIAO.md
 
 - [BENCHMARK.md](../stage5_team_affiliation_v0.1.0/BENCHMARK.md)
 - [IMPLEMENTATION_STATUS.md](../stage5_team_affiliation_v0.1.0/IMPLEMENTATION_STATUS.md)
-- [LOCAL_INTEGRATION_NOTES.md](../stage5_team_affiliation_v0.1.0/LOCAL_INTEGRATION_NOTES.md)
-- [PATCH_SUMMARY_v0.2.1.md](../stage5_team_affiliation_v0.1.0/PATCH_SUMMARY_v0.2.1.md)
-- [QA_v0.1.0.md](../stage5_team_affiliation_v0.1.0/QA_v0.1.0.md)
-- [QA_v0.1.1.md](../stage5_team_affiliation_v0.1.0/QA_v0.1.1.md)
 - [QUICKSTART.md](../stage5_team_affiliation_v0.1.0/QUICKSTART.md)
 - [README.md](../stage5_team_affiliation_v0.1.0/README.md)
 - [STAGE5_SPEC.md](../stage5_team_affiliation_v0.1.0/STAGE5_SPEC.md)
-- [STAGE5_V020.md](../stage5_team_affiliation_v0.1.0/STAGE5_V020.md)
 - [STAGE5_V021.md](../stage5_team_affiliation_v0.1.0/STAGE5_V021.md)
 
 ## stage6_ball_localization_v0.4.4

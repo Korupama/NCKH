@@ -9,7 +9,7 @@ import numpy as np
 from .adapters import load_stage2_state, load_stage3_state, observation_by_frame, validate_stage2_stage3_alignment
 from .clustering import fit_two_teams
 from .config import Stage5Config
-from .features import aggregate_features, extract_color_feature
+from .features import aggregate_features, extract_color_feature, fuse_region_features
 from .goalkeeper import assign_goalkeeper, lower_body_centroids_by_team
 from .regions import region_polygon
 from .video import read_frames, video_metadata
@@ -90,6 +90,7 @@ def run_stage5(
     per_track: Dict[str, Dict[str, Any]] = {}
     torso_features: Dict[str, np.ndarray] = {}
     lower_features: Dict[str, np.ndarray] = {}
+    fused_features: Dict[str, np.ndarray] = {}
     for t in candidate_tracks:
         tid = str(t["track_id"])
         role = str(t.get("upstream_role") or "other")
@@ -128,6 +129,13 @@ def run_stage5(
             torso_features[tid] = tf
         if lf is not None:
             lower_features[tid] = lf
+        fused = (fuse_region_features(
+            tf, lf,
+            torso_weight=config.torso_feature_weight,
+            lower_weight=config.lower_feature_weight,
+        ) if config.feature_fusion_enabled else tf)
+        if fused is not None:
+            fused_features[tid] = fused
         per_track[tid] = {
             "track_id": tid,
             "role": role,
@@ -143,9 +151,9 @@ def run_stage5(
         }
 
     outfield = {
-        tid: torso_features[tid]
+        tid: fused_features[tid]
         for tid, rec in per_track.items()
-        if rec["role"] == "player" and tid in torso_features and rec["appearance"]["valid_torso_frames"] >= config.min_valid_torso_frames
+        if rec["role"] == "player" and tid in fused_features and rec["appearance"]["valid_torso_frames"] >= config.min_valid_torso_frames
     }
     cluster_error = None
     try:
@@ -168,13 +176,13 @@ def run_stage5(
             })
         elif role == "player":
             if cluster is None or tid not in cluster.labels:
-                rec.update({"team_id": None, "team_status": "UNKNOWN", "assignment_method": "INSUFFICIENT_TORSO_APPEARANCE" if tid not in torso_features else "TEAM_CLUSTERING_UNAVAILABLE"})
+                rec.update({"team_id": None, "team_status": "UNKNOWN", "assignment_method": "INSUFFICIENT_APPEARANCE" if tid not in fused_features else "TEAM_CLUSTERING_UNAVAILABLE"})
             else:
                 status = cluster.status[tid]
                 rec.update({
                     "team_id": int(cluster.labels[tid]) if status == "VALID" else None,
                     "team_status": status,
-                    "assignment_method": "OUTFIELD_KMEANS_TORSO_COLOR",
+                    "assignment_method": "OUTFIELD_KMEANS_FUSED_APPEARANCE",
                     "cluster_id_raw": int(cluster.labels[tid]),
                     "cluster_distances": cluster.distances[tid],
                     "cluster_margin": cluster.margins[tid],
@@ -214,10 +222,16 @@ def run_stage5(
         },
         "configuration": config.to_dict(),
         "method": {
-            "outfield": "POSE_GUIDED_TORSO_COLOR_KMEANS_K2",
+            "outfield": "POSE_GUIDED_FUSED_TORSO_LOWER_COLOR_KMEANS_K2",
             "goalkeeper": "LOWER_BODY_APPEARANCE_AFFINITY_FAIL_CLOSED",
             "referee": "EXCLUDED",
             "pretrained_model": None,
+            "feature_fusion": {
+                "enabled": config.feature_fusion_enabled,
+                "torso_weight": config.torso_feature_weight,
+                "lower_weight": config.lower_feature_weight,
+                "missing_region_renormalization": True,
+            },
         },
         "tracks": output_tracks,
         "metrics": {

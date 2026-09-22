@@ -74,3 +74,31 @@ def aggregate_features(features: list[np.ndarray]) -> Optional[np.ndarray]:
     if n > 0:
         x /= n
     return x
+
+def fuse_region_features(
+    torso: Optional[np.ndarray],
+    lower: Optional[np.ndarray],
+    *,
+    torso_weight: float = 0.75,
+    lower_weight: float = 0.25,
+) -> Optional[np.ndarray]:
+    """Fuse independently sampled regions while preserving cosine geometry.
+
+    Missing regions are renormalized rather than replaced by zeros. This makes the
+    method robust to occluded legs and keeps the legacy torso-only behavior when no
+    lower-body evidence is available.
+    """
+    parts = []
+    if torso is not None and torso_weight > 0:
+        parts.append((np.asarray(torso, dtype=np.float32), float(torso_weight)))
+    if lower is not None and lower_weight > 0:
+        parts.append((np.asarray(lower, dtype=np.float32), float(lower_weight)))
+    if not parts:
+        return None
+    dim = parts[0][0].shape
+    if any(x.shape != dim for x, _ in parts):
+        raise ValueError("torso and lower features must have identical dimensions")
+    total = sum(w for _, w in parts)
+    fused = sum((w / total) * x for x, w in parts)
+    norm = float(np.linalg.norm(fused))
+    return (fused / norm).astype(np.float32) if norm > 0 else None

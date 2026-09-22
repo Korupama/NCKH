@@ -52,6 +52,27 @@ class _Anchor:
     accepted_costs: Dict[int, float] = field(default_factory=dict)
     accepted_tiers: Dict[int, str] = field(default_factory=dict)
 
+def _motion_prediction(anchor: _Anchor, target_frame: int) -> Optional[np.ndarray]:
+    """Constant-velocity center prediction for short target-window gaps."""
+    history = sorted(anchor.observations.values(), key=lambda o: o.frame_index)
+    if len(history) < 2:
+        return None
+    o0, o1 = history[-2:]
+    dt = max(1, int(o1.frame_index) - int(o0.frame_index))
+    steps = max(1, int(target_frame) - int(o1.frame_index))
+    velocity = (o1.center - o0.center) / float(dt)
+    # Avoid unstable extrapolation after long detector gaps.
+    velocity = np.clip(velocity, -0.25 * o1.height, 0.25 * o1.height)
+    return o1.center + velocity * float(min(steps, 3))
+
+def motion_cost(anchor: _Anchor, observation: _Observation, image_hw: Tuple[int, int]) -> Optional[float]:
+    predicted = _motion_prediction(anchor, observation.frame_index)
+    if predicted is None:
+        return None
+    h, w = image_hw
+    scale = max(10.0, 0.5 * (h + w))
+    return float(np.clip(np.linalg.norm(predicted - observation.center) / scale * 8.0, 0.0, 2.0))
+
 
 def _pose_arrays(pose: Optional[Mapping[str, Any]]) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], float]:
     if not pose:
@@ -198,11 +219,15 @@ class DecisionFrameAnchoredTracker:
         max_gap: int = 6,
         use_temporal_rescue: bool = True,
         rescue_max_assignment_cost: float = 0.78,
+        use_motion_prior: bool = True,
+        motion_weight: float = 0.15,
     ) -> None:
         self.max_assignment_cost = float(max_assignment_cost)
         self.max_gap = int(max_gap)
         self.use_temporal_rescue = bool(use_temporal_rescue)
         self.rescue_max_assignment_cost = float(rescue_max_assignment_cost)
+        self.use_motion_prior = bool(use_motion_prior)
+        self.motion_weight = float(np.clip(motion_weight, 0.0, 0.5))
 
     @staticmethod
     def _assign(
@@ -214,6 +239,8 @@ class DecisionFrameAnchoredTracker:
         max_cost: float,
         pos: int,
         tier: str,
+        use_motion_prior: bool = True,
+        motion_weight: float = 0.15,
     ) -> Tuple[set[int], set[int]]:
         assigned_obs: set[int] = set()
         assigned_anchor: set[int] = set()
@@ -222,7 +249,10 @@ class DecisionFrameAnchoredTracker:
         matrix = np.full((len(anchor_indices), len(observations)), 10.0, dtype=np.float64)
         for r, ai in enumerate(anchor_indices):
             for c, obs in enumerate(observations):
-                matrix[r, c] = association_cost(anchors[ai].last, obs, image_hw)
+                base = association_cost(anchors[ai].last, obs, image_hw)
+                prior = motion_cost(anchors[ai], obs, image_hw) if use_motion_prior else None
+                matrix[r, c] = ((1.0 - motion_weight) * base + motion_weight * prior
+                                if prior is not None else base)
         rows, cols = linear_sum_assignment(matrix)
         for r, c in zip(rows.tolist(), cols.tolist()):
             value = float(matrix[r, c])
@@ -278,6 +308,7 @@ class DecisionFrameAnchoredTracker:
                 assigned_primary_anchor, assigned_primary_obs = self._assign(
                     anchors, available, primary, image_sizes[pos],
                     max_cost=self.max_assignment_cost, pos=pos, tier="primary",
+                    use_motion_prior=self.use_motion_prior, motion_weight=self.motion_weight,
                 )
                 assigned_anchor = set(assigned_primary_anchor)
                 assigned_rescue_obs: set[int] = set()
@@ -290,6 +321,7 @@ class DecisionFrameAnchoredTracker:
                     rescued_anchor, assigned_rescue_obs = self._assign(
                         anchors, rescue_eligible, rescue, image_sizes[pos],
                         max_cost=self.rescue_max_assignment_cost, pos=pos, tier="rescue",
+                        use_motion_prior=self.use_motion_prior, motion_weight=self.motion_weight,
                     )
                     assigned_anchor.update(rescued_anchor)
 
@@ -339,6 +371,8 @@ def build_entity_track_state(
     max_gap: int = 6,
     use_temporal_rescue: bool = True,
     rescue_max_assignment_cost: float = 0.78,
+    use_motion_prior: bool = True,
+    motion_weight: float = 0.15,
 ) -> EntityTrackState:
     if not isinstance(perception_manifest, Mapping):
         perception_manifest = json.loads(Path(perception_manifest).read_text(encoding="utf-8"))
@@ -349,6 +383,8 @@ def build_entity_track_state(
         max_gap=max_gap,
         use_temporal_rescue=use_temporal_rescue,
         rescue_max_assignment_cost=rescue_max_assignment_cost,
+        use_motion_prior=use_motion_prior,
+        motion_weight=motion_weight,
     )
     tracked = tracker.track(frames, context)
     all_frame_indices = tracked.get("frame_indices", [])

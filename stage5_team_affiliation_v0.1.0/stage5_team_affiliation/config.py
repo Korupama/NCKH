@@ -26,6 +26,9 @@ class Stage5Config:
     goalkeeper_max_distance_ratio: float = 1.35
     allow_bbox_torso_fallback: bool = True
     allow_bbox_lower_body_fallback: bool = True
+    feature_fusion_enabled: bool = True
+    torso_feature_weight: float = 0.75
+    lower_feature_weight: float = 0.25
 
     def validate(self) -> None:
         if self.sample_every_n_frames < 1:
@@ -38,6 +41,10 @@ class Stage5Config:
             raise ValueError("min_valid_lower_body_frames must be >= 1")
         if not (0 <= self.green_hue_min < self.green_hue_max <= 179):
             raise ValueError("green hue range must be in OpenCV HSV hue space [0,179]")
+        if self.torso_feature_weight < 0 or self.lower_feature_weight < 0:
+            raise ValueError("region feature weights must be non-negative")
+        if self.feature_fusion_enabled and self.torso_feature_weight + self.lower_feature_weight <= 0:
+            raise ValueError("at least one region feature weight is required")
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
