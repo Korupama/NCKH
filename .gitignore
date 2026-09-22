@@ -36,6 +36,10 @@ htmlcov/
 /stage2_sst_rtmw_v1.3/third_party/
 /stage2_sst_rtmw_v1.3/weights/
 /stage3_pose2d_v0.1/data/
+!/stage3_pose2d_v0.1/data/
+!/stage3_pose2d_v0.1/data/task_pose23_t0/
+!/stage3_pose2d_v0.1/data/task_pose23_t0/README.md
+!/stage3_pose2d_v0.1/data/task_pose23_t0/pose23_t0_manifest.json
 /stage3_pose2d_v0.1/weights/
 /stage4_metric3d_v0.2.0/benchmark_data/
 /stage4_metric3d_v0.2.0/weights/
@@ -94,3 +98,5 @@ Desktop.ini
 .DS_Store
 .idea/
 .vscode/
+
+AI_Plan/*

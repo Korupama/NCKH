@@ -73,6 +73,12 @@ The official COCO-WholeBody sigma arrays are included in the harness. Report Bod
 
 ## B3 — SoccerNet-Pose23 (future project-specific benchmark)
 
+The Phase-2 contract and annotation rules are defined in
+[`POSE23_ANNOTATION_GUIDELINE.md`](POSE23_ANNOTATION_GUIDELINE.md). The local
+template is
+`data/task_pose23_t0/pose23_t0_manifest.json`; it is intentionally empty until
+an authorized broadcast/offside annotation source is selected.
+
 Planned annotation layout:
 
 ```text

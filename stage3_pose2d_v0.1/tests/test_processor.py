@@ -10,6 +10,8 @@ def test_processor_end_to_end(stage2_fixture,tmp_path):
     assert state["schema_version"]=="tracked-pose-2d-state-1.0"
     assert state["keypoint_schema"]["count"]==133
     assert state["metrics"]["PoseCoverageAtT0_given_stage2_candidate"]==1.0
+    assert state["metrics"]["T0AnatomyEvidenceCoverage_given_stage2_candidate"]["complete_stage4_core_metric_anchor_coverage"]==1.0
+    assert state["tracks"][0]["t0_anatomy_evidence"]["stage4_core_metric_anchors"]["all_raw_observed"] is True
     assert state["diagnostics"]["legal_body_semantics_applied"] is False
     assert (out/"tracked_pose_2d_state.json").is_file()
     h=json.loads((out/"stage3_downstream_handoff.json").read_text())

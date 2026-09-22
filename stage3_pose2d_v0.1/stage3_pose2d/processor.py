@@ -9,7 +9,7 @@ import numpy as np
 from .schemas import Stage3Config
 from .stage2_adapter import Stage2Bundle, load_stage2_bundle
 from .wholebody133 import WHOLEBODY_KEYPOINT_NAMES, keypoint_records_to_arrays
-from .quality import evaluate_pose, pose_selection_score, status_rank
+from .quality import evaluate_pose, pose_selection_score, status_rank, summarize_t0_anatomy_evidence
 from .temporal import annotate_temporal
 
 STAGE3_VERSION = "stage3-pose2d-0.1.0"
@@ -61,7 +61,17 @@ def _missing_pose_observation(frame_index: int, entity_obs: Mapping[str, Any]) -
         "source_backend": None,
         "source_score_semantics": None,
         "keypoints_133": [
-            {"index": i, "name": name, "x": None, "y": None, "raw_model_score": None, "state": "MISSING", "source": "NO_RTMW_CACHE", "temporal_estimate_xy": None}
+            {
+                "index": i,
+                "name": name,
+                "x": None,
+                "y": None,
+                "raw_model_score": None,
+                "state": "MISSING",
+                "source": "NO_RTMW_CACHE",
+                "coordinate_evidence_kind": "RAW_MISSING",
+                "temporal_estimate_xy": None,
+            }
             for i, name in enumerate(WHOLEBODY_KEYPOINT_NAMES)
         ],
         "qa": {"pose_status": "MISSING", "reason": "no_rtmw_cache_observation"},
@@ -183,6 +193,10 @@ def run_stage3(
         pose_obs, temporal_summary = annotate_temporal(pose_obs, config)
         selected = next((o for o in pose_obs if int(o["frame_index"]) == selected_frame), None)
         selected_status = "MISSING" if selected is None else str(selected["pose_status"])
+        t0_anatomy_evidence = None if selected is None else summarize_t0_anatomy_evidence(
+            selected.get("keypoints_133") or [],
+            pose_status=selected_status,
+        )
         counts[selected_status] = counts.get(selected_status, 0) + 1
         tr_out = {
             "track_id": tid,
@@ -191,6 +205,7 @@ def run_stage3(
             "upstream_identity_confidence": entity_track.get("identity_confidence"),
             "candidate_for_stage3": True,
             "selected_frame_pose_status": selected_status,
+            "t0_anatomy_evidence": t0_anatomy_evidence,
             "temporal_qa": temporal_summary,
             "observations": pose_obs,
         }
@@ -203,10 +218,27 @@ def run_stage3(
     selected_accepted = sum(x["selected_frame_pose_status"] in ("VALID", "DEGRADED") for x in output_tracks)
     selected_valid = sum(x["selected_frame_pose_status"] == "VALID" for x in output_tracks)
     feet_good = 0
+    t0_evidence = [x.get("t0_anatomy_evidence") for x in output_tracks if x.get("t0_anatomy_evidence")]
     for x in output_tracks:
         obs = next((o for o in x["observations"] if int(o["frame_index"]) == selected_frame), None)
         if obs and float((obs.get("qa") or {}).get("feet_completeness", 0.0)) >= config.min_feet_completeness_valid:
             feet_good += 1
+
+    anatomy_coverage = {
+        group: float(sum(
+            bool((entry.get("groups") or {}).get(group, {}).get("all_raw_observed"))
+            for entry in t0_evidence
+        ) / max(1, candidate_n))
+        for group in ("head", "torso", "left_leg", "right_leg", "left_foot", "right_foot")
+    }
+    complete_stage4_core = sum(
+        bool((entry.get("stage4_core_metric_anchors") or {}).get("all_raw_observed"))
+        for entry in t0_evidence
+    )
+    temporal_estimate_tracks = sum(
+        bool(entry.get("temporal_estimate_only_keypoint_names"))
+        for entry in t0_evidence
+    )
 
     state: Dict[str, Any] = {
         "schema_version": OUTPUT_SCHEMA,
@@ -238,6 +270,12 @@ def run_stage3(
             "AcceptedPoseCoverageAtT0_given_stage2_candidate": float(selected_accepted / max(1, candidate_n)),
             "ValidPoseCoverageAtT0_given_stage2_candidate": float(selected_valid / max(1, candidate_n)),
             "FootPoseCoverageAtT0_given_stage2_candidate": float(feet_good / max(1, candidate_n)),
+            "T0AnatomyEvidenceCoverage_given_stage2_candidate": {
+                "meaning": "raw-observed 2D evidence coverage for downstream World-State consumers; not ground-truth accuracy or Law-11 legal-body coverage",
+                "complete_group_coverage": anatomy_coverage,
+                "complete_stage4_core_metric_anchor_coverage": float(complete_stage4_core / max(1, candidate_n)),
+                "tracks_with_temporal_estimate_only_at_t0": int(temporal_estimate_tracks),
+            },
             "selected_frame_status_counts": counts,
             "upstream_stage2_candidate_recall_not_recomputed": True,
         },
@@ -275,6 +313,8 @@ def run_stage3(
         "selected_frame": selected_frame,
         "coordinate_space": "RAW_DISTORTED_PIXEL",
         "keypoint_schema": "COCO_WHOLEBODY_133",
+        "t0_anatomy_evidence_path": "tracks[].t0_anatomy_evidence",
+        "observed_coordinate_policy": "Only keypoints with coordinate_evidence_kind=RAW_OBSERVED are raw observed pixels; TEMPORAL_ESTIMATE_ONLY never replaces x/y.",
         "valid_track_ids": [x["track_id"] for x in output_tracks if x["selected_frame_pose_status"] == "VALID"],
         "degraded_track_ids": [x["track_id"] for x in output_tracks if x["selected_frame_pose_status"] == "DEGRADED"],
         "rejected_track_ids": [x["track_id"] for x in output_tracks if x["selected_frame_pose_status"] in ("REJECTED", "MISSING")],

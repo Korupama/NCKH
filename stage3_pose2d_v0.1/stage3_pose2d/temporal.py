@@ -104,6 +104,7 @@ def annotate_temporal(track_observations: Sequence[Mapping[str, Any]], config: S
                 cx, cy = (x1 + x2) * 0.5, (y1 + y2) * 0.5
                 est = (p0 + p2) * 0.5
                 kp["temporal_estimate_xy"] = [float(est[0] * w + cx), float(est[1] * h + cy)]
+                kp["coordinate_evidence_kind"] = "TEMPORAL_ESTIMATE_ONLY"
                 # Raw x/y stay missing by design.
 
     summary = {

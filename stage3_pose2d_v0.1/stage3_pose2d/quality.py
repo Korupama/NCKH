@@ -4,7 +4,138 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 import numpy as np
 
 from .schemas import Stage3Config
-from .wholebody133 import BODY17, FEET6, CORE_OFFSIDE_ANATOMY, BODY_SKELETON_EDGES, WHOLEBODY_KEYPOINT_NAMES
+from .wholebody133 import (
+    BODY17,
+    FEET6,
+    CORE_OFFSIDE_ANATOMY,
+    BODY_SKELETON_EDGES,
+    WHOLEBODY_KEYPOINT_NAMES,
+)
+
+
+# These groups describe image-space evidence needed by current World-State
+# consumers.  They are deliberately not an IFAB legal-body mask: downstream
+# owns legal-body construction and the eventual offside decision.
+T0_ANATOMY_EVIDENCE_GROUPS = {
+    "head": ("nose", "left_eye", "right_eye", "left_ear", "right_ear"),
+    "torso": ("left_shoulder", "right_shoulder", "left_hip", "right_hip"),
+    "left_leg": ("left_hip", "left_knee", "left_ankle"),
+    "right_leg": ("right_hip", "right_knee", "right_ankle"),
+    "left_foot": ("left_ankle", "left_big_toe", "left_small_toe", "left_heel"),
+    "right_foot": ("right_ankle", "right_big_toe", "right_small_toe", "right_heel"),
+}
+
+# The legacy metric-pose Stage-4 bridge checks this exact anchor set before
+# optimization.  Keeping it explicit here lets a Stage-3 report communicate
+# the same readiness without importing Stage-4 implementation code.
+STAGE4_CORE_METRIC_ANCHORS = (
+    "left_shoulder", "right_shoulder", "left_hip", "right_hip",
+    "left_knee", "right_knee", "left_ankle", "right_ankle",
+)
+
+
+def coordinate_evidence_kind(record: Mapping[str, Any]) -> str:
+    """Classify whether a keypoint has an observed raw coordinate.
+
+    ``temporal_estimate_xy`` is diagnostic-only and must never be consumed as
+    an observed pixel.  The fallback behaviour keeps old v0.1 JSON readable
+    while all newly emitted records store the classification explicitly.
+    """
+
+    explicit = record.get("coordinate_evidence_kind")
+    if explicit in {"RAW_OBSERVED", "TEMPORAL_ESTIMATE_ONLY", "RAW_MISSING"}:
+        return str(explicit)
+    x, y = record.get("x"), record.get("y")
+    try:
+        if x is not None and y is not None and np.isfinite(float(x)) and np.isfinite(float(y)):
+            return "RAW_OBSERVED"
+    except (TypeError, ValueError):
+        pass
+    return "TEMPORAL_ESTIMATE_ONLY" if record.get("temporal_estimate_xy") is not None else "RAW_MISSING"
+
+
+def summarize_t0_anatomy_evidence(
+    keypoints: Sequence[Mapping[str, Any]],
+    *,
+    pose_status: str,
+) -> Dict[str, Any]:
+    """Create a compact, non-decisional summary of selected-frame evidence."""
+
+    by_name = {str(record.get("name")): record for record in keypoints}
+
+    def summarize_group(names: Sequence[str]) -> Dict[str, Any]:
+        raw_observed_names: List[str] = []
+        missing_raw_names: List[str] = []
+        temporal_estimate_only_names: List[str] = []
+        state_counts: Dict[str, int] = {}
+        for name in names:
+            record = by_name.get(name, {})
+            state = str(record.get("state", "MISSING"))
+            state_counts[state] = state_counts.get(state, 0) + 1
+            kind = coordinate_evidence_kind(record)
+            # A raw coordinate marked MISSING is invalid by contract even if a
+            # malformed third-party file supplied x/y values.
+            raw_observed = kind == "RAW_OBSERVED" and state != "MISSING"
+            if raw_observed:
+                raw_observed_names.append(name)
+            else:
+                missing_raw_names.append(name)
+            if kind == "TEMPORAL_ESTIMATE_ONLY":
+                temporal_estimate_only_names.append(name)
+        total = len(names)
+        return {
+            "keypoint_names": list(names),
+            "raw_observed_count": len(raw_observed_names),
+            "keypoint_count": total,
+            "raw_observed_fraction": float(len(raw_observed_names) / max(1, total)),
+            "all_raw_observed": len(raw_observed_names) == total,
+            "raw_observed_names": raw_observed_names,
+            "missing_raw_names": missing_raw_names,
+            "temporal_estimate_only_names": temporal_estimate_only_names,
+            "keypoint_state_counts": state_counts,
+        }
+
+    groups = {
+        name: summarize_group(names)
+        for name, names in T0_ANATOMY_EVIDENCE_GROUPS.items()
+    }
+    core = summarize_group(STAGE4_CORE_METRIC_ANCHORS)
+    temporal_estimates = [
+        str(record.get("name"))
+        for record in keypoints
+        if coordinate_evidence_kind(record) == "TEMPORAL_ESTIMATE_ONLY"
+    ]
+    diagnostic_states = {
+        "GEOMETRIC_OUTLIER",
+        "TEMPORAL_OUTLIER",
+        "LEFT_RIGHT_SUSPECT",
+    }
+    diagnostics = [
+        str(record.get("name"))
+        for record in keypoints
+        if str(record.get("state", "MISSING")) in diagnostic_states
+    ]
+    review_flags: List[str] = []
+    if str(pose_status) != "VALID":
+        review_flags.append("POSE_NOT_VALID_AT_T0")
+    if not core["all_raw_observed"]:
+        review_flags.append("STAGE4_CORE_METRIC_ANCHORS_INCOMPLETE")
+    if temporal_estimates:
+        review_flags.append("TEMPORAL_ESTIMATE_ONLY_AT_T0")
+    if diagnostics:
+        review_flags.append("KEYPOINT_QA_DIAGNOSTIC_AT_T0")
+
+    return {
+        "schema_version": "stage3-t0-anatomy-evidence-1.0",
+        "scope": "raw image-space evidence for World-State consumers; not Law-11 legal-body membership or an offside decision",
+        "observed_coordinate_policy": "RAW_OBSERVED requires finite raw x/y and state != MISSING; temporal_estimate_xy never counts as observed raw evidence",
+        "temporal_estimate_policy": "TEMPORAL_ESTIMATE_ONLY is diagnostic context; consumers must not replace raw x/y with it",
+        "groups": groups,
+        "stage4_core_metric_anchors": core,
+        "temporal_estimate_only_keypoint_names": temporal_estimates,
+        "qa_diagnostic_keypoint_names": diagnostics,
+        "consumer_review_flags": review_flags,
+    }
 
 
 def _bbox_dims(bbox: Sequence[float]) -> Tuple[float, float, float, float, float, float]:
@@ -116,6 +247,7 @@ def evaluate_pose(
             "raw_model_score": float(scores[i]) if np.isfinite(scores[i]) else None,
             "state": state,
             "source": "RTMW_CACHE",
+            "coordinate_evidence_kind": "RAW_OBSERVED" if state != "MISSING" else "RAW_MISSING",
             "temporal_estimate_xy": None,
         })
 

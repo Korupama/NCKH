@@ -97,6 +97,21 @@ Coordinates are normalized by each observation bbox before temporal diagnostics.
 
 No temporal operation silently moves raw keypoints, especially at `t0`.
 
+For each emitted keypoint, `coordinate_evidence_kind` makes this distinction
+machine-readable:
+
+```text
+RAW_OBSERVED           finite raw x/y is present;
+RAW_MISSING            raw x/y is absent and no temporal estimate is exposed;
+TEMPORAL_ESTIMATE_ONLY temporal_estimate_xy is diagnostic context only.
+```
+
+The selected-frame track record also contains `t0_anatomy_evidence`, a
+downstream-facing summary of raw-observed coverage for head, torso, legs,
+feet and the Stage-4 core metric anchors. It is an image-space evidence
+summary, not an IFAB legal-body mask and not an offside decision. Consumers
+must not replace missing raw `x/y` with `temporal_estimate_xy`.
+
 ## Optional controlled re-inference
 
 Default production path reuses the Stage-2 RTMW cache. Re-inference is opt-in only.

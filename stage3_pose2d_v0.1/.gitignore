@@ -2,6 +2,9 @@ __pycache__/
 .pytest_cache/
 *.pyc
 weights/
-data/
+data/*
+!data/task_pose23_t0/
+!data/task_pose23_t0/README.md
+!data/task_pose23_t0/pose23_t0_manifest.json
 runs/
 benchmark_results/
