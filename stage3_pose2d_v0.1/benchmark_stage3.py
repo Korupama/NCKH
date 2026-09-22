@@ -5,9 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from benchmark.dsp3_adapter import inspect_3dsp, run_3dsp_benchmark
-from benchmark.coco_wholebody import export_predictions, official_xtcoco_eval
-from benchmark.pose23 import evaluate_pose23
+from benchmark.pose23_task import evaluate_pose23_task
 
 
 def _write(path: Path, data) -> None:
@@ -44,17 +42,27 @@ def main() -> None:
     q.add_argument("--predictions", required=True, type=Path)
     q.add_argument("--output", required=True, type=Path)
 
+    q = sub.add_parser("eval-pose23-task")
+    q.add_argument("--ground-truth", required=True, type=Path)
+    q.add_argument("--predictions", required=True, type=Path)
+    q.add_argument("--output", required=True, type=Path)
+    q.add_argument("--score-temporal-estimates", action="store_true")
+    q.add_argument("--include-oks", action="store_true")
+
     args = p.parse_args()
     if args.cmd == "inspect-3dsp":
+        from benchmark.dsp3_adapter import inspect_3dsp
         print(json.dumps(inspect_3dsp(args.root), indent=2, ensure_ascii=False))
         return
     if args.cmd == "run-3dsp":
+        from benchmark.dsp3_adapter import run_3dsp_benchmark
         report = run_3dsp_benchmark(args.root, args.rtmw_model, split=args.split, device=args.device, max_samples=args.max_samples)
         out = args.output_dir / "3dsp_benchmark_summary.json"
         _write(out, report)
         print(json.dumps({"status":"COMPLETE", "output":str(out), "metrics":report["metrics"]}, indent=2, ensure_ascii=False))
         return
     if args.cmd == "run-coco-wholebody":
+        from benchmark.coco_wholebody import export_predictions, official_xtcoco_eval
         args.output_dir.mkdir(parents=True, exist_ok=True)
         preds = export_predictions(args.images_root, args.annotations, args.rtmw_model, device=args.device, max_persons=args.max_persons)
         pred_path = args.output_dir / "coco_wholebody_predictions.json"
@@ -70,7 +78,18 @@ def main() -> None:
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return
     if args.cmd == "eval-pose23":
+        from benchmark.pose23 import evaluate_pose23
         report = evaluate_pose23(args.ground_truth, args.predictions)
+        _write(args.output, report)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return
+    if args.cmd == "eval-pose23-task":
+        report = evaluate_pose23_task(
+            args.ground_truth,
+            args.predictions,
+            score_temporal_estimates=args.score_temporal_estimates,
+            include_oks=args.include_oks,
+        )
         _write(args.output, report)
         print(json.dumps(report, indent=2, ensure_ascii=False))
 

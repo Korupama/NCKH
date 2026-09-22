@@ -71,7 +71,7 @@ keypoints_wholebody
 
 The official COCO-WholeBody sigma arrays are included in the harness. Report Body AP, Foot AP and WholeBody AP as the main checks.
 
-## B3 — SoccerNet-Pose23 (future project-specific benchmark)
+## B3 — SoccerNet-Pose23 task-aware Pose23@t0 benchmark
 
 The Phase-2 contract and annotation rules are defined in
 [`POSE23_ANNOTATION_GUIDELINE.md`](POSE23_ANNOTATION_GUIDELINE.md). The local
@@ -98,6 +98,30 @@ Heel PCK
 Toe PCK
 ```
 
+The Stage-3 harness also reports per-keypoint metrics, anatomy evidence
+coverage, visibility slices and difficulty slices for scale, occlusion, blur,
+view, border truncation and crowding. The primary metric source is explicitly
+`RAW_OBSERVED_ONLY`; `TEMPORAL_ESTIMATE_ONLY` points are excluded from primary
+PCK/OKS and may be requested as a separate diagnostic.
+
+Optional OKS uses pixel error divided by bbox area with the frozen 23-point
+sigma vector in `benchmark/pose23_task.py`. The six foot sigmas are project
+engineering defaults, so this is not an official COCO-WholeBody score.
+
+Run the independent Stage-3 evaluator with:
+
+```bash
+python benchmark_stage3.py eval-pose23-task \\
+  --ground-truth data/task_pose23_t0/pose23_t0_manifest.json \\
+  --predictions <pose23_predictions.json> \\
+  --output benchmark_results/task_pose23_t0/report.json \\
+  --include-oks
+```
+
+The current versioned manifest intentionally has zero samples, so this command
+must wait until an authorized Pose23 annotation source is populated. Synthetic
+fixtures in `tests/test_pose23_task.py` validate the metric protocol now.
+
 This benchmark becomes the main task-specific gate before Stage 5/8 because 3DSP does not provide heel/toe ground truth.
 
 ## B4 — Production coverage/QA diagnostics
@@ -121,4 +145,10 @@ v0.1 freezes structural gates, not football-specific accuracy thresholds. Initia
 PoseCoverageAtT0_given_stage2_candidate >= 0.98
 ```
 
-3DSP/COCO/Pose23 numerical gates should be frozen only after the real RTMW-L baselines are collected on the user's environment. Published RTMPose 3DSP numbers are comparison targets, not automatic pass/fail requirements for RTMW-L.
+Phase 4 freezes the current RTMW-L 3DSP and COCO-WholeBody diagnostics in
+`validation_reports/PHASE4_BASELINE.md` and
+`benchmark_results/phase4_baseline_run_manifest.json`. These are reference
+baselines, not automatic pass/fail requirements and not task-specific offside
+accuracy. Pose23 numerical gates remain pending until the authorized manifest
+has samples and a locked test split. Published RTMPose 3DSP numbers are
+comparison targets, not automatic pass/fail requirements for RTMW-L.
