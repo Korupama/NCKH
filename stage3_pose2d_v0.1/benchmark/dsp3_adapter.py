@@ -154,7 +154,12 @@ def run_3dsp_benchmark(
         pred = coco133_to_h36m17(result.keypoints_xy)
         gt_all.append(sample.gt_h36m17)
         pred_all.append(pred)
-        samples.append({"shot_id": sample.shot_id, "frame_id": sample.frame_id, "image": str(sample.image_path)})
+        samples.append({
+            "shot_id": sample.shot_id,
+            "frame_id": sample.frame_id,
+            "image": str(sample.image_path),
+            "inference_diagnostics": result.inference_diagnostics,
+        })
     if not gt_all:
         raise RuntimeError("No evaluable 3DSP samples found")
     summary = summarize_pdj(np.stack(pred_all), np.stack(gt_all))

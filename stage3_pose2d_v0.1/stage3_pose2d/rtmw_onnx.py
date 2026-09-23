@@ -12,6 +12,7 @@ class PoseResult:
     scores: np.ndarray
     source_bbox_xyxy: Tuple[float, float, float, float]
     crop_scale: float
+    inference_diagnostics: dict
 
 class RTMWOpenCVDNN:
     """Minimal self-contained RTMW SimCC ONNX runner.
@@ -132,4 +133,31 @@ class RTMWOpenCVDNN:
         xy = xy + center - scale / 2.0
         if k != 133:
             raise RuntimeError(f"Expected 133 RTMW keypoints, got {k}")
-        return PoseResult(xy[0].astype(np.float32), scores[0], tuple(map(float, bbox_xyxy)), float(crop_scale))
+        finite_xy = np.isfinite(xy[0]).all(axis=1)
+        finite_scores = np.isfinite(scores[0])
+        positive_scores = scores[0][finite_scores & (scores[0] > 0.0)]
+        diagnostics = {
+            "backend": "opencv_dnn",
+            "device": self.device,
+            "input_size_wh": [self.input_width, self.input_height],
+            "bbox_padding": self.bbox_padding,
+            "crop_scale": float(crop_scale),
+            "source_bbox_xyxy": [float(x) for x in bbox_xyxy],
+            "crop_center_xy": [float(x) for x in center],
+            "crop_scale_xy": [float(x) for x in scale],
+            "simcc_split_ratio": self.simcc_split_ratio,
+            "output_shapes": [list(np.asarray(x).shape) for x in outputs],
+            "keypoint_count": int(k),
+            "finite_keypoint_count": int(np.sum(finite_xy)),
+            "positive_score_count": int(positive_scores.size),
+            "raw_score_min": None if positive_scores.size == 0 else float(np.min(positive_scores)),
+            "raw_score_median": None if positive_scores.size == 0 else float(np.median(positive_scores)),
+            "raw_score_max": None if positive_scores.size == 0 else float(np.max(positive_scores)),
+        }
+        return PoseResult(
+            xy[0].astype(np.float32),
+            scores[0],
+            tuple(map(float, bbox_xyxy)),
+            float(crop_scale),
+            diagnostics,
+        )
