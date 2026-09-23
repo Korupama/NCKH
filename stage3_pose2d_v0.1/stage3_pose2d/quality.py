@@ -62,6 +62,8 @@ def evaluate_pose(
         return ({
             "pose_status": "REJECTED",
             "reason": f"invalid_shape xy={xy.shape}, scores={scores.shape}",
+            "status_reasons": ["invalid_shape"],
+            "gate_checks": {},
             "body_completeness": 0.0,
             "feet_completeness": 0.0,
             "core_completeness": 0.0,
@@ -84,6 +86,16 @@ def evaluate_pose(
     bone_outlier_fraction, bone_outliers = _bone_length_outliers(xy, available, bbox_xyxy)
     geometry_valid = bool(inside_frac >= 0.60 and bone_outlier_fraction <= 0.35)
 
+    gate_checks = {
+        "body_above_reject_floor": bool(body_comp >= config.min_body_completeness_reject),
+        "core_above_reject_floor": bool(core_comp >= config.min_core_completeness_reject),
+        "body_meets_valid_threshold": bool(body_comp >= config.min_body_completeness_valid),
+        "core_meets_valid_threshold": bool(core_comp >= config.min_core_completeness_valid),
+        "feet_meets_valid_threshold": bool(feet_comp >= config.min_feet_completeness_valid),
+        "inside_meets_valid_threshold": bool(inside_frac >= config.min_inside_fraction_valid),
+        "geometry_valid": geometry_valid,
+    }
+
     if body_comp < config.min_body_completeness_reject or core_comp < config.min_core_completeness_reject:
         status = "REJECTED"
     elif (
@@ -96,6 +108,25 @@ def evaluate_pose(
         status = "VALID"
     else:
         status = "DEGRADED"
+
+    status_reasons: List[str] = []
+    if not gate_checks["body_above_reject_floor"]:
+        status_reasons.append("body_below_reject_floor")
+    if not gate_checks["core_above_reject_floor"]:
+        status_reasons.append("core_below_reject_floor")
+    if status == "DEGRADED":
+        if not gate_checks["body_meets_valid_threshold"]:
+            status_reasons.append("body_below_valid_threshold")
+        if not gate_checks["core_meets_valid_threshold"]:
+            status_reasons.append("core_below_valid_threshold")
+        if not gate_checks["feet_meets_valid_threshold"]:
+            status_reasons.append("feet_below_valid_threshold")
+        if not gate_checks["inside_meets_valid_threshold"]:
+            status_reasons.append("inside_fraction_below_valid_threshold")
+        if not gate_checks["geometry_valid"]:
+            status_reasons.append("geometry_sanity_failed")
+    if status == "VALID" and not status_reasons:
+        status_reasons.append("all_valid_gates_passed")
 
     records: List[Dict[str, Any]] = []
     outlier_indices = {i for a, b, _ in bone_outliers for i in (a, b)}
@@ -121,6 +152,8 @@ def evaluate_pose(
 
     qa = {
         "pose_status": status,
+        "status_reasons": status_reasons,
+        "gate_checks": gate_checks,
         "body_completeness": body_comp,
         "feet_completeness": feet_comp,
         "core_completeness": core_comp,
