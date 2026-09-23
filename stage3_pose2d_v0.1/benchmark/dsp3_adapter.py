@@ -138,8 +138,16 @@ def run_3dsp_benchmark(
     max_samples: int | None = None,
     input_width: int = 288,
     input_height: int = 384,
+    bbox_padding: float = 1.25,
+    crop_scale: float = 1.0,
 ) -> Dict[str, object]:
-    model = RTMWOpenCVDNN(model_path, input_width=input_width, input_height=input_height, device=device)
+    model = RTMWOpenCVDNN(
+        model_path,
+        input_width=input_width,
+        input_height=input_height,
+        bbox_padding=bbox_padding,
+        device=device,
+    )
     gt_all: List[np.ndarray] = []
     pred_all: List[np.ndarray] = []
     samples: List[Dict[str, object]] = []
@@ -150,7 +158,11 @@ def run_3dsp_benchmark(
         if image is None:
             continue
         h, w = image.shape[:2]
-        result = model.infer_one(image, [0.0, 0.0, float(w), float(h)])
+        result = model.infer_one(
+            image,
+            [0.0, 0.0, float(w), float(h)],
+            crop_scale=crop_scale,
+        )
         pred = coco133_to_h36m17(result.keypoints_xy)
         gt_all.append(sample.gt_h36m17)
         pred_all.append(pred)
@@ -170,6 +182,11 @@ def run_3dsp_benchmark(
         "samples": len(gt_all),
         "model": str(Path(model_path).expanduser().resolve()),
         "model_input": [input_width, input_height],
+        "preprocessing": {
+            "bbox_padding": float(bbox_padding),
+            "crop_scale": float(crop_scale),
+            "protocol": "full-image bbox for 3DSP; values are explicit ablation parameters",
+        },
         "metric_protocol": {
             "PDJ_threshold": 0.5,
             "normalization": "distance between GT shoulder-centre and GT hip-centre",

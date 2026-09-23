@@ -28,6 +28,10 @@ def main() -> None:
     q.add_argument("--rtmw-model", required=True, type=Path)
     q.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
     q.add_argument("--max-samples", type=int, default=None)
+    q.add_argument("--bbox-padding", type=float, default=1.25,
+                   help="RTMW bbox padding multiplier for preprocessing ablations.")
+    q.add_argument("--crop-scale", type=float, default=1.0,
+                   help="Additional crop scale multiplier for preprocessing ablations.")
     q.add_argument("--output-dir", required=True, type=Path)
 
     q = sub.add_parser("run-coco-wholebody")
@@ -49,7 +53,15 @@ def main() -> None:
         print(json.dumps(inspect_3dsp(args.root), indent=2, ensure_ascii=False))
         return
     if args.cmd == "run-3dsp":
-        report = run_3dsp_benchmark(args.root, args.rtmw_model, split=args.split, device=args.device, max_samples=args.max_samples)
+        report = run_3dsp_benchmark(
+            args.root,
+            args.rtmw_model,
+            split=args.split,
+            device=args.device,
+            max_samples=args.max_samples,
+            bbox_padding=args.bbox_padding,
+            crop_scale=args.crop_scale,
+        )
         out = args.output_dir / "3dsp_benchmark_summary.json"
         _write(out, report)
         print(json.dumps({"status":"COMPLETE", "output":str(out), "metrics":report["metrics"]}, indent=2, ensure_ascii=False))
