@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 import json
+import hashlib
 import cv2
 import numpy as np
 
 from stage3_pose2d.wholebody133 import coco133_to_h36m17
 from stage3_pose2d.rtmw_onnx import RTMWOpenCVDNN
+from stage3_pose2d.quality import evaluate_pose, pose_selection_score, status_rank
+from stage3_pose2d.schemas import Stage3Config
 from .metrics import summarize_pdj
 
 H36M17_NAMES = (
@@ -129,6 +132,45 @@ def inspect_3dsp(root: str | Path) -> Dict[str, object]:
     return report
 
 
+def normalize_crop_scales(crop_scales: Sequence[float]) -> List[float]:
+    """Validate an explicit multi-crop sweep and retain the 1.0 control."""
+    values = [float(value) for value in crop_scales]
+    if not values:
+        raise ValueError("At least one crop scale is required")
+    if any(not np.isfinite(value) or value <= 0.0 for value in values):
+        raise ValueError("Crop scales must be finite positive numbers")
+    # Preserve user order while removing duplicates; insert the control first so
+    # a quality-score tie remains anchored to the current preprocessing.
+    unique = list(dict.fromkeys(values))
+    return [1.0, *[value for value in unique if value != 1.0]]
+
+
+def _select_crop_candidate(candidates: Sequence[Mapping[str, object]]) -> int:
+    """Select by Stage-3 QA only; no ground-truth metric enters this ranking."""
+    if not candidates:
+        raise ValueError("No crop candidates to select")
+
+    def rank(item: Mapping[str, object]):
+        qa = item["qa"]
+        scale = float(item["crop_scale"])
+        return (
+            status_rank(str(qa.get("pose_status", "REJECTED"))),
+            pose_selection_score(qa),
+            -abs(scale - 1.0),
+            -scale,
+        )
+
+    return max(range(len(candidates)), key=lambda index: rank(candidates[index]))
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def run_3dsp_benchmark(
     root: str | Path,
     model_path: str | Path,
@@ -139,8 +181,15 @@ def run_3dsp_benchmark(
     input_width: int = 288,
     input_height: int = 384,
     bbox_padding: float = 1.25,
-    crop_scale: float = 1.0,
+    crop_scale: Optional[float] = None,
+    crop_scales: Optional[Sequence[float]] = None,
 ) -> Dict[str, object]:
+    if crop_scales is not None and crop_scale is not None:
+        raise ValueError("Use either crop_scale or crop_scales, not both")
+    scales = normalize_crop_scales(crop_scales) if crop_scales is not None else [1.0 if crop_scale is None else float(crop_scale)]
+    if any(not np.isfinite(value) or value <= 0.0 for value in scales):
+        raise ValueError("Crop scales must be finite positive numbers")
+
     model = RTMWOpenCVDNN(
         model_path,
         input_width=input_width,
@@ -150,7 +199,9 @@ def run_3dsp_benchmark(
     )
     gt_all: List[np.ndarray] = []
     pred_all: List[np.ndarray] = []
+    predictions_by_scale: Dict[float, List[np.ndarray]] = {scale: [] for scale in scales}
     samples: List[Dict[str, object]] = []
+    qa_config = Stage3Config()
     for i, sample in enumerate(iter_3dsp(root, split)):
         if max_samples is not None and i >= int(max_samples):
             break
@@ -158,19 +209,39 @@ def run_3dsp_benchmark(
         if image is None:
             continue
         h, w = image.shape[:2]
-        result = model.infer_one(
-            image,
-            [0.0, 0.0, float(w), float(h)],
-            crop_scale=crop_scale,
-        )
-        pred = coco133_to_h36m17(result.keypoints_xy)
+        bbox = [0.0, 0.0, float(w), float(h)]
+        candidates = []
+        attempts = []
+        for scale in scales:
+            result = model.infer_one(image, bbox, crop_scale=scale)
+            qa, _ = evaluate_pose(result.keypoints_xy, result.scores, bbox, qa_config)
+            pred_candidate = coco133_to_h36m17(result.keypoints_xy)
+            candidates.append({
+                "crop_scale": scale,
+                "qa": qa,
+                "prediction": pred_candidate,
+            })
+            predictions_by_scale[scale].append(pred_candidate)
+            attempts.append({
+                "crop_scale": scale,
+                "pose_status": qa.get("pose_status"),
+                "selection_score": pose_selection_score(qa),
+                "qa": qa,
+                "inference_diagnostics": result.inference_diagnostics,
+            })
+
+        selected_index = _select_crop_candidate(candidates)
+        selected = candidates[selected_index]
+        pred = np.asarray(selected["prediction"], dtype=np.float32)
         gt_all.append(sample.gt_h36m17)
         pred_all.append(pred)
         samples.append({
             "shot_id": sample.shot_id,
             "frame_id": sample.frame_id,
             "image": str(sample.image_path),
-            "inference_diagnostics": result.inference_diagnostics,
+            "selected_crop_scale": float(selected["crop_scale"]),
+            "selection_policy": "status_rank_then_stage3_quality_score_then_nearest_to_1.0; no ground truth",
+            "crop_attempts": attempts,
         })
     if not gt_all:
         raise RuntimeError("No evaluable 3DSP samples found")
@@ -184,14 +255,25 @@ def run_3dsp_benchmark(
         "model_input": [input_width, input_height],
         "preprocessing": {
             "bbox_padding": float(bbox_padding),
-            "crop_scale": float(crop_scale),
-            "protocol": "full-image bbox for 3DSP; values are explicit ablation parameters",
+            "crop_scale": scales[0] if len(scales) == 1 else None,
+            "crop_scales": scales,
+            "selection_policy": "Stage-3 QA only; ground truth is used only for final metrics",
+            "protocol": "full-image bbox for 3DSP; crop scales are explicit ablation parameters",
         },
+        "model_sha256": _sha256_file(Path(model_path).expanduser().resolve()),
         "metric_protocol": {
             "PDJ_threshold": 0.5,
             "normalization": "distance between GT shoulder-centre and GT hip-centre",
             "AUC_range": [0.0, 0.5],
         },
         "metrics": summary,
+        "metrics_by_crop_scale": {
+            str(scale): summarize_pdj(np.stack(predictions), np.stack(gt_all))
+            for scale, predictions in predictions_by_scale.items()
+        },
+        "selected_crop_scale_counts": {
+            str(scale): sum(float(sample["selected_crop_scale"]) == scale for sample in samples)
+            for scale in scales
+        },
         "sample_manifest": samples,
     }

@@ -32,6 +32,8 @@ def main() -> None:
                    help="RTMW bbox padding multiplier for preprocessing ablations.")
     q.add_argument("--crop-scale", type=float, default=1.0,
                    help="Additional crop scale multiplier for preprocessing ablations.")
+    q.add_argument("--crop-scales", default=None,
+                   help="Comma-separated scales for QA-only multi-crop selection; always includes scale 1.0.")
     q.add_argument("--output-dir", required=True, type=Path)
 
     q = sub.add_parser("run-coco-wholebody")
@@ -60,11 +62,21 @@ def main() -> None:
             device=args.device,
             max_samples=args.max_samples,
             bbox_padding=args.bbox_padding,
-            crop_scale=args.crop_scale,
+            crop_scale=None if args.crop_scales is not None else args.crop_scale,
+            crop_scales=(
+                [float(value.strip()) for value in args.crop_scales.split(",") if value.strip()]
+                if args.crop_scales is not None else None
+            ),
         )
         out = args.output_dir / "3dsp_benchmark_summary.json"
         _write(out, report)
-        print(json.dumps({"status":"COMPLETE", "output":str(out), "metrics":report["metrics"]}, indent=2, ensure_ascii=False))
+        print(json.dumps({
+            "status":"COMPLETE",
+            "output":str(out),
+            "metrics":report["metrics"],
+            "metrics_by_crop_scale":report["metrics_by_crop_scale"],
+            "selected_crop_scale_counts":report["selected_crop_scale_counts"],
+        }, indent=2, ensure_ascii=False))
         return
     if args.cmd == "run-coco-wholebody":
         args.output_dir.mkdir(parents=True, exist_ok=True)
