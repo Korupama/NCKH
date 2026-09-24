@@ -1,9 +1,0 @@
-{
-  "players": [
-    {"track_id": "003", "team_id": 0, "role": "PLAYER", "active": true},
-    {"track_id": "005", "team_id": 0, "role": "PLAYER", "active": true},
-    {"track_id": "007", "team_id": 1, "role": "PLAYER", "active": true},
-    {"track_id": "011", "team_id": 1, "role": "GOALKEEPER", "active": true},
-    {"track_id": "018", "role": "REFEREE", "active": true}
-  ]
-}
