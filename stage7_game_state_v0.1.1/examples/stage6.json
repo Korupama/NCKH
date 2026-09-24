@@ -1,0 +1,11 @@
+{
+  "selected_frame_ball": {
+    "frame_index": 12345,
+    "contact": {
+      "track_id": "003",
+      "region": "FOOT",
+      "status": "ASSIGNED",
+      "confidence": 0.92
+    }
+  }
+}

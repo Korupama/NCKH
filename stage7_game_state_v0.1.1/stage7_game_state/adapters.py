@@ -1,0 +1,341 @@
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+
+def load_json(path_or_obj: Any) -> Dict[str, Any]:
+    if isinstance(path_or_obj, dict):
+        return path_or_obj
+    path = Path(path_or_obj)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _first_non_none(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
+
+def _dig(obj: Any, path: Iterable[str]) -> Any:
+    cur = obj
+    for key in path:
+        if not isinstance(cur, dict) or key not in cur:
+            return None
+        cur = cur[key]
+    return cur
+
+
+def _as_vec3(value: Any) -> Optional[List[float]]:
+    if isinstance(value, dict):
+        xyz = [value.get(k) for k in ("x", "y", "z")]
+        if all(v is not None for v in xyz):
+            value = xyz
+    if not isinstance(value, (list, tuple)) or len(value) < 3:
+        return None
+    try:
+        out = [float(value[0]), float(value[1]), float(value[2])]
+    except (TypeError, ValueError):
+        return None
+    return out if all(math.isfinite(v) for v in out) else None
+
+
+def _as_mat3(value: Any) -> Optional[List[List[float]]]:
+    if isinstance(value, (list, tuple)) and len(value) == 9 and not isinstance(value[0], (list, tuple)):
+        value = [value[0:3], value[3:6], value[6:9]]
+    if not isinstance(value, (list, tuple)) or len(value) < 3:
+        return None
+    rows: List[List[float]] = []
+    try:
+        for row in value[:3]:
+            if not isinstance(row, (list, tuple)) or len(row) < 3:
+                return None
+            rows.append([float(row[0]), float(row[1]), float(row[2])])
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(v) for row in rows for v in row):
+        return None
+    return rows
+
+
+def _mat_t_vec(R: List[List[float]], v: List[float]) -> List[float]:
+    return [
+        R[0][0] * v[0] + R[1][0] * v[1] + R[2][0] * v[2],
+        R[0][1] * v[0] + R[1][1] * v[1] + R[2][1] * v[2],
+        R[0][2] * v[0] + R[1][2] * v[1] + R[2][2] * v[2],
+    ]
+
+
+def _mat_vec(R: List[List[float]], v: List[float]) -> List[float]:
+    return [sum(R[i][j] * v[j] for j in range(3)) for i in range(3)]
+
+
+def _camera_geometry_candidates(stage1: Dict[str, Any]) -> Tuple[Optional[List[List[float]]], Optional[List[float]], Optional[str], Dict[str, Any]]:
+    rotation_candidates = [
+        ("R", stage1.get("R")),
+        ("rotation_matrix", stage1.get("rotation_matrix")),
+        ("camera.R", _dig(stage1, ["camera", "R"])),
+        ("camera.rotation_matrix", _dig(stage1, ["camera", "rotation_matrix"])),
+        ("extrinsics.R", _dig(stage1, ["extrinsics", "R"])),
+        ("pose.R", _dig(stage1, ["pose", "R"])),
+        ("calibration.rotation_matrix", _dig(stage1, ["calibration", "rotation_matrix"])),
+        ("camera_state.R", _dig(stage1, ["camera_state", "R"])),
+    ]
+    center_candidates = [
+        ("C", stage1.get("C")),
+        ("camera_center", stage1.get("camera_center")),
+        ("camera_center_m", stage1.get("camera_center_m")),
+        ("position_meters", stage1.get("position_meters")),
+        ("camera.C", _dig(stage1, ["camera", "C"])),
+        ("camera.position_meters", _dig(stage1, ["camera", "position_meters"])),
+        ("extrinsics.C", _dig(stage1, ["extrinsics", "C"])),
+        ("calibration.position_meters", _dig(stage1, ["calibration", "position_meters"])),
+        ("camera_state.C", _dig(stage1, ["camera_state", "C"])),
+    ]
+    translation_candidates = [
+        ("t", stage1.get("t")),
+        ("translation", stage1.get("translation")),
+        ("translation_vector", stage1.get("translation_vector")),
+        ("camera.t", _dig(stage1, ["camera", "t"])),
+        ("extrinsics.t", _dig(stage1, ["extrinsics", "t"])),
+        ("camera_state.t", _dig(stage1, ["camera_state", "t"])),
+    ]
+
+    R = None
+    r_path = None
+    for path, value in rotation_candidates:
+        R = _as_mat3(value)
+        if R is not None:
+            r_path = path
+            break
+    if R is None:
+        return None, None, None, {"geometry_reason": "ROTATION_MATRIX_MISSING"}
+
+    C = None
+    c_path = None
+    for path, value in center_candidates:
+        C = _as_vec3(value)
+        if C is not None:
+            c_path = path
+            break
+
+    if C is None:
+        for path, value in translation_candidates:
+            t = _as_vec3(value)
+            if t is None:
+                continue
+            # Stage 1 contract uses world->camera extrinsics: x_cam = R (X_world - C) = R X + t.
+            C = [-x for x in _mat_t_vec(R, t)]
+            c_path = f"derived_from_{path}"
+            break
+
+    if C is None:
+        return R, None, None, {"rotation_path": r_path, "geometry_reason": "CAMERA_CENTER_MISSING"}
+
+    convention = _first_non_none(
+        stage1.get("rotation_convention"),
+        _dig(stage1, ["camera", "rotation_convention"]),
+        _dig(stage1, ["extrinsics", "rotation_convention"]),
+        _dig(stage1, ["camera_state", "rotation_convention"]),
+    )
+    convention_text = str(convention).strip().upper() if convention is not None else "WORLD_TO_CAMERA"
+    if any(token in convention_text for token in ("CAMERA_TO_WORLD", "C2W", "CAM2WORLD")):
+        resolved = "CAMERA_TO_WORLD"
+    else:
+        resolved = "WORLD_TO_CAMERA"
+
+    return R, C, resolved, {
+        "rotation_path": r_path,
+        "camera_center_path": c_path,
+        "rotation_convention": resolved,
+        "rotation_convention_explicit": convention is not None,
+    }
+
+
+def _derive_centre_ray_pitch_hit(stage1: Dict[str, Any], *, epsilon: float = 1e-9) -> Tuple[Optional[List[float]], Dict[str, Any]]:
+    R, C, convention, meta = _camera_geometry_candidates(stage1)
+    if R is None or C is None or convention is None:
+        return None, meta
+
+    # The centre ray is the optical axis, i.e. [0,0,1] in camera coordinates.
+    optical_axis_cam = [0.0, 0.0, 1.0]
+    if convention == "WORLD_TO_CAMERA":
+        d_world = _mat_t_vec(R, optical_axis_cam)
+    else:
+        d_world = _mat_vec(R, optical_axis_cam)
+
+    dz = float(d_world[2])
+    if not math.isfinite(dz) or abs(dz) <= epsilon:
+        meta["geometry_reason"] = "CENTRE_RAY_PARALLEL_TO_PITCH"
+        return None, meta
+
+    lam = -float(C[2]) / dz
+    if not math.isfinite(lam) or lam <= 0.0:
+        meta["geometry_reason"] = "PITCH_INTERSECTION_BEHIND_CAMERA"
+        meta["lambda"] = lam
+        return None, meta
+
+    p = [float(C[i] + lam * d_world[i]) for i in range(3)]
+    if not all(math.isfinite(v) for v in p):
+        meta["geometry_reason"] = "NONFINITE_PITCH_INTERSECTION"
+        return None, meta
+    p[2] = 0.0
+    meta.update({
+        "geometry_reason": None,
+        "lambda": lam,
+        "camera_center_m": [float(v) for v in C],
+        "centre_ray_world_direction": [float(v) for v in d_world],
+    })
+    return p, meta
+
+
+def normalize_track_id(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
+def team_key(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        v = value.strip()
+        if not v or v.upper() in {"UNKNOWN", "UNK", "NONE", "NULL", "NA", "N/A"}:
+            return None
+        return v
+    return str(value)
+
+
+def extract_stage1_view(stage1: Dict[str, Any]) -> Tuple[Optional[float], Optional[List[float]], Dict[str, Any]]:
+    candidates = [
+        _dig(stage1, ["view", "centre_ray_pitch_hit_m"]),
+        _dig(stage1, ["view", "center_ray_pitch_hit_m"]),
+        stage1.get("centre_ray_pitch_hit_m"),
+        stage1.get("center_ray_pitch_hit_m"),
+        _dig(stage1, ["camera", "view", "centre_ray_pitch_hit_m"]),
+        _dig(stage1, ["camera", "view", "center_ray_pitch_hit_m"]),
+    ]
+    point = next((v for v in candidates if isinstance(v, (list, tuple)) and len(v) >= 2), None)
+    if point is not None:
+        try:
+            p = [float(point[0]), float(point[1]), float(point[2]) if len(point) > 2 else 0.0]
+        except (TypeError, ValueError):
+            p = None
+        if p is not None and all(math.isfinite(v) for v in p):
+            return p[0], p, {"source": "stage1.centre_ray_pitch_hit", "derived": False}
+
+    derived, geometry_meta = _derive_centre_ray_pitch_hit(stage1)
+    if derived is None:
+        return None, None, {"source": None, "derived": False, **geometry_meta}
+    return derived[0], derived, {
+        "source": "stage1.camera_geometry_fallback",
+        "derived": True,
+        **geometry_meta,
+    }
+
+
+def extract_stage6_contact(stage6: Dict[str, Any]) -> Dict[str, Any]:
+    contacts = [
+        _dig(stage6, ["selected_frame_ball", "contact"]),
+        stage6.get("contact"),
+        _dig(stage6, ["selected_frame", "contact"]),
+    ]
+    contact = next((v for v in contacts if isinstance(v, dict)), {})
+    track_id = _first_non_none(
+        contact.get("track_id"),
+        contact.get("contact_track_id"),
+        stage6.get("contact_track_id"),
+        _dig(stage6, ["toucher", "track_id"]),
+    )
+    region = _first_non_none(contact.get("region"), contact.get("body_region"), stage6.get("contact_body_region"))
+    status = _first_non_none(contact.get("status"), stage6.get("contact_status"))
+    confidence = _first_non_none(contact.get("confidence"), contact.get("score"), stage6.get("contact_confidence"))
+    frame_index = _first_non_none(
+        _dig(stage6, ["selected_frame_ball", "frame_index"]),
+        _dig(stage6, ["selected_frame", "frame_index"]),
+        stage6.get("frame_index"),
+    )
+    try:
+        if frame_index is not None:
+            frame_index = int(frame_index)
+    except (TypeError, ValueError):
+        frame_index = None
+    return {
+        "track_id": normalize_track_id(track_id),
+        "region": region,
+        "status": status,
+        "confidence": confidence,
+        "frame_index": frame_index,
+        "source": "stage6.contact",
+    }
+
+
+def _looks_like_player_record(obj: Any) -> bool:
+    return isinstance(obj, dict) and any(k in obj for k in ("track_id", "id", "player_track_id"))
+
+
+def _candidate_player_containers(stage5: Dict[str, Any]) -> List[Any]:
+    return [
+        stage5.get("players"),
+        stage5.get("tracks"),
+        stage5.get("player_states"),
+        stage5.get("entities"),
+        _dig(stage5, ["state", "players"]),
+        _dig(stage5, ["state", "tracks"]),
+        stage5.get("by_track"),
+    ]
+
+
+def extract_stage5_players(stage5: Dict[str, Any]) -> List[Dict[str, Any]]:
+    raw = None
+    for cand in _candidate_player_containers(stage5):
+        if isinstance(cand, list):
+            raw = cand
+            break
+        if isinstance(cand, dict):
+            converted = []
+            for key, value in cand.items():
+                if isinstance(value, dict):
+                    row = dict(value)
+                    row.setdefault("track_id", key)
+                    converted.append(row)
+            if converted:
+                raw = converted
+                break
+    if raw is None and _looks_like_player_record(stage5):
+        raw = [stage5]
+    if raw is None:
+        return []
+
+    players: List[Dict[str, Any]] = []
+    for row in raw:
+        if not isinstance(row, dict):
+            continue
+        tid = normalize_track_id(_first_non_none(row.get("track_id"), row.get("player_track_id"), row.get("id")))
+        if tid is None:
+            continue
+        team = _first_non_none(row.get("team_id"), row.get("team"), row.get("team_label"), row.get("affiliation"))
+        role = _first_non_none(row.get("role"), row.get("role_name"), row.get("entity_type"), row.get("class_name"), row.get("class"))
+        is_ref = bool(row.get("is_referee", False))
+        role_text = str(role).lower() if role is not None else ""
+        if any(token in role_text for token in ("referee", "official", "linesman", "assistant_ref")):
+            is_ref = True
+        active = _first_non_none(row.get("active_at_t0"), row.get("active"), row.get("visible"), row.get("eligible"), True)
+        active = bool(active)
+        players.append({
+            "track_id": tid,
+            "team_id": team,
+            "team_key": team_key(team),
+            "role": role,
+            "is_referee": is_ref,
+            "active": active,
+            "raw": row,
+        })
+    return players
