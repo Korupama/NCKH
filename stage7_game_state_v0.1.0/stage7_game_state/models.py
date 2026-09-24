@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class GameStateContext:
     schema_version: str = "1.0"
-    stage_version: str = "stage7-game-state-0.1.0"
+    stage_version: str = "stage7-game-state-0.1.2"
     frame_index: Optional[int] = None
     status: str = "UNRESOLVED"
     reasons: List[str] = field(default_factory=list)

@@ -59,6 +59,11 @@ def build_game_state_context(
         "contact_region": contact.get("region"),
         "contact_confidence": contact.get("confidence"),
         "centre_ray_pitch_hit_m": hit,
+        "centre_ray_source": view_meta.get("source"),
+        "centre_ray_derived": bool(view_meta.get("derived", False)),
+        "centre_ray_valid": view_meta.get("valid"),
+        "view_pitch_half": view_meta.get("view_pitch_half"),
+        "centre_ray_geometry": {k: v for k, v in view_meta.items() if k not in {"source", "derived", "valid", "view_pitch_half"}},
     }
     reasons: List[str] = []
 
@@ -78,7 +83,10 @@ def build_game_state_context(
         reasons.append("TOUCHER_TEAM_UNRESOLVED")
 
     if x_view is None:
-        reasons.append("CENTRE_RAY_PITCH_HIT_MISSING")
+        if hit is not None and view_meta.get("valid") is False:
+            reasons.append("CENTRE_RAY_PITCH_HIT_INVALID")
+        else:
+            reasons.append("CENTRE_RAY_PITCH_HIT_MISSING")
     elif abs(x_view) <= centre_ray_epsilon_m:
         reasons.append("CENTRE_RAY_X_AMBIGUOUS")
 
@@ -126,7 +134,8 @@ def build_game_state_context(
             "s": s,
             "label": "LEFT_TO_RIGHT" if s == 1 else "RIGHT_TO_LEFT",
             "centre_ray_x_m": float(x_view),
-            "source": view_meta["source"],
+            "view_pitch_half": view_meta.get("view_pitch_half"),
+            "source": view_meta.get("source"),
         }
 
     ctx.sets = {
@@ -137,7 +146,6 @@ def build_game_state_context(
         "inactive_excluded": _unique_sorted(inactive),
     }
 
-    # VALID means Stage 8 can consume the context without inventing missing semantics.
     hard_reasons = {
         "MISSING_CONTACT_TRACK_ID",
         "TOUCHER_TRACK_NOT_FOUND_IN_STAGE5",
@@ -145,6 +153,7 @@ def build_game_state_context(
         "TOUCHER_NOT_ACTIVE_AT_T0",
         "TOUCHER_TEAM_UNRESOLVED",
         "CENTRE_RAY_PITCH_HIT_MISSING",
+        "CENTRE_RAY_PITCH_HIT_INVALID",
         "CENTRE_RAY_X_AMBIGUOUS",
         "NO_OPPONENTS_RESOLVED",
         "NO_ATTACKERS_RESOLVED",
