@@ -40,14 +40,9 @@ def _dig(obj: Any, *keys: str) -> Any:
 
 
 def _frame_index(payload: Dict[str, Any]) -> Optional[int]:
-    selected_frame = payload.get("selected_frame")
-    if isinstance(selected_frame, dict):
-        selected_frame = None
     value = _first(
         payload.get("frame_index"),
         payload.get("selected_frame_index"),
-        selected_frame,
-        _dig(payload, "replay_context", "selected_frame"),
         _dig(payload, "selected_frame", "frame_index"),
         _dig(payload, "selected_frame_ball", "frame_index"),
         _dig(payload, "metadata", "frame_index"),
@@ -105,10 +100,6 @@ def build_preflight(
     stage1 = load_json(paths["stage1"])
     stage5 = load_json(paths["stage5"])
     stage6 = load_json(paths["stage6"])
-
-    stage5_schema = str(stage5.get("schema_version") or "")
-    if stage5_schema == "stage5-downstream-handoff-1.0":
-        warnings.append("STAGE5_LEGACY_HANDOFF_ACTIVITY_NOT_EXPLICIT")
 
     contact = extract_stage6_contact(stage6)
     players = extract_stage5_players(stage5)

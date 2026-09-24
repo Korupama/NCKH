@@ -1,0 +1,19 @@
+{
+  "schema_version": "stage7-eval-manifest-2.0",
+  "protocol": {
+    "name": "stage7-replay-integration-preflight",
+    "split": "qa_only",
+    "frozen": false,
+    "notes": "Real upstream paths. Independent GT pending; not an accuracy benchmark."
+  },
+  "cases": [
+    {
+      "case_id": "project_replay_frame104",
+      "stage1": "D:/NCKH/stage_1_camera_v12/outputs/temporal_v13/batch_video/shot_ptz/optimized_camera_states/camera_state_00000104.json",
+      "stage5": "D:/NCKH/stage5_team_affiliation_v0.1.0/outputs/project_replay/stage5_downstream_handoff.json",
+      "stage6": "D:/NCKH/stage6_ball_localization_v0.4.4/outputs/replay_t0_104_contact_v051/stage6_downstream_handoff.json",
+      "provenance": {"dataset": "PROJECT_QA", "independent_gt": false, "gt_source": null},
+      "gt": {}
+    }
+  ]
+}

@@ -314,22 +314,12 @@ def extract_stage1_view(stage1: Dict[str, Any]) -> Tuple[Optional[float], Option
 
 
 def extract_stage6_contact(stage6: Dict[str, Any]) -> Dict[str, Any]:
-    # Production Stage-6 contact-aware handoff stores the Stage-7 payload under
-    # top-level ``stage7`` and the selected frame under top-level
-    # ``selected_frame``.  Full ball_trajectory_state.json remains supported.
-    handoff_contact = _dig(stage6, ["stage7"])
     contacts = [
         _dig(stage6, ["selected_frame_ball", "contact"]),
-        handoff_contact,
         stage6.get("contact"),
         _dig(stage6, ["selected_frame", "contact"]),
     ]
     contact = next((v for v in contacts if isinstance(v, dict)), {})
-    source = (
-        "stage6.downstream_handoff.stage7"
-        if isinstance(handoff_contact, dict) and contact is handoff_contact
-        else "stage6.contact"
-    )
     track_id = _first_non_none(
         contact.get("track_id"),
         contact.get("contact_track_id"),
@@ -340,9 +330,7 @@ def extract_stage6_contact(stage6: Dict[str, Any]) -> Dict[str, Any]:
     status = _first_non_none(contact.get("status"), stage6.get("contact_status"))
     confidence = _first_non_none(contact.get("confidence"), contact.get("score"), stage6.get("contact_confidence"))
     frame_index = _first_non_none(
-        contact.get("frame_index"),
         _dig(stage6, ["selected_frame_ball", "frame_index"]),
-        stage6.get("selected_frame") if not isinstance(stage6.get("selected_frame"), dict) else None,
         _dig(stage6, ["selected_frame", "frame_index"]),
         stage6.get("frame_index"),
     )
@@ -357,7 +345,7 @@ def extract_stage6_contact(stage6: Dict[str, Any]) -> Dict[str, Any]:
         "status": status,
         "confidence": confidence,
         "frame_index": frame_index,
-        "source": source,
+        "source": "stage6.contact",
     }
 
 
@@ -367,9 +355,6 @@ def _looks_like_player_record(obj: Any) -> bool:
 
 def _candidate_player_containers(stage5: Dict[str, Any]) -> List[Any]:
     return [
-        # stage5-downstream-handoff-{1.0,3.0}
-        stage5.get("track_team"),
-        # full Stage-5 state variants
         stage5.get("players"),
         stage5.get("tracks"),
         stage5.get("player_states"),
@@ -409,35 +394,13 @@ def extract_stage5_players(stage5: Dict[str, Any]) -> List[Dict[str, Any]]:
         if tid is None:
             continue
         team = _first_non_none(row.get("team_id"), row.get("team"), row.get("team_label"), row.get("affiliation"))
-        # Residual Stage-5 v3 handoff exposes effective_role/stage5_role rather
-        # than the legacy ``role`` key.  effective_role is the downstream
-        # semantic authority when present.
-        role = _first_non_none(
-            row.get("effective_role"),
-            row.get("stage5_role"),
-            row.get("role"),
-            row.get("upstream_role"),
-            row.get("role_name"),
-            row.get("entity_type"),
-            row.get("class_name"),
-            row.get("class"),
-        )
+        role = _first_non_none(row.get("role"), row.get("role_name"), row.get("entity_type"), row.get("class_name"), row.get("class"))
         is_ref = bool(row.get("is_referee", False))
         role_text = str(role).lower() if role is not None else ""
         if any(token in role_text for token in ("referee", "official", "linesman", "assistant_ref")):
             is_ref = True
-
-        if "selected_frame_bbox_xyxy" in row:
-            # Full Stage-5 state: selected-frame visibility is explicit.
-            active = row.get("selected_frame_bbox_xyxy") is not None
-        elif isinstance(stage5.get("track_team"), dict):
-            # Residual Stage-5 handoff v3 contains selected-frame tracks only.
-            # Legacy v1 handoff did not make visibility explicit; the preflight
-            # emits a warning for that older schema.
-            active = True
-        else:
-            active = _first_non_none(row.get("active_at_t0"), row.get("active"), row.get("visible"), row.get("eligible"), True)
-            active = bool(active)
+        active = _first_non_none(row.get("active_at_t0"), row.get("active"), row.get("visible"), row.get("eligible"), True)
+        active = bool(active)
         players.append({
             "track_id": tid,
             "team_id": team,
