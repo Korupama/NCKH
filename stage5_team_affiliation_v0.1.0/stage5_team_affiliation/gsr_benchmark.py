@@ -13,7 +13,7 @@ from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score, p
 
 from .clustering import fit_two_teams
 from .config import Stage5Config
-from .features import aggregate_features, extract_color_feature
+from .features import aggregate_features, extract_color_feature, fuse_region_features
 from .goalkeeper import assign_goalkeeper, lower_body_centroids_by_team
 from .regions import region_polygon
 
@@ -375,9 +375,18 @@ def predict_sequence_color(
             "missing_image_frames": missing_frames,
         }
 
+    fused_features = {
+        tid: fuse_region_features(
+            torso_features.get(tid), lower_features.get(tid),
+            torso_weight=config.torso_feature_weight,
+            lower_weight=config.lower_feature_weight,
+        ) if config.feature_fusion_enabled else torso_features.get(tid)
+        for tid in role_by_track
+    }
     outfield = {
-        tid: torso_features[tid] for tid, role in role_by_track.items()
-        if role == "player" and tid in torso_features and diagnostics[tid]["valid_torso_frames"] >= config.min_valid_torso_frames
+        tid: fused_features[tid] for tid, role in role_by_track.items()
+        if role == "player" and fused_features.get(tid) is not None
+        and diagnostics[tid]["valid_torso_frames"] >= config.min_valid_torso_frames
     }
     pred: Dict[str, Optional[int]] = {}
     status: Dict[str, str] = {}

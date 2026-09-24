@@ -72,5 +72,10 @@ python stage5_team_affiliation_v0.1.0/benchmark_soccernet_gsr.py \
   --summary stage5_benchmark_m2.json
 ```
 
-The repository does not contain SST/RTMW weights. Stage 2 model metrics require those
-weights; Stage 5 B0 runs without a pose cache, while B1 requires one.
+The Stage-5 oracle-track RTMW-L cache and B1 benchmark were completed on the 58-sequence
+SoccerNet-GSR v1.3 `valid` split. M2 improved overall accuracy from 90.26% to 91.08%,
+outfield accuracy from 95.63% to 96.24%, and goalkeeper accuracy from 10.39% to
+14.29%. The goalkeeper result remains insufficient for a final claim.
+
+The repository does not contain SST/RTMW weights. Stage 2 model metrics still require
+those weights; Stage 5 B0 runs without a pose cache, while B1 requires one.
