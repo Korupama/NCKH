@@ -11,8 +11,8 @@
     },
     {
       "path": "IMPLEMENTATION_STATUS.md",
-      "bytes": 1894,
-      "sha256": "8c22a180e2d79a93b529b3a7f1b2563af764063c78e585480a8e58eb9aed649c"
+      "bytes": 2395,
+      "sha256": "30a80891c24d28e9a450f5acca1a53cfe58324a8b05e26d825fa8f36fc878ce4"
     },
     {
       "path": "QUICKSTART.md",
@@ -41,8 +41,8 @@
     },
     {
       "path": "benchmark/dsp3_adapter.py",
-      "bytes": 7194,
-      "sha256": "86780ba99e34f5f7b40e053187382725f0d1dd5d3c73d35164e90102a641582c"
+      "bytes": 11867,
+      "sha256": "0e5b58cca1bdb39db9a069615f7031159a2d38a17e91c0e6f930037bd9f97b9e"
     },
     {
       "path": "benchmark/metrics.py",
@@ -56,8 +56,8 @@
     },
     {
       "path": "benchmark_stage3.py",
-      "bytes": 3627,
-      "sha256": "db82d3709279c6a943d9c014728e5ff15da7bff8f5da9309bf5a04e5747cf169"
+      "bytes": 4770,
+      "sha256": "c908496e4b8fd87029acf4e651fbdafecd1e4bd1e31622a06409dc218ff893b8"
     },
     {
       "path": "docs/BENCHMARK.md",
@@ -68,6 +68,11 @@
       "path": "docs/MODEL_PROVENANCE.md",
       "bytes": 2161,
       "sha256": "538f90f80722cb2b7e66831541c16886142399b1d2b6e4b6fe7a25504c86e28d"
+    },
+    {
+      "path": "docs/MODEL_BACKEND_ABLATION.md",
+      "bytes": 3538,
+      "sha256": "bc614eb3bf0d76f462ab0976222a9f5df5c41f85c80efb5575d6f502cbfc96af"
     },
     {
       "path": "docs/STAGE3_SPEC.md",
@@ -86,8 +91,8 @@
     },
     {
       "path": "requirements-benchmark.txt",
-      "bytes": 110,
-      "sha256": "51bd816b38ba8830d1c5188753dad1fd5feff630742973893ac4c76366630549"
+      "bytes": 111,
+      "sha256": "08cd1e805e933275167cab36c18754fe7c462a64938aec966c8fe77ac21ceda7"
     },
     {
       "path": "requirements.txt",
@@ -156,8 +161,8 @@
     },
     {
       "path": "tests/test_3dsp_adapter.py",
-      "bytes": 857,
-      "sha256": "3443ba8f56edcc727bcb3d3e417084ff75a36429902c6231acf315b99500f770"
+      "bytes": 2791,
+      "sha256": "8696cca5740284a6a58d3d0bba7efa663b64555ced70cc16a3984c4d049002d1"
     },
     {
       "path": "tests/test_coco_export.py",
@@ -211,7 +216,8 @@
     }
   ],
   "validation": {
-    "pytest": "21 passed",
+    "pytest": "31 passed",
+    "phase7_model_backend_ablation": "completed comparative RTMW-X evaluation; RTMW-L retained as production default",
     "real_legacy_stage2_contract_smoke": "passed; 10/10 t0 cache poses structurally accepted; not GT accuracy"
   },
   "third_party_bundled": false,

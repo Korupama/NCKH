@@ -20,6 +20,15 @@
 - Future SoccerNet-Pose23 PCK evaluator.
 - CLI, download helper, notebook skeleton and automated tests.
 
+## Model backend ablation decision
+
+Comparative ablation is complete, but RTMW-X is **not promoted**. The
+workspace has a reproducible RTMW-L baseline and a fully evaluated RTMW-X
+backend; RTMW-X did not improve the full 3DSP result. See
+[`docs/PHASE7_MODEL_BACKEND_ABLATION.md`](docs/PHASE7_MODEL_BACKEND_ABLATION.md)
+for provenance, metrics and re-open criteria. RTMW-L remains the production
+default; RTMW-X is offline-only and no Stage-2 input or contract was changed.
+
 ## Structural validation performed during packaging
 
 A real legacy Stage-2 migration output was regenerated from the supplied historical SST+RTMW frames 85–87, then passed through Stage 3 cache-only mode. It produced 10/10 available and accepted candidate poses at `t0=86`. This is a plumbing/contract smoke test, **not a pose-accuracy benchmark**.
