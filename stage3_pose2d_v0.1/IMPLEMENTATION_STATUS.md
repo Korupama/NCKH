@@ -29,6 +29,18 @@ backend; RTMW-X did not improve the full 3DSP result. See
 for provenance, metrics and re-open criteria. RTMW-L remains the production
 default; RTMW-X is offline-only and no Stage-2 input or contract was changed.
 
+## Phase 8 decision
+
+Phase 8 is **ANNOTATION_READY, not TRAIN_READY**. A sequence-disjoint
+SoccerNet-GSR task manifest and WholeBody133 validator are now available.
+Training remains gated on human-verified keypoints, reviewer metadata and
+confirmed data rights. See [`docs/MODEL_FINE_TUNING.md`](docs/MODEL_FINE_TUNING.md).
+
+Phase 8A pseudo-label self-training preparation is complete: 2,936/2,986 train
+tasks passed RTMW-L QA and were exported as train-only pseudo-labels. No
+validation/test pseudo-labels were created; no student checkpoint or final
+accuracy claim exists yet.
+
 ## Structural validation performed during packaging
 
 A real legacy Stage-2 migration output was regenerated from the supplied historical SST+RTMW frames 85–87, then passed through Stage 3 cache-only mode. It produced 10/10 available and accepted candidate poses at `t0=86`. This is a plumbing/contract smoke test, **not a pose-accuracy benchmark**.
