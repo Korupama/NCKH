@@ -1,0 +1,11 @@
+{
+  "stage3_input_ready": false,
+  "candidate_track_ids": [
+    "track_001"
+  ],
+  "candidate_tracks_missing_rtmw_at_selected_frame": [
+    "track_001"
+  ],
+  "entity_track_state_schema": "entity-track-state-1.0",
+  "raw_rtmw_track_cache": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\s2\\stage2_rtmw_track_cache.json"
+}

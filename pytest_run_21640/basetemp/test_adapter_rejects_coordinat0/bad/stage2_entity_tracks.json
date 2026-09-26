@@ -1,0 +1,62 @@
+{
+  "schema_version": "entity-track-state-1.0",
+  "stage2_version": "stage2-sst-rtmw-1.3.0",
+  "replay_context": {
+    "selected_frame": 10,
+    "window_start": 9,
+    "window_end": 11,
+    "image_width": 1920,
+    "image_height": 1080,
+    "fps": 25.0,
+    "coordinate_space": "UNDISTORTED_PIXEL",
+    "video_path": ""
+  },
+  "tracks": [
+    {
+      "track_id": "track_001",
+      "role": "player",
+      "role_score": 0.95,
+      "role_margin": 0.4,
+      "candidate_for_stage3": true,
+      "identity_confidence": 0.9,
+      "observations": [
+        {
+          "frame_index": 9,
+          "bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "detector_score": 0.9,
+          "physical_human_id": "human_9",
+          "pose_cache_key": "track_001:frame_9"
+        },
+        {
+          "frame_index": 10,
+          "bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "detector_score": 0.9,
+          "physical_human_id": "human_10",
+          "pose_cache_key": "track_001:frame_10"
+        },
+        {
+          "frame_index": 11,
+          "bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "detector_score": 0.9,
+          "physical_human_id": "human_11",
+          "pose_cache_key": "track_001:frame_11"
+        }
+      ]
+    }
+  ]
+}

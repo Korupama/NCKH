@@ -92,14 +92,36 @@ class DSP3Sample:
     gt_h36m17: np.ndarray
 
 
-def iter_3dsp(root: str | Path, split: str = "train") -> Iterator[DSP3Sample]:
+def _load_shot_manifest(shot_manifest: str | Path | None) -> Optional[set[str]]:
+    if shot_manifest is None:
+        return None
+    path = Path(shot_manifest).expanduser().resolve()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, list):
+        shot_ids = data
+    else:
+        shot_ids = data.get("shot_ids") or data.get("holdout_shots")
+    if not isinstance(shot_ids, list) or not all(isinstance(x, (str, int)) for x in shot_ids):
+        raise ValueError(f"Shot manifest must contain a shot_ids list: {path}")
+    return {str(x) for x in shot_ids}
+
+
+def iter_3dsp(
+    root: str | Path,
+    split: str = "train",
+    *,
+    shot_manifest: str | Path | None = None,
+) -> Iterator[DSP3Sample]:
     base = Path(root).expanduser().resolve()
     split_dir = base / split
     if not split_dir.is_dir() and base.name == split and base.is_dir():
         split_dir = base
     if not split_dir.is_dir():
         raise FileNotFoundError(f"3DSP split not found: {split_dir}")
+    allowed_shots = _load_shot_manifest(shot_manifest)
     for shot_dir in sorted(p for p in split_dir.iterdir() if p.is_dir()):
+        if allowed_shots is not None and shot_dir.name not in allowed_shots:
+            continue
         img_dir, posture_dir = shot_dir / "img", shot_dir / "posture"
         if not img_dir.is_dir() or not posture_dir.is_dir():
             continue
@@ -183,6 +205,7 @@ def run_3dsp_benchmark(
     bbox_padding: float = 1.25,
     crop_scale: Optional[float] = None,
     crop_scales: Optional[Sequence[float]] = None,
+    shot_manifest: str | Path | None = None,
 ) -> Dict[str, object]:
     if crop_scales is not None and crop_scale is not None:
         raise ValueError("Use either crop_scale or crop_scales, not both")
@@ -202,7 +225,7 @@ def run_3dsp_benchmark(
     predictions_by_scale: Dict[float, List[np.ndarray]] = {scale: [] for scale in scales}
     samples: List[Dict[str, object]] = []
     qa_config = Stage3Config()
-    for i, sample in enumerate(iter_3dsp(root, split)):
+    for i, sample in enumerate(iter_3dsp(root, split, shot_manifest=shot_manifest)):
         if max_samples is not None and i >= int(max_samples):
             break
         image = cv2.imread(str(sample.image_path))
@@ -250,6 +273,8 @@ def run_3dsp_benchmark(
         "schema_version": "stage3-3dsp-benchmark-1.0",
         "dataset": "3D Shot Posture Dataset (3DSP)",
         "split": split,
+        "shot_manifest": None if shot_manifest is None else str(Path(shot_manifest).expanduser().resolve()),
+        "shot_ids": sorted({str(sample["shot_id"]) for sample in samples}),
         "samples": len(gt_all),
         "model": str(Path(model_path).expanduser().resolve()),
         "model_input": [input_width, input_height],

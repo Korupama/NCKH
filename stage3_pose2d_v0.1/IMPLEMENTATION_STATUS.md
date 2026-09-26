@@ -41,6 +41,14 @@ tasks passed RTMW-L QA and were exported as train-only pseudo-labels. No
 validation/test pseudo-labels were created; no student checkpoint or final
 accuracy claim exists yet.
 
+## Phase 9 decision
+
+Final Stage-3 integration is complete with explicit limits: shot-level
+internal holdout, immutable Stage-2 contract smoke and full regression pass.
+Production fallback remains deferred and COCO official evaluation is
+unavailable on the current Windows environment. See
+[`docs/FINAL_INTEGRATION_REPORT.md`](docs/FINAL_INTEGRATION_REPORT.md).
+
 ## Structural validation performed during packaging
 
 A real legacy Stage-2 migration output was regenerated from the supplied historical SST+RTMW frames 85–87, then passed through Stage 3 cache-only mode. It produced 10/10 available and accepted candidate poses at `t0=86`. This is a plumbing/contract smoke test, **not a pose-accuracy benchmark**.

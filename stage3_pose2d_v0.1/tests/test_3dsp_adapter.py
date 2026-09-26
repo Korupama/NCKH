@@ -7,6 +7,7 @@ from benchmark.dsp3_adapter import (
     iter_3dsp,
     normalize_crop_scales,
     parse_3dsp_keypoints_2d,
+    run_3dsp_benchmark,
 )
 
 
@@ -25,6 +26,18 @@ def test_iter_synthetic_3dsp(tmp_path):
     samples=list(iter_3dsp(tmp_path,"train"))
     assert len(samples)==1 and samples[0].gt_h36m17.shape==(17,2)
     assert inspect_3dsp(tmp_path)["splits"]["train"]["posture_json"]==1
+
+
+def test_iter_shot_manifest_filters_and_preserves_order(tmp_path):
+    import cv2
+    for shot_id in ("00001", "00002", "00003"):
+        shot=tmp_path/"train"/shot_id; (shot/"img").mkdir(parents=True); (shot/"posture").mkdir()
+        cv2.imwrite(str(shot/"img"/"001.jpg"),np.zeros((32,24,3),np.uint8))
+        (shot/"posture"/"001.json").write_text(json.dumps({"keypont_2d":{str(i):{"x":i,"y":i} for i in range(17)}}))
+    manifest=tmp_path/"holdout.json"
+    manifest.write_text(json.dumps({"shot_ids":["00003","00001"]}))
+    samples=list(iter_3dsp(tmp_path,"train",shot_manifest=manifest))
+    assert [s.shot_id for s in samples] == ["00001", "00003"]
 
 
 def test_crop_scales_keep_control_first_and_remove_duplicates():
