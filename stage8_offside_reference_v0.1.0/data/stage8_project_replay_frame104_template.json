@@ -1,0 +1,19 @@
+{
+  "schema_version": "stage8-eval-manifest-1.0",
+  "protocol": {
+    "name": "project-replay-frame104-integration",
+    "split": "qa_only",
+    "frozen": false,
+    "notes": "Paths match the current local workspace convention. Independent GT intentionally empty."
+  },
+  "cases": [
+    {
+      "case_id": "project_replay_frame104",
+      "stage4": "D:/NCKH/stage4_metric3d_v0.2.0/runs/stage4_v051_frame104/sam3d-pitch-refined/stage4_downstream_handoff.json",
+      "stage6": "D:/NCKH/stage6_ball_localization_v0.4.4/outputs/replay_t0_104_contact_v051/stage6_downstream_handoff.json",
+      "stage7": "D:/NCKH/stage7_game_state_v0.1.0/outputs/project_replay_104/game_state_context.json",
+      "provenance": {"dataset": "PROJECT_QA", "independent_gt": false, "gt_source": null},
+      "gt": {}
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "stage4-downstream-handoff-2.1",
+  "producer": "stage4-sam3d-pitch-refined-0.5.1",
+  "selected_frame": 104,
+  "coordinate_frame": {
+    "name": "STAGE1_PITCH_WORLD",
+    "units": "m",
+    "x": "goal-to-goal",
+    "y": "touchline-to-touchline",
+    "z": "up",
+    "pitch_plane": "z=0"
+  },
+  "tracks": [
+    {
+      "track_id": "track_007",
+      "role": "player",
+      "selected_frame_status": "VALID",
+      "observations": [{
+        "frame_index": 104,
+        "joints_world": [
+          {"name": "nose", "xyz_world_m": [49.0, 4.0, 1.7], "valid": true},
+          {"name": "left_big_toe", "xyz_world_m": [49.3, 4.1, 0.02], "valid": true}
+        ],
+        "quality": "VALID"
+      }]
+    },
+    {
+      "track_id": "track_011",
+      "role": "goalkeeper",
+      "selected_frame_status": "VALID",
+      "observations": [{
+        "frame_index": 104,
+        "joints_world": [
+          {"name": "right_shoulder", "xyz_world_m": [47.6, 2.0, 1.45], "valid": true},
+          {"name": "right_heel", "xyz_world_m": [47.2, 2.1, 0.02], "valid": true}
+        ],
+        "quality": "VALID"
+      }]
+    }
+  ]
+}

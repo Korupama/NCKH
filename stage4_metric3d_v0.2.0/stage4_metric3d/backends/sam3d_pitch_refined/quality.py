@@ -1,4 +1,5 @@
-def ground_quality_reasons(metrics: dict, coverage: float | None) -> list[str]:
+from typing import Optional
+def ground_quality_reasons(metrics: dict, coverage: Optional[float]) -> list[str]:
     reasons = []
     if coverage is None or coverage < 0.50:
         reasons.append("ground_anchor_coverage_at_t0 < 0.50")

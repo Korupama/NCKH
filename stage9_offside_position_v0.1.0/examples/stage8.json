@@ -1,0 +1,75 @@
+{
+  "schema_version": "stage8-offside-reference-1.0",
+  "stage_version": "stage8-offside-reference-0.1.0",
+  "frame_index": 104,
+  "status": "UNRESOLVED",
+  "reasons": [
+    "DEMO_IGNORES_STAGE8_STATUS"
+  ],
+  "attack_direction": {
+    "s": 1,
+    "label": "LEFT_TO_RIGHT"
+  },
+  "opponent_ranking": [
+    {
+      "track_id": "track_007",
+      "rank": 1,
+      "goalward_q_m": 49.33,
+      "goalward_x_m": 49.33,
+      "anchor": {
+        "name": "left_big_toe",
+        "xyz_world_m": [
+          49.33,
+          2.4,
+          0.02
+        ]
+      }
+    },
+    {
+      "track_id": "track_011",
+      "rank": 2,
+      "goalward_q_m": 47.73,
+      "goalward_x_m": 47.73,
+      "anchor": {
+        "name": "left_big_toe",
+        "xyz_world_m": [
+          47.73,
+          -4.6,
+          0.02
+        ]
+      }
+    }
+  ],
+  "second_last_opponent": {
+    "track_id": "track_011",
+    "candidate_track_ids": [
+      "track_011"
+    ],
+    "identity_ambiguous": false,
+    "goalward_q_m": 47.73,
+    "X_world_m": 47.73
+  },
+  "ball": {
+    "x_extent_m": [
+      44.0,
+      44.22
+    ],
+    "goalward_q_m": 44.22,
+    "goalward_x_m": 44.22,
+    "X_world_m": 44.11,
+    "center_xyz_world_m": [
+      44.11,
+      -7.5,
+      0.11
+    ]
+  },
+  "reference": {
+    "source": "SECOND_LAST_OPPONENT",
+    "goalward_q_m": 47.73,
+    "X_world_m": 47.73,
+    "vertical_plane": {
+      "axis": "X",
+      "X_world_m": 47.73
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": "stage6-downstream-handoff-1.0",
+  "selected_frame": 104,
+  "stage8": {
+    "selected_method": "CONTACT_GROUND_PLANE",
+    "center_xyz_world_m": [44.11, 0.0, 0.11],
+    "X_world_m": 44.11,
+    "ball_center_x_extent_m": [44.0, 44.22],
+    "usable_for_offside": true,
+    "accuracy_validated": false
+  },
+  "research_accuracy_frozen": false
+}

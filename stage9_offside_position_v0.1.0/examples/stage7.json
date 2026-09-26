@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "stage_version": "stage7-game-state-0.1.2",
+  "frame_index": 104,
+  "status": "UNRESOLVED",
+  "reasons": [
+    "DEMO_IGNORES_UPSTREAM_BLOCKER"
+  ],
+  "toucher": {
+    "track_id": "track_005",
+    "team_id": 1,
+    "role": "player"
+  },
+  "attacking_team_id": 1,
+  "attack_direction": {
+    "s": 1,
+    "label": "LEFT_TO_RIGHT",
+    "centre_ray_x_m": 36.2,
+    "source": "stage1.centre_ray_pitch_hit"
+  },
+  "sets": {
+    "attackers": [
+      "track_005",
+      "track_006",
+      "track_009"
+    ],
+    "opponents": [
+      "track_007",
+      "track_011"
+    ],
+    "referees_excluded": [
+      "track_003"
+    ],
+    "unknown_team_excluded": [],
+    "inactive_excluded": []
+  }
+}

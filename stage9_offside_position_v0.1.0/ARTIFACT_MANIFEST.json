@@ -1,0 +1,242 @@
+{
+  "schema_version": "stage9-artifact-manifest-1.0",
+  "stage_version": "stage9-offside-position-0.1.0",
+  "mode": "BEST_EFFORT_DEMO",
+  "validation": {
+    "pytest_passed": 28,
+    "oracle_logic_accuracy": 1.0,
+    "web_smoke": true
+  },
+  "files": [
+    {
+      "path": "APPLY_STAGE9_V0_1.md",
+      "size_bytes": 407,
+      "sha256": "bc6550afc98e006fca21befac67b167b8d0ea845cc02faad95d7bd84b47a4e00"
+    },
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "size_bytes": 802,
+      "sha256": "6cf52ccf960cf023d9c17835a216a7be1183394d44f3766f3ea5026b31f6878d"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 3501,
+      "sha256": "7ed0d77aaf51d736b342dadc20327d2e62f5f1da71c33f2de48cee947b978936"
+    },
+    {
+      "path": "STAGE9_EVALUATION_PROTOCOL.md",
+      "size_bytes": 950,
+      "sha256": "7061fd3b6659f5c98e96fad6573489810d41342328fa3d56c0faa1bd45ad9809"
+    },
+    {
+      "path": "STAGE9_SPEC.md",
+      "size_bytes": 1682,
+      "sha256": "3d899fbb3b9b39836b8b5b2bd7e9ef1d6e7d7bf4d477758c52d5325a13a16643"
+    },
+    {
+      "path": "STAGE9_WEB_DEMO.md",
+      "size_bytes": 954,
+      "sha256": "6d11a1b856aaa7c870593ce5199fd5096e30e64d53ae0086a129b5df0783c343"
+    },
+    {
+      "path": "VALIDATION_REPORT.md",
+      "size_bytes": 1622,
+      "sha256": "ab44e16b0b0dd166e81c2b244e834d4826bd0e90c648ce696b820562f25a7ab5"
+    },
+    {
+      "path": "benchmark_stage9.py",
+      "size_bytes": 2554,
+      "sha256": "f8a24521ab76ae7429f0ee044cd1ea474ed253e525cdd4dae9c399dfd29b3c75"
+    },
+    {
+      "path": "examples/frame104_demo.jpg",
+      "size_bytes": 41284,
+      "sha256": "674a1edde91913f07be62ddd27ee2b2a94c0fcfa5e027478b083f11b3052d3d8"
+    },
+    {
+      "path": "examples/stage1.json",
+      "size_bytes": 1147,
+      "sha256": "d6c58675a8514f4e8f1eb4b8ef2ab0f72fc6988cf3181a78c93d896e1d5a761b"
+    },
+    {
+      "path": "examples/stage3.json",
+      "size_bytes": 14972,
+      "sha256": "8e6a6c40278773158cc45bcfb98e03a2278a5058c244938c37211b5d49f7e97b"
+    },
+    {
+      "path": "examples/stage4.json",
+      "size_bytes": 17844,
+      "sha256": "74b5a62cda2faec50cfd832a2648ef2c2cd2641c43c5b66f27097d728df69a90"
+    },
+    {
+      "path": "examples/stage6.json",
+      "size_bytes": 407,
+      "sha256": "1c55bc8ef6e0a911951740d586cc7aa8542b5ca126151ac0e5ceb361283dc884"
+    },
+    {
+      "path": "examples/stage7.json",
+      "size_bytes": 711,
+      "sha256": "a50caa5c5fd1dd6e5b870cb3273707444844bcc977889e3d26b70310c90a8bc8"
+    },
+    {
+      "path": "examples/stage8.json",
+      "size_bytes": 1425,
+      "sha256": "d12949a544c642a896e5482f6239a6e739bf37d4454b2baea4bde8e1d4f8c009"
+    },
+    {
+      "path": "outputs/example/offside_position_state.json",
+      "size_bytes": 4669,
+      "sha256": "79e029cc26066083cefb19d441417345d3754e847b03c4b7b8a85859cea8423c"
+    },
+    {
+      "path": "outputs/example/stage9_overlay.jpg",
+      "size_bytes": 89444,
+      "sha256": "c3e487cc0d29a009dce9acdba05605d97ace759a354dd6ca0852de7af6fead60"
+    },
+    {
+      "path": "outputs/fallback/offside_position_state.json",
+      "size_bytes": 5117,
+      "sha256": "0b493ed5ba5b8dcf82acd7123bbe2afc5e6086ca3f35526a9a7083d56fde54fc"
+    },
+    {
+      "path": "outputs/fallback/stage9_overlay.jpg",
+      "size_bytes": 88371,
+      "sha256": "6eff5b82425d2be79b96923e2ec08be2cf6b5dde9bd7d40a43cb71cd6753b3f7"
+    },
+    {
+      "path": "outputs/stage9_oracle/stage9_oracle_benchmark.json",
+      "size_bytes": 700,
+      "sha256": "fd08b4569b27c19b2c85ae00ce4773373d68ab2b7fd76317a9b37a025612b417"
+    },
+    {
+      "path": "pyproject.toml",
+      "size_bytes": 427,
+      "sha256": "d566a67b92b27fc2e64297f23ed3b1ba1591572c62fbb545ab402fdb3cef1b90"
+    },
+    {
+      "path": "requirements.txt",
+      "size_bytes": 43,
+      "sha256": "5c559545e098291fb8102ba5a0f0d56e86a1a2811740941902c675d0038eff8c"
+    },
+    {
+      "path": "run_project_frame104_demo.ps1",
+      "size_bytes": 1311,
+      "sha256": "fc3176e959d916f270d7d68dc63b03a52626a7603408b1174f91a2f026514eec"
+    },
+    {
+      "path": "run_stage9.py",
+      "size_bytes": 2185,
+      "sha256": "8cdc3c96f5ff2041b4c470cf2ebf1da52f5598f3823ab23882b0eab9b7710431"
+    },
+    {
+      "path": "stage9_offside_position/__init__.py",
+      "size_bytes": 178,
+      "sha256": "b5e56800957ec08f0b7a289674c6bf42d895b38af66ead400916002f50367b64"
+    },
+    {
+      "path": "stage9_offside_position/adapters.py",
+      "size_bytes": 9333,
+      "sha256": "eb56496f8807c24a35621c348c8ac5582d1e07e7e5460869f8b9fcab252b1015"
+    },
+    {
+      "path": "stage9_offside_position/classification.py",
+      "size_bytes": 2007,
+      "sha256": "f4c6241d05097bf2177b3ef75fb6bb036e02b8d29e1ce0d225ed4695128cebb4"
+    },
+    {
+      "path": "stage9_offside_position/constants.py",
+      "size_bytes": 715,
+      "sha256": "64f2b26589171200b0ed1a4aed10b61fee16a7f7d62bf053a718e104a2659e09"
+    },
+    {
+      "path": "stage9_offside_position/core.py",
+      "size_bytes": 7967,
+      "sha256": "c7fee3d0abb14fa21c585ecc9752ddebb9247738a2972342c0ef97c1434c5969"
+    },
+    {
+      "path": "stage9_offside_position/geometry.py",
+      "size_bytes": 5060,
+      "sha256": "24f420ce30388cc23574c8102af3f0f8583ffddc264025948bb385924b5aa524"
+    },
+    {
+      "path": "stage9_offside_position/models.py",
+      "size_bytes": 968,
+      "sha256": "42fcf7d1a70fd6f80ea335371476265e43cf96edee69d260a5e545b48ea1898f"
+    },
+    {
+      "path": "stage9_offside_position/projection.py",
+      "size_bytes": 2488,
+      "sha256": "6382f18f4d5b8ed208c3109f32b17ebc48f24820072fca609a922ba54e2b7411"
+    },
+    {
+      "path": "stage9_offside_position/visualization.py",
+      "size_bytes": 10669,
+      "sha256": "f85516d6f8335cbbf9de6346f8a0d912291d7b27d583830ae6558abfac10010c"
+    },
+    {
+      "path": "stage9_offside_position/webapp.py",
+      "size_bytes": 5346,
+      "sha256": "a7dad31dca6c5e78a3f73a05f276e40083ca6e75761c78eae32deab8bde88277"
+    },
+    {
+      "path": "static/app.js",
+      "size_bytes": 3558,
+      "sha256": "b11ea4d20596a2af9d1dc411adde5f24617ec15df6cd555c9c5b713427a8abef"
+    },
+    {
+      "path": "static/styles.css",
+      "size_bytes": 4593,
+      "sha256": "e0b2b40a9a720e232fc65b2305a0d2dd27b4e535dd78b0166aa30e4345a6cc0b"
+    },
+    {
+      "path": "templates/index.html",
+      "size_bytes": 3224,
+      "sha256": "050dc32039f52647c6822ccf3bc9b705208e4c92ee5ff97b61fd2075e1ed0687"
+    },
+    {
+      "path": "tests/__init__.py",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/helpers.py",
+      "size_bytes": 2183,
+      "sha256": "452f625d6b103b91230b15e917b57dabbad4c4900a8c525e56914f7d81746ae8"
+    },
+    {
+      "path": "tests/test_adapters.py",
+      "size_bytes": 1507,
+      "sha256": "433c3269fbf8717c873a2bf7a6a5249b4907955e388b9c388cd5c2445ffa8126"
+    },
+    {
+      "path": "tests/test_classification.py",
+      "size_bytes": 1125,
+      "sha256": "a9d66a719cf1b5b034a2200fa253975e9598200e0dd1f5cdeed0db5652162b42"
+    },
+    {
+      "path": "tests/test_core.py",
+      "size_bytes": 2964,
+      "sha256": "23b64284acf6bf7f973a2aebf8f0bce4ecc897bd550d5a3c80d83323ff8cdb08"
+    },
+    {
+      "path": "tests/test_geometry.py",
+      "size_bytes": 1601,
+      "sha256": "5ddcb9b2148662f1f08b48642aa5ca81bd69cf269afcd3ab7c94124a573f3b33"
+    },
+    {
+      "path": "tests/test_projection.py",
+      "size_bytes": 769,
+      "sha256": "72c9a6c912cbe85acde3abbbb593749e96e04097c593713d1cf511fd97aad101"
+    },
+    {
+      "path": "tests/test_webapp.py",
+      "size_bytes": 725,
+      "sha256": "d368d8bbbbac1b6c8a679fd84e68b25f89ca0bfa45dc1e3971dc8e104bd034be"
+    },
+    {
+      "path": "web_demo.py",
+      "size_bytes": 2211,
+      "sha256": "ae88c05a92bb3564488d793ef57f5674928f5941b70e4ce63170d7c987285243"
+    }
+  ]
+}

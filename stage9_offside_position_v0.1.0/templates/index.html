@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stage 9 · Offside Position Demo</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">NCKH · OFFLINE REPLAY PIPELINE</div>
+        <h1>Stage 9 · Offside Position</h1>
+      </div>
+      <div class="mode-pill" id="modePill">BEST-EFFORT DEMO</div>
+    </header>
+
+    <main class="layout">
+      <section class="viewer-card card">
+        <div class="card-head">
+          <div>
+            <h2>Replay frame</h2>
+            <p>Visual ON/OFF flags over the selected frame.</p>
+          </div>
+          <div class="controls">
+            <label><input id="toggleOverlay" type="checkbox" checked> Overlay</label>
+            <label><input id="toggleRef" type="checkbox" checked> Ref line</label>
+            <label><input id="toggleDef" type="checkbox" checked> Key defenders</label>
+            <label><input id="toggleAllDef" type="checkbox"> All defenders</label>
+            <label><input id="toggleSkeleton" type="checkbox"> Keypoints</label>
+            <label><input id="toggleLabels" type="checkbox" checked> Labels</label>
+          </div>
+        </div>
+        <div class="viewer-wrap">
+          <img id="frameImage" alt="Stage 9 replay overlay" />
+        </div>
+        <div class="legend">
+          <span><i class="dot off"></i> OFFSIDE</span>
+          <span><i class="dot on"></i> ONSIDE</span>
+          <span><i class="dot passer"></i> PASSER</span>
+          <span><i class="dot defender"></i> DEFENDER</span>
+          <span><i class="dot ref"></i> REFERENCE</span>
+          <span><i class="dot ball"></i> BALL</span>
+          <span><i class="dot referee"></i> REFEREE</span>
+        </div>
+      </section>
+
+      <aside class="side-stack">
+        <section class="card summary-card">
+          <div class="card-head compact"><h2>Context</h2></div>
+          <div class="metrics-grid">
+            <div class="metric"><span>Frame</span><strong id="frameMetric">—</strong></div>
+            <div class="metric"><span>Direction</span><strong id="directionMetric">—</strong></div>
+            <div class="metric"><span>Reference X</span><strong id="referenceMetric">—</strong></div>
+            <div class="metric"><span>Reference source</span><strong id="referenceSourceMetric">—</strong></div>
+            <div class="metric wide"><span>Frame source</span><strong id="frameSourceMetric">—</strong></div>
+          </div>
+          <div class="source-warning" id="sourceWarning" hidden></div>
+          <div class="warning-box">
+            Demo mode ignores upstream blockers / degraded / uncertainty gates for semantics, but image-space locations are never fabricated. Tracks without grounded screen geometry remain in the side panel only.
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head compact">
+            <div>
+              <h2>Attackers</h2>
+              <p id="attackerSummary">—</p>
+            </div>
+          </div>
+          <div id="attackerList" class="player-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head compact"><h2>Opponent ranking</h2></div>
+          <div id="opponentList" class="player-list"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

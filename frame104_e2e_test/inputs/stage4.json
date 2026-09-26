@@ -1,0 +1,2464 @@
+{
+  "schema_version": "stage4-downstream-handoff-2.1",
+  "producer": "stage4-sam3d-pitch-refined-0.5.1",
+  "source_world_grounded_pose_state": "D:\\NCKH\\stage4_metric3d_v0.2.0\\runs\\stage4_v051_frame104\\sam3d-pitch-refined\\world_grounded_pose_state.json",
+  "selected_frame": 104,
+  "coordinate_frame": {
+    "name": "STAGE1_PITCH_WORLD",
+    "units": "m",
+    "x": "goal-to-goal",
+    "y": "touchline-to-touchline",
+    "z": "up",
+    "pitch_plane": "z=0"
+  },
+  "tracks": [
+    {
+      "track_id": "track_001",
+      "role": "player",
+      "observations": [],
+      "selected_frame_status": "MISSING"
+    },
+    {
+      "track_id": "track_002",
+      "role": "player",
+      "observations": [],
+      "selected_frame_status": "MISSING"
+    },
+    {
+      "track_id": "track_003",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            30.154112256999205,
+            19.393013185732542,
+            0.5436732800365867
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                30.381802849988492,
+                19.486355295927677,
+                1.2186440130412324
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                30.34089179167431,
+                19.48603673349306,
+                1.2612204187207814
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                30.38407868769334,
+                19.439866716172542,
+                1.2546572973968706
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                30.237729904584896,
+                19.454195382251175,
+                1.2508106967730273
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                30.34160805975158,
+                19.342468636252327,
+                1.2334677115634998
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                30.15433559626789,
+                19.527743268525768,
+                1.0787019290649145
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                30.261137623734747,
+                19.211573578437232,
+                1.0630220277398457
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                29.95789741307196,
+                19.59401683104001,
+                0.9289615273208516
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                30.23247645590653,
+                19.110215584620217,
+                0.8279870228464321
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                30.084012416958963,
+                19.642005971847954,
+                0.7368621049780786
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                30.370770554232255,
+                19.25969750062529,
+                0.7179774883438186
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                30.168498578454617,
+                19.46571245195687,
+                0.5463677705464915
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                30.139725935543794,
+                19.320313919508216,
+                0.5409787895266818
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                30.376177951552524,
+                19.420663058170778,
+                0.20563122145637625
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                30.042868081725054,
+                19.407484986022006,
+                0.1611349979210801
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                30.461998987229254,
+                19.39712414344897,
+                -0.1558726353133384
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                29.694876574078613,
+                19.527996388814973,
+                0.11227592112023421
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                30.64701837840602,
+                19.362098528106323,
+                -0.13289923392905445
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                30.61892089171593,
+                19.430122403912172,
+                -0.15784159355170235
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                30.448008764464333,
+                19.39731963367077,
+                -0.21168704135320082
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                29.644137601255213,
+                19.560498526864,
+                -0.06025446959353742
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                29.607721667243084,
+                19.516207662768736,
+                -0.0207052608257694
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                29.65297440001766,
+                19.544706704839484,
+                0.1437095718469421
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "left_small_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 6.277501687143699
+            },
+            "ground_contact_residual_cm": 15.784159355170235,
+            "reprojection_p95_px": 89.09915304949311,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.7412327775935686,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 6.277501687143699,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.6217790280618077
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_004",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            29.025902753513016,
+            2.6999555709285543,
+            0.7465407575556989
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                29.189782811237908,
+                2.7014846761000513,
+                1.425294311297043
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                29.142734899075883,
+                2.6961851351613504,
+                1.458971012636842
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                29.18660644614055,
+                2.651332969181434,
+                1.4542028389994102
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                29.04562748452884,
+                2.6676584300003707,
+                1.4246492761722078
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                29.150689264186155,
+                2.560234663720907,
+                1.4116484253269501
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                29.00694976733872,
+                2.7742054900953175,
+                1.2371679322908014
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                29.101348134766713,
+                2.4640283150276883,
+                1.2062800376152674
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                28.93468269981836,
+                2.8749488762525406,
+                1.002680838187166
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                29.215032974875285,
+                2.4134196104996892,
+                0.9718481541025712
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                29.149727877000124,
+                2.9254702728782753,
+                0.9554318899717289
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                29.28277321965878,
+                2.5866615921894223,
+                1.104445396546422
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                29.012868742117867,
+                2.771279720342198,
+                0.7603675560816159
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                29.038936764908165,
+                2.6286314215149105,
+                0.732713959029782
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                29.25762628693804,
+                2.9706054309269962,
+                0.5609678927605897
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                29.16279226609739,
+                2.7260084174144836,
+                0.3942250575632926
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                28.92963406402715,
+                2.9486406306910258,
+                0.46140317328831393
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                28.95006817672604,
+                2.733619921701859,
+                0.12376033438893064
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                28.94136122817283,
+                3.014032304340537,
+                0.29726336162559663
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                28.899752729836724,
+                3.041930547518504,
+                0.34336503457670386
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                28.87920830670753,
+                2.9332292345344637,
+                0.47037443698236747
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                29.09583998417185,
+                2.7977293138436234,
+                0.058309136934428185
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                29.07141007176228,
+                2.733961935458062,
+                0.04043933710342573
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                28.906059161943308,
+                2.7256515612314427,
+                0.08947626744627768
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_small_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 5.46202034887281
+            },
+            "ground_contact_residual_cm": 4.043933710342573,
+            "reprojection_p95_px": 24.790921831691005,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.36433209845541664,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 5.46202034887281,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.057996280682475164
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_005",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            38.18560432205267,
+            17.991961614817363,
+            0.6808098507452294
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                38.35595903050742,
+                18.041010029561633,
+                1.3637364376666783
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                38.30857521924037,
+                18.05627040861569,
+                1.3934015421258925
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                38.33512670516039,
+                17.999142610149875,
+                1.3977017587024365
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                38.209545551400794,
+                18.05611813329284,
+                1.354326642498572
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                38.27253558303762,
+                17.920494946409008,
+                1.3630347531244
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                38.175408900159425,
+                18.1297324745165,
+                1.1695339136896488
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                38.2708604377343,
+                17.82656557131785,
+                1.1554013580911118
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                38.19090500694384,
+                18.225825855563798,
+                0.932326797192049
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                38.20702101512087,
+                17.77589179864497,
+                0.9036831089541977
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                38.417871883148756,
+                18.205086251558317,
+                0.8753635502541517
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                38.20222901493216,
+                17.764737911666714,
+                0.6656886082082956
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                38.15664076132872,
+                18.059370635867097,
+                0.684633367059063
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                38.21456788277663,
+                17.92455259376763,
+                0.6769863344313958
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                38.27005525594389,
+                18.131832329316715,
+                0.32529523729192444
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                38.41493472465099,
+                18.027993153143537,
+                0.36651799073201374
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                38.15442063789481,
+                18.037643896800503,
+                0.012092613789985052
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                38.14215991584149,
+                17.949815402607765,
+                0.16986593509806713
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                38.293342796792004,
+                18.116551196521698,
+                -0.07474773885445396
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                38.22389595405074,
+                18.141078014480208,
+                -0.07371528874586053
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                38.12023085933481,
+                18.010334722223366,
+                -0.022477027702348273
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                38.20088399154156,
+                17.99941721967932,
+                0.010841911481728417
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                38.184252714418065,
+                17.933184597470294,
+                0.024154132786661897
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                38.09052579043903,
+                17.93239641171021,
+                0.16691270057201724
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_big_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 4.420801695027638
+            },
+            "ground_contact_residual_cm": 1.0841911481728417,
+            "reprojection_p95_px": 5.417562747335948,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.18256189083084937,
+            "ground_consensus_count": 5,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 4.420801695027638,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.04147581991920254
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_006",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            40.39340058770196,
+            20.438431302920375,
+            0.5668793017132701
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                40.551311202796626,
+                20.412122724660414,
+                1.0939684472417346
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                40.56225239930277,
+                20.44800993023272,
+                1.1372350025962827
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                40.531741198408014,
+                20.39392312766264,
+                1.1444255042573381
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                40.50560398059454,
+                20.53465490080479,
+                1.1614091284720267
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                40.43147020925254,
+                20.405345699602556,
+                1.1775654621412048
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                40.43102407997648,
+                20.636279540054577,
+                1.0086950970027804
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                40.320994103100645,
+                20.341711474623555,
+                1.0557627544176151
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                40.403921409767605,
+                20.733540560104128,
+                0.7886079195200209
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                40.39020884654637,
+                20.23473547002554,
+                0.8510540158157394
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                40.50355767341679,
+                20.745325525250777,
+                0.6067390863109212
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                40.55654229238773,
+                20.280219356869292,
+                0.740256442113191
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                40.435360953324704,
+                20.4978226722302,
+                0.5685365318824651
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                40.351440222079226,
+                20.37903993361055,
+                0.565222071544075
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                40.731922250930126,
+                20.358900346966912,
+                0.38701283043499135
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                40.583714529447505,
+                20.168790162323326,
+                0.3601793348659097
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                40.639228547359764,
+                20.47262941491008,
+                0.08059495927222127
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                40.476225278784106,
+                20.31122617762322,
+                0.0715433001372654
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                40.77563051076373,
+                20.388960982207443,
+                -0.003205776160097429
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                40.76926746807935,
+                20.459257867235866,
+                0.007473583756483215
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                40.60491865244535,
+                20.500196192436945,
+                0.04435704481262093
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                40.59712848850134,
+                20.21946931858627,
+                -0.015175469242821649
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                40.52778462074649,
+                20.20904024219488,
+                -0.02519735922349753
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                40.44345593729227,
+                20.345434355371776,
+                0.040597439989852546
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "left_big_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 1.7247536394078937
+            },
+            "ground_contact_residual_cm": 0.3205776160097429,
+            "reprojection_p95_px": 17.690106589104488,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.5452119907147144,
+            "ground_consensus_count": 6,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 1.7247536394078937,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.1361041881362448
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_007",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            40.22314057922168,
+            10.799498122164511,
+            0.7034010649252229
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                40.4222228586642,
+                10.972467398379784,
+                1.3766504490260267
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                40.373733862615026,
+                10.970987425649101,
+                1.4111406560440605
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                40.41967981822619,
+                10.926490527328482,
+                1.4140457526685442
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                40.27507409109064,
+                10.93355060619636,
+                1.382717376751157
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                40.38569891341481,
+                10.826059433047801,
+                1.3881615647911039
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                40.20992438347149,
+                10.986460839719992,
+                1.1857742988419555
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                40.35805232169835,
+                10.689338737236236,
+                1.2423559897450045
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                40.131289649164195,
+                11.127935831559498,
+                0.9767485238270073
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                40.57382918883162,
+                10.677294681839308,
+                1.0841381142491522
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                40.34253606383834,
+                11.226466121237912,
+                0.9084548972414468
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                40.72723878436873,
+                10.863166753770647,
+                1.0809922266495802
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                40.23500766109033,
+                10.870374655371206,
+                0.6998130040629218
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                40.21127349735302,
+                10.728621588957816,
+                0.706989125787524
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                40.57560574822241,
+                10.814720379411282,
+                0.4908658484096593
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                40.10056236656349,
+                10.728543898002915,
+                0.31903760717518903
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                40.530433181259845,
+                10.789812332428784,
+                0.10225054456620386
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                39.77962578038961,
+                10.783930026325654,
+                0.10196674122859672
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                40.71418750435668,
+                10.759600456367899,
+                0.07651563806930195
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                40.679396219267915,
+                10.825134691736157,
+                0.05739638542189285
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                40.50033449814983,
+                10.787814048002026,
+                0.05163506586616684
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                39.893108638934606,
+                10.746281301707379,
+                -0.031171325366417424
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                39.83458408313283,
+                10.70338853133407,
+                -0.01999171553786816
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                39.723247742454845,
+                10.795614560530042,
+                0.08766762516836346
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "left_heel",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 5.02821948643839
+            },
+            "ground_contact_residual_cm": 5.163506586616684,
+            "reprojection_p95_px": 7.037737699849203,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.4415565695242891,
+            "ground_consensus_count": 4,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 5.02821948643839,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.0523150902755198
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_008",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            40.04816989896314,
+            2.769664788427015,
+            0.7492262452625347
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                40.343764916424306,
+                2.826927786698162,
+                1.3694685827232465
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                40.30250649581404,
+                2.8295475391193943,
+                1.4092441852730935
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                40.34266750988543,
+                2.7819568938822705,
+                1.4049050074994325
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                40.20148000226453,
+                2.803264046798418,
+                1.3926007962496105
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                40.29668339998029,
+                2.6899771540670603,
+                1.3807509695573335
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                40.19309261739788,
+                2.898756698522414,
+                1.2240028401795393
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                40.18288555699806,
+                2.588561458282676,
+                1.2132679145829606
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                40.23939135223,
+                3.0112652809840963,
+                1.0147187611047679
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                40.16038313626587,
+                2.4979032380047705,
+                0.9931771238447622
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                40.41326570390025,
+                2.993536942098732,
+                0.8896129017355072
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                40.313499814933365,
+                2.57924724420554,
+                0.87012125969621
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                40.035288335006356,
+                2.843165324801495,
+                0.7530694610826805
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                40.06105146291992,
+                2.696164252052535,
+                0.7453830294423889
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                40.06755508055102,
+                2.9289347697909722,
+                0.38388069767672395
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                40.38194979268051,
+                2.7288222880530597,
+                0.5437506433919728
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                39.750264768628824,
+                2.8748484967136676,
+                0.5195399240253455
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                40.352062963952065,
+                2.6576440855338532,
+                0.20183468157743834
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                39.6599686746899,
+                2.8927213814701602,
+                0.3843412724103348
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                39.64444715259869,
+                2.9337892602402214,
+                0.43589972349295447
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                39.718392275454896,
+                2.8609071608471215,
+                0.561940599285311
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                40.512239586940126,
+                2.7162323301145044,
+                0.1478509869796807
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                40.48991473558745,
+                2.65033585572278,
+                0.13795458573640573
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                40.32209009715844,
+                2.6392421749268387,
+                0.15885908769796764
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_small_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 10.056746047862969
+            },
+            "ground_contact_residual_cm": 13.795458573640573,
+            "reprojection_p95_px": 9.46013755888591,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.3950486841864521,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 10.056746047862969,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.15899260693184641
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_009",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            39.17850069721887,
+            0.0900697091794509,
+            0.7522370460917982
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                39.418515861198,
+                0.1378816727231147,
+                1.419021121669414
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                39.374008900083574,
+                0.14079007863650972,
+                1.4577526719179525
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                39.41490093897718,
+                0.09183689398695094,
+                1.455506963271997
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                39.269966535415456,
+                0.11513670270467813,
+                1.4379463578970637
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                39.36861888993248,
+                -0.0036414384984411186,
+                1.4309917089551059
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                39.24227312081123,
+                0.21489142988804844,
+                1.2679649114475886
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                39.27566208788459,
+                -0.11566433607892534,
+                1.2342154336275315
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                39.178549949353666,
+                0.3512268064519759,
+                1.059271018912686
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                39.246193467638776,
+                -0.21590862822298007,
+                1.0054335533167653
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                39.304315260804316,
+                0.4277257438170885,
+                0.8822850719914892
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                39.453729298029145,
+                -0.17991608491529476,
+                0.9188982021086933
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                39.1743918280473,
+                0.16679682263397666,
+                0.7577539514277127
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                39.18260956639045,
+                0.013342595724925133,
+                0.7467201407558837
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                39.38337433066097,
+                0.26837236287638433,
+                0.4565869758493659
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                39.40324242161547,
+                0.03324918335277616,
+                0.43749896377944664
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                39.06578335001891,
+                0.26801502184352444,
+                0.32619319894075716
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                39.27305534670725,
+                0.020373396294971258,
+                0.12028462994740652
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                39.147136218351044,
+                0.29891066749331685,
+                0.17802670575952062
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                39.103593170773436,
+                0.34701148013585836,
+                0.2061374018970965
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                39.01100819375681,
+                0.2640123325719905,
+                0.3251148591893065
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                39.440888742011694,
+                0.04036973008845379,
+                0.06387168921053687
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                39.40291161442126,
+                -0.019617371405630024,
+                0.051610483605259105
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                39.23316657643515,
+                0.014916906545323627,
+                0.08080875085237782
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_big_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 3.513990778538474
+            },
+            "ground_contact_residual_cm": 6.3871689210536875,
+            "reprojection_p95_px": 8.840371993960584,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.09670158375975382,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 3.513990778538474,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.06979314548608652
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_010",
+      "role": "player",
+      "observations": [],
+      "selected_frame_status": "MISSING"
+    },
+    {
+      "track_id": "track_011",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            34.214838771333206,
+            -10.542856273154094,
+            0.6626347499639307
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                34.42218291380544,
+                -10.366088653157197,
+                1.319554247570252
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                34.376050160055826,
+                -10.379098335739695,
+                1.3538317811260732
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                34.429163206288344,
+                -10.414044222631837,
+                1.3527013328944903
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                34.28577007055647,
+                -10.431773991045592,
+                1.323017273061112
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                34.413884894810174,
+                -10.516328784897297,
+                1.318744165158277
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                34.19909722324537,
+                -10.389328617985363,
+                1.1380613713644858
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                34.446694880334434,
+                -10.62103027165442,
+                1.123895280705768
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                34.09996008488689,
+                -10.188080599111842,
+                1.0009985464249724
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                34.540908866863425,
+                -10.652084631255377,
+                0.881310174919083
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                34.24161562798024,
+                -10.022388458582444,
+                0.9164618369921839
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                34.603114931684175,
+                -10.447262968302557,
+                0.7991857116995854
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                34.18065309057526,
+                -10.477530512700946,
+                0.6687554663697353
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                34.24902445209114,
+                -10.608182033607239,
+                0.6565140335581261
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                34.39206917319661,
+                -10.372145148031406,
+                0.3740334281356137
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                34.128961625756496,
+                -10.571999459440296,
+                0.3002281824680443
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                34.441950546897154,
+                -10.398191312770244,
+                0.0214399565869674
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                33.78134909478176,
+                -10.631034630469836,
+                0.3486773953259633
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                34.61298847353198,
+                -10.324573062291869,
+                0.025355501344466402
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                34.54952444505107,
+                -10.287300870192919,
+                0.0012311377991777173
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                34.42750344090431,
+                -10.415341625692026,
+                -0.03149067048185661
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                33.70206412981637,
+                -10.584558748872528,
+                0.1960830259910018
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                33.69748328797412,
+                -10.651328244764839,
+                0.21982229275521625
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                33.742753914897804,
+                -10.643973660301063,
+                0.3868391832926118
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "left_big_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 0.9406490334546852
+            },
+            "ground_contact_residual_cm": 2.5355501344466402,
+            "reprojection_p95_px": 8.650996869463851,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.32063123805747834,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 0.9406490334546852,
+            "ground_vs_sam_disagreement": "SAM_DEPTH_DISAGREEMENT",
+            "ground_vs_refined_m": 0.010333169053350367
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_012",
+      "role": "player",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            32.93612560123939,
+            -18.168969327893116,
+            0.8208864513014923
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                33.143469000430805,
+                -18.008477946133862,
+                1.506378171954856
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                33.09562598098431,
+                -18.01649630137143,
+                1.5418697877373388
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                33.14483081222449,
+                -18.058106609762923,
+                1.5398716496846345
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                32.999128343684276,
+                -18.05790038381502,
+                1.5114653545552401
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                33.11699298779374,
+                -18.157794102593975,
+                1.5051408210490629
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                32.881255143677606,
+                -18.045280158419757,
+                1.3585220295361427
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                33.13483736641821,
+                -18.26356931613675,
+                1.32831429843823
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                32.71418638330566,
+                -18.040422768487332,
+                1.1533966296871447
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                33.190809569659955,
+                -18.3938977382565,
+                1.1091165268910472
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                32.782225037291,
+                -17.873765599005417,
+                0.9934730366404101
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                33.342640402815555,
+                -18.217527901800548,
+                1.0521924588673113
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                32.87750153923325,
+                -18.115108475601446,
+                0.8335122977275039
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                32.99474966324553,
+                -18.222830180184783,
+                0.8082606048754807
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                33.01815183069438,
+                -17.90267346096931,
+                0.5183542121878114
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                33.015225025309384,
+                -18.08750371733169,
+                0.42681167992009067
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                32.7751876203678,
+                -18.15022554308546,
+                0.6265297165996511
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                32.82264883962139,
+                -18.167737647949775,
+                0.12631935959590676
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                32.73758920372178,
+                -18.20897242564965,
+                0.47438400861788965
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                32.6840129550255,
+                -18.180680079682876,
+                0.5087959197476022
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                32.7469097335477,
+                -18.176818590823995,
+                0.6660109739668404
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                32.898034740413394,
+                -18.016282795615556,
+                0.07039156982683352
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                32.918205925610934,
+                -18.083464040428836,
+                0.04912020784910673
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                32.787132686476106,
+                -18.195701765378328,
+                0.08904539477857078
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_small_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 2.6990347789050375
+            },
+            "ground_contact_residual_cm": 4.9120207849106725,
+            "reprojection_p95_px": 6.935481020947275,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.22872482396650345,
+            "ground_consensus_count": 3,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 2.6990347789050375,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.0635314532613083
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    },
+    {
+      "track_id": "track_016",
+      "role": "goalkeeper",
+      "observations": [
+        {
+          "frame_index": 104,
+          "root_world_m": [
+            50.7101816026258,
+            3.3140932691800895,
+            0.6977343059664318
+          ],
+          "joints_world": [
+            {
+              "name": "nose",
+              "xyz_world_m": [
+                50.411512887100365,
+                3.7861293401685217,
+                1.0591705177862174
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_eye",
+              "xyz_world_m": [
+                50.40249248378242,
+                3.7549713564372027,
+                1.1069261784739521
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_eye",
+              "xyz_world_m": [
+                50.44788492569667,
+                3.798316263174332,
+                1.1021327033358714
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ear",
+              "xyz_world_m": [
+                50.437642226347805,
+                3.656285783121799,
+                1.1229937543332205
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ear",
+              "xyz_world_m": [
+                50.54558964734492,
+                3.7582189330810962,
+                1.1103160686997473
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_shoulder",
+              "xyz_world_m": [
+                50.407920932145124,
+                3.5268613883908664,
+                0.983896064114302
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_shoulder",
+              "xyz_world_m": [
+                50.688999151984454,
+                3.677567928937261,
+                1.00411065077179
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_elbow",
+              "xyz_world_m": [
+                50.37769193043333,
+                3.387061302651862,
+                0.7952960770442039
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_elbow",
+              "xyz_world_m": [
+                50.85700628156154,
+                3.658344381435189,
+                0.8390535934010175
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_wrist",
+              "xyz_world_m": [
+                50.345963542457994,
+                3.4551297704963595,
+                0.5926812777887891
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_wrist",
+              "xyz_world_m": [
+                50.85333112132696,
+                3.7485901452522725,
+                0.6448024170028614
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_hip",
+              "xyz_world_m": [
+                50.63939611422581,
+                3.2935792728343145,
+                0.6892526023291712
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_hip",
+              "xyz_world_m": [
+                50.78096709102579,
+                3.3346072655258645,
+                0.7062160096036925
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_knee",
+              "xyz_world_m": [
+                50.526853136630045,
+                3.575426663116488,
+                0.4646026279807951
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_knee",
+              "xyz_world_m": [
+                50.90126148630824,
+                3.5679172108905064,
+                0.43479895641803035
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_ankle",
+              "xyz_world_m": [
+                50.566952326267014,
+                3.447867325805408,
+                0.14820376388676726
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_ankle",
+              "xyz_world_m": [
+                51.01761843556088,
+                3.4089850975463776,
+                0.15418384568406918
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_big_toe",
+              "xyz_world_m": [
+                50.51702329044338,
+                3.598240575375403,
+                0.06174032724046086
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_small_toe",
+              "xyz_world_m": [
+                50.48272696432201,
+                3.5356213146959874,
+                0.05483788280155988
+              ],
+              "valid": true
+            },
+            {
+              "name": "left_heel",
+              "xyz_world_m": [
+                50.58345680818279,
+                3.4076244816926433,
+                0.11323980827290869
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_big_toe",
+              "xyz_world_m": [
+                51.05794106307799,
+                3.564406767024483,
+                0.07866817996397835
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_small_toe",
+              "xyz_world_m": [
+                51.11097169215154,
+                3.515243761427982,
+                0.09420928712463539
+              ],
+              "valid": true
+            },
+            {
+              "name": "right_heel",
+              "xyz_world_m": [
+                51.02659181420505,
+                3.363822733761701,
+                0.12361853025975122
+              ],
+              "valid": true
+            }
+          ],
+          "quality": {
+            "root_refinement": "VALID",
+            "ground_anchor": {
+              "name": "right_small_toe",
+              "usable": true,
+              "fallback": false,
+              "distance_to_sam_prior_m": 13.395543026817428
+            },
+            "ground_contact_residual_cm": 9.420928712463539,
+            "reprojection_p95_px": 18.304150862130673,
+            "initialization": "GROUND_CONSENSUS",
+            "ground_candidate_spread_m": 0.4432960321297471,
+            "ground_consensus_count": 6,
+            "ground_rejection_reason": null,
+            "ground_vs_sam_disagreement_m": 13.395543026817428,
+            "ground_vs_sam_disagreement": "LARGE_SAM_DEPTH_ERROR",
+            "ground_vs_refined_m": 0.08875968016781627
+          }
+        }
+      ],
+      "selected_frame_status": "VALID"
+    }
+  ],
+  "not_owned_by_stage4": [
+    "team_id",
+    "attacking_team",
+    "attack_direction",
+    "toucher",
+    "ball_state",
+    "legal_body_mask",
+    "second_last_opponent",
+    "offside_decision"
+  ]
+}
