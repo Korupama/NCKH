@@ -199,25 +199,50 @@ $$\text{med}_0 = \text{median}_{j \in C_0} (X_j), \quad \text{med}_1 = \text{med
 
 ## 7. BẢNG KẾT QUẢ ĐỊNH LƯỢNG & ABLATION STUDY (RESULTS FOR THE PAPER)
 
-### 7.1. Bảng kết quả so sánh chính (Main Results Table)
-Toàn bộ kết quả chạy trên cùng 58 video sequences thuộc SoccerNet-GSR `valid` split:
+### 7.1. Bảng kết quả Stage 2 (End-to-End Detection, Role Classification & Tracking quanh T0)
+Đo đạc chính thức trên giao thức `quick` của SoccerNet-GSR v1.3 (10 sequences `SNGS-021` đến `SNGS-030`, 30 cửa sổ mục tiêu quanh $T_0$, 1,530 frames):
+
+| Nhóm chỉ số | Chỉ số đánh giá (Metrics) | Giá trị thực nghiệm | Ý nghĩa khoa học |
+| :--- | :--- | :---: | :--- |
+| **Nhận diện & Vai trò** | **Candidate Recall (Player + GK)** | **94.55%** (382/404) | Độ phủ phát hiện người thi đấu tại khung hình quyết định $T_0$ |
+| | **Candidate Precision** | **92.72%** (382/412) | Tỷ lệ báo động giả rất thấp |
+| | **Referee Leakage Rate** | **3.23%** (1/31) | Tỷ lệ trọng tài bị nhầm thành ứng viên thi đấu |
+| | **Role Macro-F1** | **79.98%** | F1 trung bình giữa các vai trò (Player: 93.25%, GK: 69.57%, Ref: 77.14%) |
+| | **Human $AP_{50}$ / $mAP_{50:95}$** | **91.16% / 54.58%** | Độ chính xác trung bình toàn bộ con người theo chuẩn COCO |
+| | **Khử trùng lặp (Cross-Class Duplicate)** | $4.14\% \rightarrow \mathbf{0.23\%}$ | Giảm $94.4\%$ xung đột nhãn giữa các lớp sau Physical Consolidation |
+| **Bám vết neo quanh $T_0$** | **$TCR@1s$ (Target Continuity Rate)** | **85.10%** | Tỷ lệ duy trì đúng ID liên tục trong cửa sổ $\pm 1$ giây quanh $T_0$ |
+| | **Anchor Coverage / Conditional TCR** | **94.55% / 90.00%** | Khả năng neo danh tính và độ ổn định trên các track đã neo |
+| | **Candidate HOTA / AssA / DetA** | **69.01% / 71.70% / 66.73%** | Bộ chỉ số đánh giá bám vết chuẩn TrackEval |
+| | **Candidate IDF1 (ID Precision / Recall)** | **88.04%** (88.08% / 88.01%) | Độ ổn định danh tính nhất quán |
+| **Ablation Bám vết** | `primary` (SST + RTMW Pose + Consolidation) | **69.01% HOTA / 85.10% TCR** | Mô hình hoàn chỉnh đề xuất |
+| | `no_pose` (SST IoU + Motion Prior, không Pose) | 68.92% HOTA / 84.84% TCR | Giảm nhẹ AssA ($-0.08\%$) và TCR ($-0.26\%$) khi thiếu Pose |
+| | `oracle_boxes_geom` (GT Bbox + Role, không ID) | **98.92% HOTA / 98.74% TCR** | Giới hạn trần tiệm cận hoàn hảo của thuật toán Hungarian |
+
+---
+
+### 7.2. Bảng kết quả so sánh chính Stage 5 (58 Video Sequences `valid` split)
+Toàn bộ kết quả chạy trên cùng 58 video sequences thuộc SoccerNet-GSR v1.3 (1,222 track đội bóng, 127 track trọng tài):
 
 | Phương pháp | Overall Acc | Coverage | Selective Acc | Outfield Acc | GK Acc | GK Coverage | Ref Contam | Macro-F1 |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **B0: Baseline BBox-Color** | 90.26% | 93.29% | 96.75% | 95.63% | 10.39% | 38.96% | 0.00% | 96.60% |
 | **B1: Torso-Only Color** | 90.54% | 93.50% | 96.84% | 95.88% | 11.69% | 40.25% | 0.00% | 96.65% |
 | **M2: Torso + Lower Fusion** | 91.08% | 93.94% | 96.95% | 96.24% | 14.29% | 48.05% | 0.00% | 96.76% |
+| **`residual-v3` (Abstention Policy)** | **80.20%** | **80.36%** | **99.80%** 🏆 | **85.59%** *(Sel: 99.80%)* | *0.00% (Từ chối)* | 0.00% | **0.00%** | **99.61%** |
 | **M3-A: Pure Image Spatial** | **95.42%** | **97.22%** | **98.15%** | **96.24%** | **83.12%** | **100.00%** | 0.00% | **98.10%** |
-| **M3-B: Spatial-Hybrid (Toàn diện)** | **96.32%** | **97.22%** | **99.07%** | **96.24%** | **97.40%** | **100.00%** | **0.00%** | **98.90%** |
+| **M3-B: Spatial-Hybrid (Toàn diện)** | **96.32%** | **97.22%** | **99.07%** | **96.24%** | **97.40%** 🚀 | **100.00%** | **0.00%** | **98.90%** |
 
-*Khoảng tin cậy Bootstrap 95% của M3-B:* Overall Accuracy đạt $[94.45\%, 97.72\%]$.
+*Khoảng tin cậy Bootstrap 95% của M3-B:* Overall Accuracy đạt $[94.45\%, 97.72\%]$.  
+*Chỉ số phân cụm của `residual-v3`:* Macro-ARI đạt **0.9866**, Macro-NMI đạt **0.9896**, Khả năng phục hồi vai trò thủ môn tồn dư (GK Role F1) đạt **87.84%** (P=91.55%, R=84.42%).
 
-### 7.2. Bảng thực nghiệm phân rã (Ablation Study)
+### 7.3. Bảng thực nghiệm phân rã (Ablation Study)
 Phân tích đóng góp của từng thành phần kỹ thuật đối với độ chính xác:
 1. **Đóng góp của việc lọc nhiễu nền cỏ bằng Pose:** Tăng độ chính xác Outfield từ $95.63\% \rightarrow 96.24\%$ và giảm sai lệch do cỏ sân.
 2. **Đóng góp của trọng số Quần (Lower-body 0.25):** Tăng khả năng phân biệt trong các trận đấu mà hai đội mặc áo cùng tone màu nhưng quần khác màu (giảm $35\%$ ca xung đột).
 3. **Đóng góp của Tầng Không gian Thủ môn (Spatial Reasoning):** Đưa tỷ lệ phân loại đúng thủ môn từ $14.29\%$ lên $97.40\%$ ($+83.11\%$), đóng góp trực tiếp nâng Overall Accuracy từ $91.08\%$ lên $96.32\%$.
-4. **Đóng góp của Cơ chế Fail-Closed:** Khi loại bỏ các ca không chắc chắn về `UNKNOWN`, Selective Accuracy đạt tới **99.07%** (tức là khi hệ thống đưa ra phán quyết, độ chính xác gần như tuyệt đối).
+4. **Đóng góp của Cơ chế Fail-Closed / Abstention:** Khi loại bỏ các ca mập mờ về `UNKNOWN`, Selective Accuracy đạt tới **99.80%** (trong `residual-v3`) và **99.07%** (trong M3-B), bảo đảm độ an toàn tuyệt đối cho công nghệ VAR khi ra phán quyết tự động.
+
+> **Tài liệu tham chiếu chi tiết:** Xem tập tin đầy đủ tại [TAI_LIEU_DANH_GIA_VA_KET_QUA_STAGE2_STAGE5.md](file:///home/tondaiquoc/Workspace/Project/NCKH_SoICT/TAI_LIEU_DANH_GIA_VA_KET_QUA_STAGE2_STAGE5.md).
 
 ---
 
