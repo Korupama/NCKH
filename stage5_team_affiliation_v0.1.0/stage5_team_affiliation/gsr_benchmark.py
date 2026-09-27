@@ -55,6 +55,7 @@ class GSRAnn:
     role: str
     team: Optional[str]
     bbox_xyxy: Tuple[float, float, float, float]
+    pitch_x: Optional[float] = None
 
 
 @dataclass
@@ -225,9 +226,17 @@ class SoccerNetGSRDataset:
             tid = ann.get("track_id", attrs.get("track_id", ann.get("id")))
             if tid is None:
                 continue
+            pitch_x = None
+            pitch_rec = ann.get("bbox_pitch")
+            if isinstance(pitch_rec, dict) and "x_bottom_middle" in pitch_rec:
+                try:
+                    pitch_x = float(pitch_rec["x_bottom_middle"])
+                except Exception:
+                    pitch_x = None
             rec = GSRAnn(
                 frame_index=iid_to_frame[iid], image_id=iid, track_id=str(tid), role=role,
                 team=_team(attrs.get("team")), bbox_xyxy=tuple(map(float, box)),
+                pitch_x=pitch_x,
             )
             by_frame.setdefault(rec.frame_index, []).append(rec)
             by_track.setdefault(rec.track_id, []).append(rec)
@@ -395,6 +404,22 @@ def predict_sequence_color(
         try:
             cluster = fit_two_teams(outfield, config)
             team_lower = lower_body_centroids_by_team(cluster.labels, cluster.status, lower_features)
+            track_image_x: Dict[str, List[float]] = {}
+            track_pitch_x: Dict[str, List[float]] = {}
+            for tid, anns in seq.anns_by_track.items():
+                for a in anns:
+                    track_image_x.setdefault(tid, []).append((a.bbox_xyxy[0] + a.bbox_xyxy[2]) / 2.0)
+                    if a.pitch_x is not None:
+                        track_pitch_x.setdefault(tid, []).append(a.pitch_x)
+
+            team_image_x = {
+                team: [x for tid, lab in cluster.labels.items() if lab == team and cluster.status.get(tid) == "VALID" for x in track_image_x.get(tid, [])]
+                for team in (0, 1)
+            }
+            team_pitch_x = {
+                team: [x for tid, lab in cluster.labels.items() if lab == team and cluster.status.get(tid) == "VALID" for x in track_pitch_x.get(tid, [])]
+                for team in (0, 1)
+            }
             for tid, role in role_by_track.items():
                 if role == "referee":
                     pred[tid] = None; status[tid] = "NOT_APPLICABLE"
@@ -404,7 +429,13 @@ def predict_sequence_color(
                     else:
                         pred[tid] = int(cluster.labels[tid]); status[tid] = "VALID"
                 elif role == "goalkeeper":
-                    g = assign_goalkeeper(lower_features.get(tid), team_lower, config)
+                    g = assign_goalkeeper(
+                        lower_features.get(tid), team_lower, config,
+                        gk_pitch_x=track_pitch_x.get(tid),
+                        gk_image_x=track_image_x.get(tid),
+                        team_pitch_x=team_pitch_x,
+                        team_image_x=team_image_x,
+                    )
                     pred[tid] = g.get("team_id"); status[tid] = str(g.get("status"))
             clustering = {
                 "status": "VALID",
