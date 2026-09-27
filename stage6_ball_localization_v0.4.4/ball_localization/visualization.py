@@ -20,18 +20,25 @@ GOAL_WIDTH_M = 7.32
 CORNER_ARC_RADIUS_M = 1.0
 # Only a visualization depth; the goal frame is outside the calibrated pitch plane.
 GOAL_RENDER_DEPTH_M = 2.0
+IMAGE_SUFFIXES = {".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
 
 
 def render_selected_frame(video_path: str | Path, selected: dict[str, Any], output_path: str | Path) -> Path:
     fi = int(selected["frame_index"])
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
-        raise RuntimeError(f"Cannot open video {video_path}")
-    cap.set(cv2.CAP_PROP_POS_FRAMES, fi)
-    ok, img = cap.read()
-    cap.release()
-    if not ok or img is None:
-        raise RuntimeError(f"Cannot decode frame {fi}")
+    source = Path(video_path)
+    if source.suffix.lower() in IMAGE_SUFFIXES:
+        img = cv2.imread(str(source), cv2.IMREAD_COLOR)
+        if img is None:
+            raise RuntimeError(f"Cannot decode image {video_path}")
+    else:
+        cap = cv2.VideoCapture(str(video_path))
+        if not cap.isOpened():
+            raise RuntimeError(f"Cannot open video {video_path}")
+        cap.set(cv2.CAP_PROP_POS_FRAMES, fi)
+        ok, img = cap.read()
+        cap.release()
+        if not ok or img is None:
+            raise RuntimeError(f"Cannot decode frame {fi}")
     cand = selected.get("candidate")
     if cand:
         x1, y1, x2, y2 = [int(round(v)) for v in cand["bbox_xyxy"]]

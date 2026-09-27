@@ -88,12 +88,14 @@ def build_offside_reference(
             ball = None
     state.ball = ball
 
-    if pre["status"] == "READY":
+    if pre["status"] in {"READY", "DEGRADED_READY"}:
         second = select_second_last(state.opponent_ranking, tie_epsilon_m=tie_epsilon_m)
         if second is not None and ball is not None:
             state.second_last_opponent = second
             state.reference = build_reference(second, ball, s7["s"], epsilon_m=comparison_epsilon_m)
-            state.status = "VALID"
+            state.status = "DEGRADED" if pre["status"] == "DEGRADED_READY" else "VALID"
+            if state.status == "DEGRADED":
+                state.reasons = ["STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY"]
         else:
             state.status = "UNRESOLVED"
             state.reasons = ["REFERENCE_GEOMETRY_NOT_RESOLVED"]
@@ -106,7 +108,7 @@ def build_offside_reference(
         "opponent_extent_rows": extent_rows,
         "opponent_count_stage7": len(s7["opponents"]),
         "opponent_count_with_usable_geometry": len(usable),
-        "ranking_complete": pre["status"] == "READY",
+        "ranking_complete": pre["status"] in {"READY", "DEGRADED_READY"},
         "tie_epsilon_m": float(tie_epsilon_m),
         "reference_comparison_epsilon_m": float(comparison_epsilon_m),
         "invariants": {

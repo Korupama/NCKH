@@ -67,20 +67,9 @@ def process_stage1(image_path, out_dir, device='cuda:0', frame_index=104):
         )
         stage1_json = camera_state.to_dict()
     except Exception as e:
-        print(f"[Real Inference] PnLCalib failed: {e}. Falling back to mock stage1...")
-        # Fallback to mock stage1.json
-        mock_path = Path(__file__).resolve().parent.parent / 'stage_1_camera_v12' / 'test_pipeline' / 'stage1.json'
-        if not mock_path.exists():
-            mock_path = Path(__file__).resolve().parent / 'examples' / 'stage1.json'
-        
-        with open(mock_path, 'r') as f:
-            stage1_json = json.load(f)
-        stage1_json['frame_index'] = frame_index
-        stage1_json['selected_frame'] = frame_index
-        if 'image' not in stage1_json:
-            stage1_json['image'] = {}
-        stage1_json['image']['width'] = frame_width
-        stage1_json['image']['height'] = frame_height
+        raise RuntimeError(
+            f"Stage 1 PnLCalib failed for frame {frame_index}; fresh pipeline refuses mock fallback"
+        ) from e
     
     out_path = Path(out_dir) / 'stage1.json'
     with open(out_path, 'w') as f:
@@ -141,7 +130,7 @@ def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
     stage2_json = {
         'schema_version': 'entity-track-state-1.0',
         'replay_context': {
-            'video_path': str(image_path),
+            'video_path': str(Path(image_path).resolve()),
             'fps': 30.0,
             'selected_frame': frame_index,
             'window_start': frame_index,
@@ -222,15 +211,17 @@ def process_stage3(image_path, out_dir, device='cuda', frame_index=104):
                 
                 keypoints_133.append({
                     'index': i,
+                    'name': WHOLEBODY_NAMES[i],
                     'x': float(x),
                     'y': float(y),
-                    'score': float(score),
+                    'raw_model_score': float(score),
                     'state': state
                 })
                 
             tracks.append({
                 'track_id': track_id,
-                'role': role,
+                'upstream_role': role,
+                'upstream_identity_confidence': track.get('identity_confidence'),
                 'observations': [
                     {
                         'frame_index': frame_index,
@@ -245,11 +236,16 @@ def process_stage3(image_path, out_dir, device='cuda', frame_index=104):
     stage3_json = {
         'schema_version': 'tracked-pose-2d-state-1.0',
         'replay_context': {
+            'video_path': str(Path(image_path).resolve()),
+            'video_id': 'stage9_live_upload',
+            'fps': 30.0,
+            'frame_count': frame_index + 1,
             'selected_frame': frame_index,
             'window_start': frame_index,
             'window_end': frame_index,
             'image_width': frame_width,
             'image_height': frame_height,
+            'coordinate_space': 'RAW_DISTORTED_PIXEL',
         },
         'coordinate_space': 'RAW_DISTORTED_PIXEL',
         'keypoint_schema': {'count': 133, 'names': WHOLEBODY_NAMES},
@@ -263,225 +259,456 @@ def process_stage3(image_path, out_dir, device='cuda', frame_index=104):
 
 
 def process_stage4(image_path, out_dir, device='cuda', frame_index=104):
-    print('[Real Inference] Processing Stage 4 3D Pose (Fixed Height Baseline)...')
-    import sys
+    print('[Real Inference] Running the existing Stage 4 SAM3D + v0.5.1 pipeline...')
+    from datetime import datetime, timezone
+    import os
+    import subprocess
     import shutil
-    stage4_path = r'd:\NCKH\stage4_metric3d_v0.2.0'
-    if stage4_path not in sys.path:
-        sys.path.append(stage4_path)
-    from stage4_metric3d.backends.fixed_height_v03 import run_fixed_height_v03
-    
+    import uuid
+    project_root = Path(__file__).resolve().parent.parent
+    stage4_root = project_root / 'stage4_metric3d_v0.2.0'
     stage3_state = Path(out_dir) / 'stage3.json'
-    if not stage3_state.exists():
-        print("[Real Inference] Warning: stage3.json not found. Skipping Stage 4.")
-        return
-        
-    try:
-        run_fixed_height_v03(
-            stage3_state=stage3_state,
-            camera_dir=out_dir,
-            output_dir=out_dir,
-            reference_height_m=1.80,
-            selected_frame_only=True
-        )
-        
-        # Rename output to stage4.json
-        out_baseline = Path(out_dir) / 'metric_body_proxy_state_v03_baseline.json'
-        if out_baseline.exists():
-            shutil.move(str(out_baseline), str(Path(out_dir) / 'stage4.json'))
-            print(f"[Real Inference] Saved {Path(out_dir) / 'stage4.json'}")
-        else:
-            print("[Real Inference] Stage 4 output not generated.")
-            
-    except Exception as e:
-        print(f"[Real Inference] Stage 4 failed: {e}")
+    camera_state = Path(out_dir) / 'stage1.json'
+    missing = [str(path) for path in (stage3_state, camera_state, Path(image_path)) if not path.is_file()]
+    if missing:
+        raise FileNotFoundError('Stage 4 inputs are missing: ' + ', '.join(missing))
+
+    # The web layer only prepares an isolated runtime directory. All 3D
+    # inference, validation and refinement stay owned by the existing Stage-4
+    # entry points in stage4_metric3d_v0.2.0.
+    # Some already-running Stage-9 servers still use the legacy live_session
+    # output directory. Keep every Stage-4 invocation isolated even in that
+    # directory so retrying a frame never collides with an earlier run and
+    # never reuses its native SAM3D artifact.
+    run_stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    stage4_run_id = f'{run_stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    runtime = Path(out_dir) / 'stage4_runs' / stage4_run_id
+    camera_dir = runtime / 'camera'
+    frames_dir = runtime / 'frames'
+    result_dir = runtime / 'sam3d-pitch-refined'
+    camera_dir.mkdir(parents=True, exist_ok=False)
+    frames_dir.mkdir(parents=True, exist_ok=False)
+    camera_copy = camera_dir / f'camera_state_{frame_index:08d}.json'
+    frame_copy = frames_dir / f'frame_{frame_index:08d}.jpg'
+    shutil.copy2(camera_state, camera_copy)
+    shutil.copy2(image_path, frame_copy)
+
+    worker_python = project_root / '.venv-sam3d-cpu' / 'Scripts' / 'python.exe'
+    stage_python = Path(r'D:\anaconda3\envs\stage4-rtmw3d\python.exe')
+    checkpoint = project_root / 'third_party' / 'model.ckpt'
+    mhr_model = project_root / 'third_party' / 'mhr_model.pt'
+    sam3d_root = project_root / 'third_party' / 'sam-3d-body'
+    required = [worker_python, stage_python, checkpoint, mhr_model, sam3d_root / 'sam_3d_body']
+    absent = [str(path) for path in required if not path.exists()]
+    if absent:
+        raise FileNotFoundError('Stage 4 runtime dependency is missing: ' + ', '.join(absent))
+
+    native_artifact = runtime / 'sam3d_native_this_run.npz'
+    worker_command = [
+        str(worker_python), '-u', str(stage4_root / 'run_sam3d_body_worker.py'),
+        '--stage3-state', str(stage3_state),
+        '--camera-dir', str(camera_dir),
+        '--frames-dir', str(frames_dir),
+        '--checkpoint', str(checkpoint),
+        '--mhr-path', str(mhr_model),
+        '--sam3d-root', str(sam3d_root),
+        '--device', 'cuda' if str(device).startswith('cuda') else 'cpu',
+        '--cpu-threads', '4',
+        '--person-batch-size', '1',
+        '--inference-type', 'body',
+        '--frame-index', str(frame_index),
+        '--output-cache', str(native_artifact),
+    ]
+    worker_env = os.environ.copy()
+    worker_env['SAM3D_DINOV3_ROOT'] = str(project_root / 'third_party' / 'dinov3')
+    subprocess.run(worker_command, cwd=str(stage4_root), env=worker_env, check=True)
+    if not native_artifact.is_file():
+        raise RuntimeError('Existing Stage-4 SAM3D worker did not produce its native artifact')
+
+    common = [
+        str(stage_python), str(stage4_root / 'run_stage4.py'), 'sam3d-pitch-refined',
+        '--stage3-state', str(stage3_state),
+        '--camera-dir', str(camera_dir),
+        '--sam3d-cache', str(native_artifact),
+        '--selected-frame', str(frame_index),
+        '--window-radius', '0',
+        '--disable-temporal',
+    ]
+    subprocess.run(common + ['--preflight-only'], cwd=str(stage4_root), check=True)
+    subprocess.run(common + ['--output-dir', str(result_dir)], cwd=str(stage4_root), check=True)
+
+    handoff = result_dir / 'stage4_downstream_handoff.json'
+    quality = result_dir / 'stage4_quality_report.json'
+    if not handoff.is_file() or not quality.is_file():
+        raise RuntimeError('Existing Stage-4 pipeline did not produce its required artifacts')
+    shutil.copy2(handoff, Path(out_dir) / 'stage4.json')
+    manifest = {
+        'schema_version': 'stage9-stage4-invocation-1.0',
+        'stage4_run_id': stage4_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage4_root),
+        'worker_entry_point': str(stage4_root / 'run_sam3d_body_worker.py'),
+        'stage4_entry_point': str(stage4_root / 'run_stage4.py'),
+        'native_artifact_generated_in_this_run': str(native_artifact),
+        'reused_preexisting_native_artifact': False,
+        'handoff': str(handoff),
+        'quality_report': str(quality),
+    }
+    (Path(out_dir) / 'stage4_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f"[Real Inference] Existing Stage 4 pipeline saved {Path(out_dir) / 'stage4.json'}")
 
 def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
-    print('[Real Inference] Processing Stage 5 Team Affiliation...')
-    import sys
+    print('[Real Inference] Running the existing Stage 5 team-affiliation pipeline...')
     import shutil
+    import subprocess
+    from datetime import datetime, timezone
     from pathlib import Path
-    import json
-    
-    stage5_path = r'd:\NCKH\stage5_team_affiliation_v0.1.0'
-    if stage5_path not in sys.path:
-        sys.path.append(stage5_path)
-    
-    import stage5_team_affiliation.video
-    import cv2
-    def mock_read_frames(path, frame_indices):
-        img = cv2.imread(str(path))
-        return {idx: img for idx in frame_indices}
-    
-    def mock_video_metadata(path):
-        img = cv2.imread(str(path))
-        return {"fps": 30.0, "frame_count": 9999, "width": img.shape[1], "height": img.shape[0]}
-        
-    stage5_team_affiliation.video.read_frames = mock_read_frames
-    stage5_team_affiliation.video.video_metadata = mock_video_metadata
-    
-    from stage5_team_affiliation.pipeline import run_stage5
-    from stage5_team_affiliation.config import Stage5Config
-    
-    stage3_state = Path(out_dir) / 'stage3.json'
-    stage2_state = Path(out_dir) / 'stage2.json'
-    
-    if not stage3_state.exists():
-        print("[Real Inference] Warning: stage3.json not found. Skipping Stage 5.")
-        return
-        
-    cfg = Stage5Config()
-    try:
-        state = run_stage5(
-            stage3_state=str(stage3_state),
-            stage2_state=str(stage2_state),
-            video_path=str(image_path),
-            output_dir=out_dir,
-            config=cfg
-        )
-        
-        out_handoff = Path(out_dir) / 'stage5_downstream_handoff.json'
-        if out_handoff.exists():
-            shutil.copy(str(out_handoff), str(Path(out_dir) / 'stage5.json'))
-            print(f"[Real Inference] Saved {Path(out_dir) / 'stage5.json'}")
-            
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[Real Inference] Stage 5 failed: {e}")
+    import uuid
+
+    out_root = Path(out_dir).resolve()
+    stage2_state = out_root / 'stage2.json'
+    stage3_state = out_root / 'stage3.json'
+    stage4_handoff = out_root / 'stage4.json'
+    source_image = Path(image_path).resolve()
+    for required in (stage2_state, stage3_state, stage4_handoff, source_image):
+        if not required.is_file():
+            raise FileNotFoundError(f'Existing Stage-5 pipeline input is missing: {required}')
+
+    project_root = Path(__file__).resolve().parent
+    stage5_root = project_root.parent / 'stage5_team_affiliation_v0.1.0'
+    stage5_entry = stage5_root / 'run_stage5.py'
+    if not stage5_entry.is_file():
+        raise FileNotFoundError(f'Existing Stage-5 entry point is missing: {stage5_entry}')
+
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stage5_run_id = f'{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    result_dir = out_root / 'stage5_runs' / stage5_run_id
+    result_dir.mkdir(parents=True, exist_ok=False)
+
+    command = [
+        sys.executable,
+        str(stage5_entry),
+        '--stage3-state', str(stage3_state),
+        '--stage2-state', str(stage2_state),
+        '--stage4-handoff', str(stage4_handoff),
+        '--video', str(source_image),
+        '--output-dir', str(result_dir),
+        '--method', 'legacy-v0',
+        '--sample-every', '1',
+        '--max-samples', '1',
+        '--min-torso-frames', '1',
+        '--min-lower-frames', '1',
+        '--goalkeeper-defensive-tail',
+        '--goalkeeper-geometry-min-observations', '1',
+    ]
+    subprocess.run(command, cwd=str(stage5_root), check=True)
+
+    handoff = result_dir / 'stage5_downstream_handoff.json'
+    state = result_dir / 'team_affiliation_state.json'
+    overlay = result_dir / 'selected_frame_team_affiliation.png'
+    if not handoff.is_file() or not state.is_file():
+        raise RuntimeError('Existing Stage-5 pipeline did not produce its required artifacts')
+
+    public_handoff = out_root / 'stage5.json'
+    public_state = out_root / 'stage5_team_affiliation_state.json'
+    shutil.copy2(handoff, public_handoff)
+    shutil.copy2(state, public_state)
+    if overlay.is_file():
+        shutil.copy2(overlay, out_root / 'stage5_overlay.png')
+
+    manifest = {
+        'schema_version': 'stage9-stage5-invocation-1.0',
+        'stage5_run_id': stage5_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage5_root),
+        'stage5_entry_point': str(stage5_entry),
+        'method': 'legacy-v0',
+        'input_mode': 'SINGLE_SELECTED_FRAME',
+        'temporal_aggregation': False,
+        'source_image': str(source_image),
+        'stage2_state': str(stage2_state),
+        'stage3_state': str(stage3_state),
+        'stage4_handoff': str(stage4_handoff),
+        'goalkeeper_fallback': 'DEFENSIVE_TAIL_ASSOCIATION',
+        'result_directory': str(result_dir),
+        'handoff': str(handoff),
+        'state': str(state),
+        'overlay': str(overlay) if overlay.is_file() else None,
+        'reused_preexisting_artifact': False,
+    }
+    (out_root / 'stage5_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f'[Real Inference] Existing Stage 5 pipeline saved {public_handoff}')
 
 def process_stage6(image_path, out_dir, device='cuda', frame_index=104):
-    print('[Real Inference] Processing Stage 6 Ball Localization...')
-    import sys
+    print('[Real Inference] Running the existing Stage 6 v0.5.1 contact-aware pipeline...')
     import shutil
-    import json
+    import subprocess
+    from datetime import datetime, timezone
     from pathlib import Path
-    
-    stage6_path = r'd:\NCKH\stage6_ball_localization_v0.4.4'
-    if stage6_path not in sys.path:
-        sys.path.append(stage6_path)
-        
-    stage1_json = Path(out_dir) / 'stage1.json'
-    stage2_json = Path(out_dir) / 'stage2.json'
-    stage3_json = Path(out_dir) / 'stage3.json'
-    
-    if not stage1_json.exists() or not stage2_json.exists():
-        print("[Real Inference] Warning: stage1.json or stage2.json not found. Skipping Stage 6.")
-        return
-        
-    try:
-        from ball_localization.pipeline import run_stage6
-        import ball_localization.stage1_context
-        
-        # We need to mock load_replay_context_from_stage1 to return what we want
-        def mock_load_replay(root, video=None):
-            return {
-                "schema_version": "stage6-stage1-v12-adapter-1.0",
-                "video_path": str(image_path),
-                "video_id": "live",
-                "fps": 30.0,
-                "frame_count": 9999,
-                "image_width": 1920,
-                "image_height": 1080,
-                "selected_frame": frame_index,
-                "window_start": frame_index,
-                "window_end": frame_index,
-                "coordinate_space": "RAW_DISTORTED_PIXEL",
-                "stage1_package_version": "v12",
-                "camera_state_schema": "camera-state-1.0",
-                "source_timeline_manifest": ""
-            }
-        
-        ball_localization.stage1_context.load_replay_context_from_stage1 = mock_load_replay
-        
-        import ball_localization.camera
-        import ball_localization.pipeline
-        def mock_camera_state_for_frame(stage1_root, fi):
-            return ball_localization.camera.load_camera_state(Path(stage1_root) / 'stage1.json')
-            
-        ball_localization.pipeline.camera_state_for_frame = mock_camera_state_for_frame
-        
-        import ball_localization.visualization
-        def mock_render_selected_frame(video_path, selected, output_path):
-            img = cv2.imread(str(video_path))
-            if img is None:
-                return Path(output_path)
-            cand = selected.get("candidate")
-            if cand:
-                x1, y1, x2, y2 = [int(round(v)) for v in cand["bbox_xyxy"]]
-                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 2)
-                u, v = [int(round(z)) for z in cand["center_uv"]]
-                cv2.drawMarker(img, (u, v), (0, 255, 255), cv2.MARKER_CROSS, 14, 2)
-            cv2.putText(img, f"BALL t0={frame_index} {selected.get('status')}", (25, 40), cv2.FONT_HERSHEY_SIMPLEX, .8, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.imwrite(str(output_path), img)
-            return Path(output_path)
-            
-        ball_localization.visualization.render_selected_frame = mock_render_selected_frame
-        
-        state = run_stage6(
-            stage1_root=out_dir,
-            output_dir=out_dir,
-            provider_kind='stage2-sst',
-            weights=None,
-            stage2_entity_tracks=str(stage2_json),
-            video_path=str(image_path),
-            conf_floor=0.05,
-            top_k=10,
-            imgsz=1920,
-            device=device,
-            tracker_kind='viterbi',
-            localization_mode='hybrid-3d',
-            ball_radius_m=0.11,
-            pitch_margin_m=12.0,
-            pitch_far_prior=0.20,
-            progress_every=10,
-            temporal_config=None,
-            hybrid_config=None,
-        )
-        
-        out_handoff = Path(out_dir) / 'ball_trajectory_state.json'
-        if out_handoff.exists():
-            shutil.copy(str(out_handoff), str(Path(out_dir) / 'stage6.json'))
-            print(f"[Real Inference] Saved {Path(out_dir) / 'stage6.json'}")
-            
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[Real Inference] Stage 6 failed: {e}")
+    import uuid
 
-def process_stage7(out_dir):
-    print('[Real Inference] Processing Stage 7 Game State...')
-    import sys
+    out_root = Path(out_dir).resolve()
+    source_image = Path(image_path).resolve()
+    inputs = {
+        'stage1': out_root / 'stage1.json',
+        'stage2': out_root / 'stage2.json',
+        'stage3': out_root / 'stage3.json',
+        'stage4': out_root / 'stage4.json',
+        'image': source_image,
+    }
+    missing = [str(path) for path in inputs.values() if not path.is_file()]
+    if missing:
+        raise FileNotFoundError('Existing Stage-6 pipeline inputs are missing: ' + ', '.join(missing))
+
+    project_root = Path(__file__).resolve().parent
+    stage6_root = project_root.parent / 'stage6_ball_localization_v0.4.4'
+    stage6_entry = stage6_root / 'run_stage6_ball.py'
+    if not stage6_entry.is_file():
+        raise FileNotFoundError(f'Existing Stage-6 entry point is missing: {stage6_entry}')
+
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stage6_run_id = f'{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    runtime = out_root / 'stage6_runs' / stage6_run_id
+    result_dir = runtime / 'contact-aware'
+
+    # Build the directory contract already consumed by Stage 6's camera adapter.
+    # The copied payload remains the Stage-1 result generated for this request.
+    camera_dir = runtime / 'stage1_bundle' / 'outputs' / 'temporal_v13' / 'batch_video' / 'shot_ptz' / 'optimized_camera_states'
+    camera_dir.mkdir(parents=True, exist_ok=False)
+    camera_copy = camera_dir / f'camera_state_{int(frame_index):08d}.json'
+    shutil.copy2(inputs['stage1'], camera_copy)
+
+    command = [
+        sys.executable,
+        str(stage6_entry),
+        '--stage1-root', str(runtime / 'stage1_bundle'),
+        '--output-dir', str(result_dir),
+        '--provider', 'stage2-sst',
+        '--stage2-entity-tracks', str(inputs['stage2']),
+        '--video', str(source_image),
+        '--stage3-state', str(inputs['stage3']),
+        '--stage4-handoff', str(inputs['stage4']),
+        '--tracker', 'viterbi',
+        '--localization-mode', 'contact-aware',
+        '--device', str(device),
+        '--progress-every', '1',
+    ]
+    subprocess.run(command, cwd=str(stage6_root), check=True)
+
+    state = result_dir / 'ball_trajectory_state.json'
+    handoff = result_dir / 'stage6_downstream_handoff.json'
+    overlay = result_dir / 'selected_frame_ball.png'
+    report = result_dir / 'contact_refinement_report.md'
+    if not state.is_file() or not handoff.is_file():
+        raise RuntimeError('Existing Stage-6 pipeline did not produce its required artifacts')
+
+    public_state = out_root / 'stage6.json'
+    shutil.copy2(state, public_state)
+    shutil.copy2(handoff, out_root / 'stage6_downstream_handoff.json')
+    if overlay.is_file():
+        shutil.copy2(overlay, out_root / 'stage6_overlay.png')
+    if report.is_file():
+        shutil.copy2(report, out_root / 'stage6_contact_report.md')
+
+    manifest = {
+        'schema_version': 'stage9-stage6-invocation-1.0',
+        'stage6_run_id': stage6_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage6_root),
+        'stage6_entry_point': str(stage6_entry),
+        'provider': 'stage2-sst',
+        'tracker': 'viterbi',
+        'localization_mode': 'contact-aware',
+        'input_mode': 'SINGLE_SELECTED_FRAME',
+        'temporal_window_frames': 1,
+        'stage1_camera_copy': str(camera_copy),
+        'stage2_state': str(inputs['stage2']),
+        'stage3_state': str(inputs['stage3']),
+        'stage4_handoff': str(inputs['stage4']),
+        'source_image': str(source_image),
+        'result_directory': str(result_dir),
+        'state': str(state),
+        'downstream_handoff': str(handoff),
+        'overlay': str(overlay) if overlay.is_file() else None,
+        'reused_preexisting_artifact': False,
+    }
+    (out_root / 'stage6_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f'[Real Inference] Existing Stage 6 pipeline saved {public_state}')
+
+def process_stage7(out_dir, frame_index=104):
+    print('[Real Inference] Running the existing Stage 7 game-state pipeline...')
     import shutil
-    import json
+    import subprocess
+    from datetime import datetime, timezone
     from pathlib import Path
-    
-    stage7_path = r'd:\NCKH\stage7_game_state_v0.1.0'
-    if stage7_path not in sys.path:
-        sys.path.append(stage7_path)
-        
-    stage1_json = Path(out_dir) / 'stage1.json'
-    stage5_json = Path(out_dir) / 'stage5.json'
-    stage6_json = Path(out_dir) / 'stage6.json'
-    
-    if not stage1_json.exists() or not stage5_json.exists() or not stage6_json.exists():
-        print("[Real Inference] Warning: stage1/5/6 not found. Skipping Stage 7.")
-        return
-        
-    try:
-        from stage7_game_state.core import build_game_state_context
-        
-        ctx = build_game_state_context(str(stage1_json), str(stage5_json), str(stage6_json))
-        out_path = Path(out_dir) / 'stage7.json'
-        with open(out_path, 'w') as f:
-            json.dump(ctx.to_dict(), f, indent=2)
-            
-        print(f"[Real Inference] Saved {out_path}")
-            
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[Real Inference] Stage 7 failed: {e}")
+    import uuid
+
+    out_root = Path(out_dir).resolve()
+    inputs = {
+        'stage1': out_root / 'stage1.json',
+        'stage5': out_root / 'stage5.json',
+        'stage6': out_root / 'stage6.json',
+    }
+    missing = [str(path) for path in inputs.values() if not path.is_file()]
+    if missing:
+        raise FileNotFoundError('Existing Stage-7 pipeline inputs are missing: ' + ', '.join(missing))
+
+    project_root = Path(__file__).resolve().parent
+    stage7_root = project_root.parent / 'stage7_game_state_v0.1.0'
+    preflight_entry = stage7_root / 'preflight_stage7.py'
+    stage7_entry = stage7_root / 'run_stage7.py'
+    missing_entries = [str(path) for path in (preflight_entry, stage7_entry) if not path.is_file()]
+    if missing_entries:
+        raise FileNotFoundError('Existing Stage-7 entry point is missing: ' + ', '.join(missing_entries))
+
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stage7_run_id = f'{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    result_dir = out_root / 'stage7_runs' / stage7_run_id
+    result_dir.mkdir(parents=True, exist_ok=False)
+    preflight_report = result_dir / 'stage7_preflight.json'
+    state = result_dir / 'game_state_context.json'
+
+    common_inputs = [
+        '--stage1', str(inputs['stage1']),
+        '--stage5', str(inputs['stage5']),
+        '--stage6', str(inputs['stage6']),
+    ]
+    preflight_command = [
+        sys.executable, str(preflight_entry),
+        *common_inputs,
+        '--output', str(preflight_report),
+    ]
+    preflight = subprocess.run(preflight_command, cwd=str(stage7_root))
+    if preflight.returncode not in (0, 2) or not preflight_report.is_file():
+        raise RuntimeError(f'Existing Stage-7 preflight failed with exit code {preflight.returncode}')
+
+    stage7_command = [
+        sys.executable, str(stage7_entry),
+        *common_inputs,
+        '--output', str(state),
+    ]
+    execution = subprocess.run(stage7_command, cwd=str(stage7_root))
+    if execution.returncode not in (0, 2) or not state.is_file():
+        raise RuntimeError(f'Existing Stage-7 pipeline failed with exit code {execution.returncode}')
+
+    stage7_state = json.loads(state.read_text(encoding='utf-8'))
+    public_state = out_root / 'stage7.json'
+    shutil.copy2(state, public_state)
+    shutil.copy2(preflight_report, out_root / 'stage7_preflight.json')
+    manifest = {
+        'schema_version': 'stage9-stage7-invocation-1.0',
+        'stage7_run_id': stage7_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage7_root),
+        'preflight_entry_point': str(preflight_entry),
+        'stage7_entry_point': str(stage7_entry),
+        'preflight_exit_code': int(preflight.returncode),
+        'pipeline_exit_code': int(execution.returncode),
+        'semantic_status': stage7_state.get('status'),
+        'reasons': stage7_state.get('reasons', []),
+        'stage1_state': str(inputs['stage1']),
+        'stage5_handoff': str(inputs['stage5']),
+        'stage6_state': str(inputs['stage6']),
+        'result_directory': str(result_dir),
+        'preflight_report': str(preflight_report),
+        'state': str(state),
+        'reused_preexisting_artifact': False,
+    }
+    (out_root / 'stage7_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f'[Real Inference] Existing Stage 7 pipeline saved {public_state} ({stage7_state.get("status")})')
+
+def process_stage8(out_dir, frame_index=104):
+    print('[Real Inference] Running the existing Stage 8 offside-reference pipeline...')
+    import shutil
+    import subprocess
+    from datetime import datetime, timezone
+    from pathlib import Path
+    import uuid
+
+    out_root = Path(out_dir).resolve()
+    inputs = {
+        'stage4': out_root / 'stage4.json',
+        'stage6': out_root / 'stage6_downstream_handoff.json',
+        'stage7': out_root / 'stage7.json',
+    }
+    missing = [str(path) for path in inputs.values() if not path.is_file()]
+    if missing:
+        raise FileNotFoundError('Existing Stage-8 pipeline inputs are missing: ' + ', '.join(missing))
+
+    project_root = Path(__file__).resolve().parent
+    stage8_root = project_root.parent / 'stage8_offside_reference_v0.1.0'
+    preflight_entry = stage8_root / 'preflight_stage8.py'
+    stage8_entry = stage8_root / 'run_stage8.py'
+    missing_entries = [str(path) for path in (preflight_entry, stage8_entry) if not path.is_file()]
+    if missing_entries:
+        raise FileNotFoundError('Existing Stage-8 entry point is missing: ' + ', '.join(missing_entries))
+
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stage8_run_id = f'{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    result_dir = out_root / 'stage8_runs' / stage8_run_id
+    result_dir.mkdir(parents=True, exist_ok=False)
+    preflight_report = result_dir / 'stage8_preflight.json'
+    state = result_dir / 'offside_reference_state.json'
+    plot = result_dir / 'stage8_longitudinal_qa.png'
+
+    common_inputs = [
+        '--stage4', str(inputs['stage4']),
+        '--stage6', str(inputs['stage6']),
+        '--stage7', str(inputs['stage7']),
+    ]
+    preflight = subprocess.run(
+        [sys.executable, str(preflight_entry), *common_inputs, '--output', str(preflight_report)],
+        cwd=str(stage8_root),
+    )
+    if preflight.returncode not in (0, 2) or not preflight_report.is_file():
+        raise RuntimeError(f'Existing Stage-8 preflight failed with exit code {preflight.returncode}')
+
+    execution = subprocess.run(
+        [sys.executable, str(stage8_entry), *common_inputs, '--output', str(state)],
+        cwd=str(stage8_root),
+    )
+    if execution.returncode not in (0, 2) or not state.is_file():
+        raise RuntimeError(f'Existing Stage-8 pipeline failed with exit code {execution.returncode}')
+
+    stage8_state = json.loads(state.read_text(encoding='utf-8'))
+    public_state = out_root / 'stage8.json'
+    shutil.copy2(state, public_state)
+    shutil.copy2(preflight_report, out_root / 'stage8_preflight.json')
+    if plot.is_file():
+        shutil.copy2(plot, out_root / 'stage8_longitudinal_qa.png')
+
+    manifest = {
+        'schema_version': 'stage9-stage8-invocation-1.0',
+        'stage8_run_id': stage8_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage8_root),
+        'preflight_entry_point': str(preflight_entry),
+        'stage8_entry_point': str(stage8_entry),
+        'preflight_exit_code': int(preflight.returncode),
+        'pipeline_exit_code': int(execution.returncode),
+        'semantic_status': stage8_state.get('status'),
+        'reasons': stage8_state.get('reasons', []),
+        'stage4_handoff': str(inputs['stage4']),
+        'stage6_handoff': str(inputs['stage6']),
+        'stage7_state': str(inputs['stage7']),
+        'result_directory': str(result_dir),
+        'preflight_report': str(preflight_report),
+        'state': str(state),
+        'plot': str(plot) if plot.is_file() else None,
+        'reused_preexisting_artifact': False,
+    }
+    (out_root / 'stage8_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f'[Real Inference] Existing Stage 8 pipeline saved {public_state} ({stage8_state.get("status")})')
 
 if __name__ == '__main__':
     image_path = sys.argv[1]
@@ -520,4 +747,6 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         
-    process_stage7(out_dir)
+    process_stage7(out_dir, frame_index)
+
+    process_stage8(out_dir, frame_index)

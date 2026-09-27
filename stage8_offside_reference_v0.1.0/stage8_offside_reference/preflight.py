@@ -38,7 +38,14 @@ def build_preflight(stage4_input: Any, stage6_input: Any, stage7_input: Any) -> 
     elif len(set(known_frames)) != 1:
         blockers.append("FRAME_INDEX_MISMATCH")
 
-    if s7["status"] != "VALID":
+    stage7_tentative_only = bool(
+        s7["status"] == "DEGRADED"
+        and set(stage7.get("reasons") or []) == {"CONTACT_TENTATIVE_SPATIAL_ONLY"}
+        and ((stage7.get("toucher") or {}).get("evidence_level") == "TENTATIVE_SPATIAL_ONLY")
+    )
+    if s7["status"] == "DEGRADED" and stage7_tentative_only:
+        warnings.append("STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY")
+    elif s7["status"] != "VALID":
         blockers.append("STAGE7_CONTEXT_UNRESOLVED")
     if s7["s"] not in (-1, 1):
         blockers.append("ATTACK_DIRECTION_INVALID")
@@ -90,11 +97,17 @@ def build_preflight(stage4_input: Any, stage6_input: Any, stage7_input: Any) -> 
 
     blockers = list(dict.fromkeys(blockers))
     warnings = list(dict.fromkeys(warnings))
+    status = "BLOCKED" if blockers else ("DEGRADED_READY" if stage7_tentative_only else "READY")
     return {
         "schema_version": "stage8-preflight-1.0",
-        "status": "READY" if not blockers else "BLOCKED",
+        "status": status,
         "frames": frames,
-        "stage7": {"status": s7["status"], "s": s7["s"], "opponents": opponents},
+        "stage7": {
+            "status": s7["status"],
+            "s": s7["s"],
+            "opponents": opponents,
+            "tentative_spatial_contact_only": stage7_tentative_only,
+        },
         "stage4": {
             "schema_version": s4["schema_version"],
             "producer": s4["producer"],

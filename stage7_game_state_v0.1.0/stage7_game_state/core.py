@@ -24,14 +24,15 @@ def _evaluate_invariants(ctx: GameStateContext, players: List[Dict[str, Any]]) -
         if p["active"] and not p["is_referee"] and p["team_key"] is not None
     }
     toucher_id = ctx.toucher.get("track_id") if isinstance(ctx.toucher, dict) else None
+    resolved = ctx.status in {"VALID", "DEGRADED"}
     checks = {
-        "toucher_is_attacker": bool(toucher_id) and toucher_id in attackers if ctx.status == "VALID" else True,
+        "toucher_is_attacker": bool(toucher_id) and toucher_id in attackers if resolved else True,
         "sets_disjoint": attackers.isdisjoint(opponents),
         "referees_excluded": referees.isdisjoint(attackers | opponents),
-        "eligible_partition_complete": (attackers | opponents) == eligible_known if ctx.status == "VALID" else True,
+        "eligible_partition_complete": (attackers | opponents) == eligible_known if resolved else True,
         "attack_direction_binary": (
             isinstance(ctx.attack_direction, dict) and ctx.attack_direction.get("s") in (-1, 1)
-        ) if ctx.status == "VALID" else True,
+        ) if resolved else True,
     }
     return all(checks.values()), checks
 
@@ -58,6 +59,10 @@ def build_game_state_context(
         "contact_status": contact.get("status"),
         "contact_region": contact.get("region"),
         "contact_confidence": contact.get("confidence"),
+        "contact_track_id_confirmed": contact.get("track_id"),
+        "contact_nearest_track_id": contact.get("nearest_track_id"),
+        "contact_spatial_distance_px": contact.get("image_distance_px"),
+        "contact_spatial_threshold_px": contact.get("threshold_px"),
         "centre_ray_pitch_hit_m": hit,
         "centre_ray_source": view_meta.get("source"),
         "centre_ray_derived": bool(view_meta.get("derived", False)),
@@ -67,9 +72,18 @@ def build_game_state_context(
     }
     reasons: List[str] = []
 
-    toucher_id = contact.get("track_id")
+    confirmed_toucher_id = contact.get("track_id")
+    tentative_contact = bool(
+        not confirmed_toucher_id
+        and contact.get("status") == "INSUFFICIENT_TEMPORAL_SUPPORT"
+        and contact.get("nearest_track_id")
+    )
+    diagnostics["contact_tentative_spatial_only"] = tentative_contact
+    toucher_id = contact.get("nearest_track_id") if tentative_contact else confirmed_toucher_id
     if not toucher_id:
         reasons.append("MISSING_CONTACT_TRACK_ID")
+    elif tentative_contact:
+        reasons.append("CONTACT_TENTATIVE_SPATIAL_ONLY")
 
     by_track = {p["track_id"]: p for p in players}
     toucher = by_track.get(toucher_id) if toucher_id else None
@@ -125,6 +139,10 @@ def build_game_state_context(
         "team_id": toucher["team_id"],
         "role": toucher["role"],
         "source": contact["source"],
+        "evidence_status": contact.get("status"),
+        "evidence_level": "TENTATIVE_SPATIAL_ONLY" if tentative_contact else "CONFIRMED",
+        "image_distance_px": contact.get("image_distance_px"),
+        "threshold_px": contact.get("threshold_px"),
     }
     ctx.attacking_team_id = attacking_team_raw
 
@@ -158,7 +176,12 @@ def build_game_state_context(
         "NO_OPPONENTS_RESOLVED",
         "NO_ATTACKERS_RESOLVED",
     }
-    ctx.status = "VALID" if not any(r in hard_reasons for r in reasons) else "UNRESOLVED"
+    if any(r in hard_reasons for r in reasons):
+        ctx.status = "UNRESOLVED"
+    elif tentative_contact:
+        ctx.status = "DEGRADED"
+    else:
+        ctx.status = "VALID"
     ctx.reasons = reasons
 
     inv_ok, inv = _evaluate_invariants(ctx, players)
@@ -171,7 +194,7 @@ def build_game_state_context(
     diagnostics["num_inactive_excluded"] = len(ctx.sets["inactive_excluded"])
     ctx.diagnostics = diagnostics
 
-    if ctx.status == "VALID" and not inv_ok:
+    if ctx.status in {"VALID", "DEGRADED"} and not inv_ok:
         ctx.status = "UNRESOLVED"
         ctx.reasons.append("INVARIANT_FAILURE")
     return ctx

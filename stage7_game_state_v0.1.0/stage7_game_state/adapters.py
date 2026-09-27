@@ -353,9 +353,13 @@ def extract_stage6_contact(stage6: Dict[str, Any]) -> Dict[str, Any]:
         frame_index = None
     return {
         "track_id": normalize_track_id(track_id),
+        "nearest_track_id": normalize_track_id(contact.get("nearest_track_id")),
         "region": region,
         "status": status,
         "confidence": confidence,
+        "image_distance_px": contact.get("image_distance_px"),
+        "threshold_px": contact.get("threshold_px"),
+        "temporal_contact_evidence": contact.get("temporal_contact_evidence"),
         "frame_index": frame_index,
         "source": source,
     }

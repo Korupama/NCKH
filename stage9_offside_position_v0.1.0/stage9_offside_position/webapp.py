@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlparse
 import json
 import mimetypes
+from datetime import datetime, timezone
+import uuid
 
 from .adapters import load_json, replay_context
 from .core import build_offside_position_state
@@ -162,13 +164,16 @@ def make_handler(ctx: DemoContext):
                     print(f"[stage9-web] LIVE ANALYSIS REQUEST: frame={frame_index}")
                     
                     import subprocess
-                    import tempfile
                     import sys
                     import base64
                     
-                    # Chúng ta tạo một thư mục tạm để lưu kết quả live
-                    outdir = root / "outputs" / "live_session"
-                    outdir.mkdir(parents=True, exist_ok=True)
+                    # Every request gets a new directory. This is also the hard
+                    # boundary preventing Stage 4 from finding artifacts from a
+                    # previous web run.
+                    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                    run_id = f"{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}"
+                    outdir = root / "outputs" / "live_runs" / run_id
+                    outdir.mkdir(parents=True, exist_ok=False)
                     
                     frame_path = outdir / f"frame_{frame_index}.jpg"
                     if "image" in req_data:
@@ -178,9 +183,11 @@ def make_handler(ctx: DemoContext):
                         img_bytes = base64.b64decode(img_b64)
                         img_array = np.frombuffer(img_bytes, dtype=np.uint8)
                         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-                        # Resize to 1920x1080 to match Stage 1 mock camera data
-                        img_resized = cv2.resize(img, (1920, 1080))
-                        cv2.imwrite(str(frame_path), img_resized)
+                        if img is None:
+                            raise ValueError("Could not decode the submitted video frame")
+                        cv2.imwrite(str(frame_path), img)
+                    else:
+                        raise ValueError("A source-frame image is required for fresh inference")
                     
                     cmd = [
                         sys.executable,
@@ -197,15 +204,27 @@ def make_handler(ctx: DemoContext):
                     # Reload context and mutate global ctx
                     if type(ctx).__name__ == "PipelineContext":
                         from stage9_offside_position.pipeline import build_pipeline_context
-                        new_paths = {f"stage{i}": outdir / f"stage{i}.json" for i in range(1, 8)}
+                        new_paths = {f"stage{i}": outdir / f"stage{i}.json" for i in range(1, 9)}
                         new_ctx = build_pipeline_context(paths=new_paths, image_path=str(frame_path))
                         ctx.state = new_ctx.state
                         ctx.frame = new_ctx.frame
                         ctx.frame_source = new_ctx.frame_source
-                        # Đè frame_index để giao diện không bị nhảy lại số 104 do xài mock data
+                        # Keep the UI on the exact frame selected by the user.
                         ctx.state["frame_index"] = int(frame_index)
                     
-                    self._send(200, json.dumps({"status": "ok", "outdir": str(outdir)}).encode("utf-8"), "application/json")
+                    self._send(200, json.dumps({
+                        "status": "ok", "run_id": run_id, "outdir": str(outdir),
+                        "stage4_execution": "EXISTING_STAGE4_PIPELINE_FRESH_INFERENCE",
+                        "stage4_invocation": str(outdir / "stage4_invocation.json"),
+                        "stage5_execution": "EXISTING_STAGE5_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
+                        "stage5_invocation": str(outdir / "stage5_invocation.json"),
+                        "stage6_execution": "EXISTING_STAGE6_CONTACT_AWARE_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
+                        "stage6_invocation": str(outdir / "stage6_invocation.json"),
+                        "stage7_execution": "EXISTING_STAGE7_PIPELINE_FRESH_CONTEXT_RESOLUTION",
+                        "stage7_invocation": str(outdir / "stage7_invocation.json"),
+                        "stage8_execution": "EXISTING_STAGE8_PIPELINE_FRESH_REFERENCE_GEOMETRY",
+                        "stage8_invocation": str(outdir / "stage8_invocation.json"),
+                    }).encode("utf-8"), "application/json")
                 except Exception as e:
                     import traceback
                     traceback.print_exc()

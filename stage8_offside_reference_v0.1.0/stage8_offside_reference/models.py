@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class OffsideReferenceState:
     schema_version: str = "stage8-offside-reference-1.0"
-    stage_version: str = "stage8-offside-reference-0.1.0"
+    stage_version: str = "stage8-offside-reference-0.1.1"
     frame_index: Optional[int] = None
     status: str = "UNRESOLVED"
     reasons: List[str] = field(default_factory=list)
