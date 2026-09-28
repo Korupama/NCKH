@@ -1,0 +1,33 @@
+{
+  "schema_version": "stage7-eval-manifest-2.0",
+  "protocol": {
+    "name": "stage7-frozen-context-eval",
+    "split": "locked_test",
+    "notes": "Partial GT is allowed. Only independently labeled fields are scored."
+  },
+  "cases": [
+    {
+      "case_id": "case001",
+      "stage1": "relative/path/to/stage1.json",
+      "stage5": "relative/path/to/stage5.json",
+      "stage6": "relative/path/to/stage6.json",
+      "provenance": {
+        "dataset": "PROJECT_FROZEN",
+        "independent_gt": true,
+        "gt_source": "manual_double_review_or_public_annotation"
+      },
+      "gt": {
+        "frame_index": 104,
+        "status": "VALID",
+        "toucher_track_id": "track_006",
+        "attacking_team_id": 1,
+        "attack_direction_s": 1,
+        "sets": {
+          "attackers": ["track_006", "track_008"],
+          "opponents": ["track_001", "track_002"],
+          "referees_excluded": ["track_003"]
+        }
+      }
+    }
+  ]
+}

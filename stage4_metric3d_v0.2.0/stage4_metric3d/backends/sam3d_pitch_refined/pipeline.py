@@ -79,6 +79,22 @@ def preflight_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cac
     s3 = _load_stage3_for_frame(stage3_state, selected_frame); cams = CameraTimelineLite.load_dir(camera_dir); cache = Sam3DNativeCache.load(sam3d_cache)
     track_ids = _eligible_tracks(s3); frames = _frames_in_window(s3, track_ids, cfg.window_radius_frames)
     errors: list[str] = []; warnings: list[str] = []
+    try:
+        source_fps = float(s3.replay_context.get("fps"))
+        if not np.isfinite(source_fps) or source_fps <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        source_fps = None
+        errors.append("stage3_source_fps_missing_or_invalid")
+    try:
+        image_width = int(s3.replay_context.get("image_width"))
+        image_height = int(s3.replay_context.get("image_height"))
+        if image_width <= 0 or image_height <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        image_width = None
+        image_height = None
+        errors.append("stage3_image_size_missing_or_invalid")
     if tuple(cache.track_ids) != tuple(track_ids): errors.append("sam3d_track_order_mismatch")
     cache_frame_set = set(int(x) for x in cache.frame_indices.tolist())
     missing_cache = [f for f in frames if f not in cache_frame_set]
@@ -114,8 +130,8 @@ def preflight_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cac
         "ready": not errors,
         "selected_frame": int(s3.selected_frame),
         "temporal_status": temporal_status,
-        "source_fps": float(s3.replay_context.get("fps")),
-        "image_size": [int(s3.replay_context.get("image_width")), int(s3.replay_context.get("image_height"))],
+        "source_fps": source_fps,
+        "image_size": [image_width, image_height],
         "window_frames": frames,
         "track_ids": track_ids,
         "sam3d_cache": {"schema": "stage4-sam3d-native-cache-1.0", "T": cache.T, "N": cache.N, "J": cache.J},

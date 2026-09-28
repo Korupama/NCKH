@@ -55,7 +55,105 @@ def lower_body_centroids_by_team(
     return out
 
 
-def assign_goalkeeper(feature: Optional[np.ndarray], team_lower_centroids: Mapping[int, np.ndarray], config: Stage5Config) -> Dict[str, Any]:
+def assign_goalkeeper_spatial(
+    *,
+    gk_pitch_x: Optional[Any] = None,
+    gk_image_x: Optional[Any] = None,
+    team_pitch_x: Optional[Mapping[int, Any]] = None,
+    team_image_x: Optional[Mapping[int, Any]] = None,
+    config: Stage5Config,
+) -> Dict[str, Any]:
+    mode = getattr(config, "goalkeeper_assignment_mode", "spatial_hybrid")
+
+    # 1. Pitch spatial reasoning (if enabled and coordinates available)
+    if mode in ("spatial_hybrid", "spatial_pitch"):
+        if (
+            gk_pitch_x is not None and len(gk_pitch_x) > 0
+            and team_pitch_x is not None and 0 in team_pitch_x and 1 in team_pitch_x
+            and len(team_pitch_x[0]) > 0 and len(team_pitch_x[1]) > 0
+        ):
+            med0 = float(np.median(team_pitch_x[0]))
+            med1 = float(np.median(team_pitch_x[1]))
+            sep = abs(med0 - med1)
+            min_sep = getattr(config, "goalkeeper_min_pitch_separation_m", 1.0)
+            if sep >= min_sep:
+                left_team = 0 if med0 < med1 else 1
+                right_team = 1 - left_team
+                gk_med = float(np.median(gk_pitch_x))
+                team_id = left_team if gk_med < 0 else right_team
+                margin = abs(gk_med)
+                return {
+                    "team_id": team_id,
+                    "status": "VALID",
+                    "method": "SPATIAL_PITCH_GOAL_AFFINITY",
+                    "margin": margin,
+                    "pitch_separation_m": sep,
+                    "gk_pitch_median_m": gk_med,
+                }
+        if mode == "spatial_pitch":
+            return {"team_id": None, "status": "UNKNOWN", "method": "INSUFFICIENT_PITCH_COORDINATES"}
+
+    # 2. Image spatial reasoning (if enabled and coordinates available)
+    if mode in ("spatial_hybrid", "spatial_image"):
+        if (
+            gk_image_x is not None and len(gk_image_x) > 0
+            and team_image_x is not None and 0 in team_image_x and 1 in team_image_x
+            and len(team_image_x[0]) > 0 and len(team_image_x[1]) > 0
+        ):
+            med0 = float(np.median(team_image_x[0]))
+            med1 = float(np.median(team_image_x[1]))
+            gk_med = float(np.median(gk_image_x))
+            d0 = abs(gk_med - med0)
+            d1 = abs(gk_med - med1)
+            margin = abs(d0 - d1)
+            min_margin = getattr(config, "goalkeeper_min_spatial_margin_px", 30.0)
+            if margin >= min_margin:
+                team_id = 0 if d0 < d1 else 1
+                return {
+                    "team_id": team_id,
+                    "status": "VALID",
+                    "method": "SPATIAL_IMAGE_CENTROID_AFFINITY",
+                    "margin": margin,
+                    "d0_px": d0,
+                    "d1_px": d1,
+                    "gk_image_median_px": gk_med,
+                }
+            elif not getattr(config, "goalkeeper_fallback_to_color", True):
+                return {
+                    "team_id": None,
+                    "status": "UNKNOWN",
+                    "method": "AMBIGUOUS_IMAGE_SPATIAL_SEPARATION",
+                    "margin": margin,
+                }
+
+    return {"team_id": None, "status": "UNKNOWN", "method": "SPATIAL_UNAVAILABLE"}
+
+
+def assign_goalkeeper(
+    feature: Optional[np.ndarray],
+    team_lower_centroids: Mapping[int, np.ndarray],
+    config: Stage5Config,
+    *,
+    gk_pitch_x: Optional[Any] = None,
+    gk_image_x: Optional[Any] = None,
+    team_pitch_x: Optional[Mapping[int, Any]] = None,
+    team_image_x: Optional[Mapping[int, Any]] = None,
+) -> Dict[str, Any]:
+    mode = getattr(config, "goalkeeper_assignment_mode", "spatial_hybrid")
+    if mode != "color_lower_body":
+        spatial_res = assign_goalkeeper_spatial(
+            gk_pitch_x=gk_pitch_x,
+            gk_image_x=gk_image_x,
+            team_pitch_x=team_pitch_x,
+            team_image_x=team_image_x,
+            config=config,
+        )
+        if spatial_res.get("status") == "VALID":
+            return spatial_res
+        if not getattr(config, "goalkeeper_fallback_to_color", True):
+            return spatial_res
+
+    # Color fallback
     if feature is None:
         return {"team_id": None, "status": "UNKNOWN", "method": "NO_LOWER_BODY_FEATURE"}
     if set(team_lower_centroids) != {0, 1}:

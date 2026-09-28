@@ -41,12 +41,11 @@ class PitchSpec:
 @dataclass
 class Distortion:
     model: str = "opencv"
-    radial: List[float] = field(default_factory=list)       # k1,k2,k3,k4,k5,k6 as available
-    tangential: List[float] = field(default_factory=list)   # p1,p2
-    thin_prism: List[float] = field(default_factory=list)   # s1..s4
+    radial: List[float] = field(default_factory=list)
+    tangential: List[float] = field(default_factory=list)
+    thin_prism: List[float] = field(default_factory=list)
 
     def opencv_vector(self) -> np.ndarray:
-        # OpenCV accepts [k1,k2,p1,p2,k3,k4,k5,k6,s1,s2,s3,s4].
         k = list(self.radial) + [0.0] * (6 - len(self.radial))
         p = list(self.tangential) + [0.0] * (2 - len(self.tangential))
         s = list(self.thin_prism) + [0.0] * (4 - len(self.thin_prism))
@@ -91,6 +90,10 @@ class CameraState:
     def P(self) -> np.ndarray:
         return self.K @ np.column_stack([self.R_world_to_camera, self.t_world_to_camera])
 
+    def view_metadata(self) -> Dict[str, Any]:
+        from .geometry import camera_view_metadata
+        return camera_view_metadata(self)
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "schema_version": self.schema_version,
@@ -110,6 +113,7 @@ class CameraState:
                 "t_world_to_camera": self.t_world_to_camera.tolist(),
             },
             "projection": {"P": self.P.tolist()},
+            "view": self.view_metadata(),
             "source": self.source,
             "evidence": self.evidence,
             "audit": self.audit,

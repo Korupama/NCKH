@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "case_id": "case001",
+      "stage1": "relative/path/to/stage1.json",
+      "stage5": "relative/path/to/stage5.json",
+      "stage6": "relative/path/to/stage6.json",
+      "gt": {
+        "status": "VALID",
+        "attacking_team_id": 0,
+        "attack_direction_s": 1,
+        "sets": {
+          "attackers": [
+            "003",
+            "005"
+          ],
+          "opponents": [
+            "007",
+            "011"
+          ],
+          "referees_excluded": [
+            "018"
+          ]
+        }
+      }
+    }
+  ]
+}

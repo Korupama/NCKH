@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "stage_version": "stage7-game-state-0.1.2",
+  "frame_index": 104,
+  "status": "VALID",
+  "reasons": [],
+  "attack_direction": {
+    "s": 1,
+    "label": "LEFT_TO_RIGHT",
+    "centre_ray_x_m": 36.24704413097739,
+    "source": "stage1.centre_ray_pitch_hit"
+  },
+  "sets": {
+    "attackers": ["track_006"],
+    "opponents": ["track_007", "track_011"],
+    "referees_excluded": ["track_003"],
+    "unknown_team_excluded": [],
+    "inactive_excluded": []
+  }
+}

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stage9-offside-position"
+version = "0.1.0"
+description = "Best-effort offside-position classification and local web demo for the NCKH football replay pipeline"
+requires-python = ">=3.9"
+dependencies = [
+  "numpy>=1.24",
+  "opencv-python>=4.8",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

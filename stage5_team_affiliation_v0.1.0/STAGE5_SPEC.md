@@ -29,9 +29,13 @@ Produce track-level team affiliation for players visible in the replay analysis 
 
 ## Goalkeeper policy
 
-Goalkeepers are not used to fit outfield clusters. v0.1 assigns them only when lower-body appearance has a sufficiently clear affinity to one of the two outfield-team lower-body centroids. Otherwise `UNKNOWN`.
+Goalkeepers are not used to fit outfield clusters. With a Stage 4 handoff, v0.1
+first uses goal-to-goal pitch position, then image-space distance to the two
+outfield clusters. Lower-body appearance remains the fallback. Every branch has
+an ambiguity threshold; otherwise the result is `UNKNOWN`.
 
-This is intentionally conservative; v0.1 does not infer goalkeeper team from tactical assumptions.
+This is intentionally conservative and does not equate the goalkeeper role with
+a specific team without spatial or appearance evidence.
 
 ## Referee policy
 
@@ -39,4 +43,6 @@ Role=`referee` is excluded before clustering and receives `NOT_APPLICABLE`.
 
 ## Stage boundaries
 
-Stage 5 does not consume Stage 4 and does not resolve attacking team. Stage 7 combines Stage 5 team IDs with Stage 6 toucher identity.
+Stage 5 may consume the Stage 4 selected-frame handoff to resolve goalkeeper
+affiliation with pitch/image spatial evidence. It still does not resolve the
+attacking team. Stage 7 combines Stage 5 team IDs with Stage 6 toucher identity.

@@ -29,6 +29,10 @@ class Stage5Config:
     feature_fusion_enabled: bool = True
     torso_feature_weight: float = 0.75
     lower_feature_weight: float = 0.25
+    goalkeeper_assignment_mode: str = "spatial_hybrid"
+    goalkeeper_min_spatial_margin_px: float = 30.0
+    goalkeeper_min_pitch_separation_m: float = 1.0
+    goalkeeper_fallback_to_color: bool = True
 
     def validate(self) -> None:
         if self.sample_every_n_frames < 1:

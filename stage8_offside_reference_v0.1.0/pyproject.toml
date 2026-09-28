@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stage8-offside-reference"
+version = "0.1.0"
+description = "Deterministic second-last-opponent and offside-reference geometry for offline football replay analysis"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+qa = ["matplotlib>=3.7"]
+test = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
