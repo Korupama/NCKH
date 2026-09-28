@@ -14,6 +14,9 @@ Implemented:
 - Stage-3 bbox/keypoint overlay support;
 - Stage-4 -> Stage-1 projection fallback;
 - projected Stage-8 reference line;
+- fresh live invocation after Stage 8 in the Stage 1–9 orchestrator;
+- Stage 9 API payload, overlay layer, roster labels, and 3D/sideline coloring;
+- strict live mode that preserves unresolved upstream gates;
 - oracle benchmark and unit/integration tests.
 
 Not validated/frozen:

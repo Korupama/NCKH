@@ -400,8 +400,6 @@ def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
         '--max-samples', '1',
         '--min-torso-frames', '1',
         '--min-lower-frames', '1',
-        '--goalkeeper-defensive-tail',
-        '--goalkeeper-geometry-min-observations', '1',
     ]
     subprocess.run(command, cwd=str(stage5_root), check=True)
 
@@ -431,7 +429,6 @@ def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
         'stage2_state': str(stage2_state),
         'stage3_state': str(stage3_state),
         'stage4_handoff': str(stage4_handoff),
-        'goalkeeper_fallback': 'DEFENSIVE_TAIL_ASSOCIATION',
         'result_directory': str(result_dir),
         'handoff': str(handoff),
         'state': str(state),
@@ -710,6 +707,84 @@ def process_stage8(out_dir, frame_index=104):
     )
     print(f'[Real Inference] Existing Stage 8 pipeline saved {public_state} ({stage8_state.get("status")})')
 
+def process_stage9(image_path, out_dir, frame_index=104):
+    print('[Real Inference] Running the existing Stage 9 offside-position pipeline in strict mode...')
+    import shutil
+    import subprocess
+    from datetime import datetime, timezone
+    from pathlib import Path
+    import uuid
+
+    out_root = Path(out_dir).resolve()
+    inputs = {
+        'stage1': out_root / 'stage1.json',
+        'stage3': out_root / 'stage3.json',
+        'stage4': out_root / 'stage4.json',
+        'stage6': out_root / 'stage6.json',
+        'stage7': out_root / 'stage7.json',
+        'stage8': out_root / 'stage8.json',
+        'image': Path(image_path).resolve(),
+    }
+    missing = [str(path) for path in inputs.values() if not path.is_file()]
+    if missing:
+        raise FileNotFoundError('Existing Stage-9 pipeline inputs are missing: ' + ', '.join(missing))
+
+    stage9_root = Path(__file__).resolve().parent
+    stage9_entry = stage9_root / 'run_stage9.py'
+    if not stage9_entry.is_file():
+        raise FileNotFoundError(f'Existing Stage-9 entry point is missing: {stage9_entry}')
+
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stage9_run_id = f'{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}'
+    result_dir = out_root / 'stage9_runs' / stage9_run_id
+    result_dir.mkdir(parents=True, exist_ok=False)
+    state = result_dir / 'offside_position_state.json'
+    overlay = result_dir / 'stage9_overlay.jpg'
+    command = [
+        sys.executable, str(stage9_entry),
+        '--stage4', str(inputs['stage4']),
+        '--stage6', str(inputs['stage6']),
+        '--stage7', str(inputs['stage7']),
+        '--stage8', str(inputs['stage8']),
+        '--stage1', str(inputs['stage1']),
+        '--stage3', str(inputs['stage3']),
+        '--image', str(inputs['image']),
+        '--output', str(state),
+        '--overlay', str(overlay),
+        '--strict',
+    ]
+    execution = subprocess.run(command, cwd=str(stage9_root))
+    if execution.returncode not in (0, 2) or not state.is_file():
+        raise RuntimeError(f'Existing Stage-9 pipeline failed with exit code {execution.returncode}')
+
+    stage9_state = json.loads(state.read_text(encoding='utf-8'))
+    public_state = out_root / 'stage9.json'
+    shutil.copy2(state, public_state)
+    if overlay.is_file():
+        shutil.copy2(overlay, out_root / 'stage9_overlay.jpg')
+    manifest = {
+        'schema_version': 'stage9-live-invocation-1.0',
+        'stage9_run_id': stage9_run_id,
+        'frame_index': int(frame_index),
+        'pipeline_owner': str(stage9_root),
+        'stage9_entry_point': str(stage9_entry),
+        'mode': 'STRICT',
+        'pipeline_exit_code': int(execution.returncode),
+        'semantic_status': stage9_state.get('status'),
+        'stage4_handoff': str(inputs['stage4']),
+        'stage6_state': str(inputs['stage6']),
+        'stage7_state': str(inputs['stage7']),
+        'stage8_state': str(inputs['stage8']),
+        'result_directory': str(result_dir),
+        'state': str(state),
+        'overlay': str(overlay) if overlay.is_file() else None,
+        'reused_preexisting_artifact': False,
+    }
+    (out_root / 'stage9_invocation.json').write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8'
+    )
+    print(f'[Real Inference] Existing Stage 9 pipeline saved {public_state} ({stage9_state.get("status")})')
+
 if __name__ == '__main__':
     image_path = sys.argv[1]
     out_dir = sys.argv[2]
@@ -750,3 +825,5 @@ if __name__ == '__main__':
     process_stage7(out_dir, frame_index)
 
     process_stage8(out_dir, frame_index)
+
+    process_stage9(image_path, out_dir, frame_index)

@@ -6,6 +6,25 @@ let sidelineCenterX = 0;
 let sidelineDrag = null;
 const drawExistingPitchView = drawPitch;
 
+function spatialTrackColor(row) {
+  if (typeof layers !== 'undefined' && layers.has(9)) {
+    return {
+      OFFSIDE_POSITION: '#ff5e62',
+      ONSIDE: '#68d391',
+      TOUCHER_EXCLUDED: '#f8eb50',
+      UNAVAILABLE: '#a9b2bc'
+    }[row.offside_label] || color(row);
+  }
+  return color(row);
+}
+
+function spatialTrackLabel(row) {
+  const suffix = {
+    OFFSIDE_POSITION: ' OFF', ONSIDE: ' ON', TOUCHER_EXCLUDED: ' PASSER', UNAVAILABLE: ' ON?'
+  }[row.offside_label] || '';
+  return row.track_id.replace('track_', '#') + suffix;
+}
+
 function field3dProjector(width, height, center, yaw, zoom) {
   const length = Number(state.pitch.length_m || 105);
   const pitchWidth = Number(state.pitch.width_m || 68);
@@ -114,8 +133,8 @@ function drawStadium3D() {
   }).forEach(function (row) {
     const dimmed = focus && row.track_id !== focus;
     context.globalAlpha = dimmed ? 0.28 : 1;
-    context.strokeStyle = color(row);
-    context.fillStyle = color(row);
+    context.strokeStyle = spatialTrackColor(row);
+    context.fillStyle = spatialTrackColor(row);
     context.lineWidth = row.track_id === focus ? 3 : 2;
     state.skeleton_edges.forEach(function (edge) {
       const a = row.joints_world[edge[0]];
@@ -139,7 +158,7 @@ function drawStadium3D() {
     const root = project(row.root_world_m);
     context.font = '10px Segoe UI';
     context.fillStyle = '#eef7f1';
-    context.fillText(row.track_id.replace('track_', '#'), root[0] + 4, labelY);
+    context.fillText(spatialTrackLabel(row), root[0] + 4, labelY);
   });
   context.globalAlpha = 1;
 
@@ -232,8 +251,8 @@ function drawSideline() {
   rows.forEach(function (row) {
     const dimmed = focus && row.track_id !== focus;
     context.globalAlpha = dimmed ? 0.25 : 1;
-    context.strokeStyle = color(row);
-    context.fillStyle = color(row);
+    context.strokeStyle = spatialTrackColor(row);
+    context.fillStyle = spatialTrackColor(row);
     context.lineWidth = row.track_id === focus ? 3.5 : 2.2;
     state.skeleton_edges.forEach(function (edge) {
       const a = row.joints_world[edge[0]];
@@ -256,7 +275,7 @@ function drawSideline() {
     const top = Math.min(...joints.map(function (point) { return point[1]; }));
     context.fillStyle = '#eef7f1';
     context.font = '10px Segoe UI';
-    context.fillText(row.track_id.replace('track_', '#'), root[0] + 5, top - 5);
+    context.fillText(spatialTrackLabel(row), root[0] + 5, top - 5);
   });
   context.globalAlpha = 1;
 

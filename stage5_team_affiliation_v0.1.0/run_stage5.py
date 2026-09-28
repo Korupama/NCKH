@@ -10,6 +10,7 @@ def main():
     ap.add_argument("--stage3-state", required=True)
     ap.add_argument("--video", default=None)
     ap.add_argument("--stage2-state", default=None)
+    ap.add_argument("--stage4-handoff", default=None, help="Optional Stage4 world-pose handoff used for goalkeeper spatial affiliation")
     ap.add_argument("--output-dir", required=True)
     ap.add_argument("--method", choices=["legacy-v0", "residual-v1", "residual-v2", "residual-v3"], default="legacy-v0")
     ap.add_argument("--pitch-state", help="Stage1 metric pitch-track cache; required for residual V2/V3")
@@ -40,6 +41,7 @@ def main():
         stage3_state=args.stage3_state,
         video_path=args.video,
         stage2_state=args.stage2_state,
+        stage4_handoff=args.stage4_handoff,
         output_dir=args.output_dir,
         config=cfg,
     )

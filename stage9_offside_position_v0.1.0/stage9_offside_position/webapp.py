@@ -204,13 +204,26 @@ def make_handler(ctx: DemoContext):
                     # Reload context and mutate global ctx
                     if type(ctx).__name__ == "PipelineContext":
                         from stage9_offside_position.pipeline import build_pipeline_context
-                        new_paths = {f"stage{i}": outdir / f"stage{i}.json" for i in range(1, 9)}
+                        new_paths = {f"stage{i}": outdir / f"stage{i}.json" for i in range(1, 10)}
                         new_ctx = build_pipeline_context(paths=new_paths, image_path=str(frame_path))
                         ctx.state = new_ctx.state
                         ctx.frame = new_ctx.frame
                         ctx.frame_source = new_ctx.frame_source
                         # Keep the UI on the exact frame selected by the user.
                         ctx.state["frame_index"] = int(frame_index)
+
+                    stage5_handoff = json.loads((outdir / "stage5.json").read_text(encoding="utf-8"))
+                    track_team = stage5_handoff.get("track_team", {})
+                    assigned_count = sum(
+                        1 for record in track_team.values()
+                        if record.get("team_id") is not None
+                    )
+                    unknown_count = sum(
+                        1 for record in track_team.values()
+                        if record.get("team_status") == "UNKNOWN"
+                    )
+                    stage9_state = json.loads((outdir / "stage9.json").read_text(encoding="utf-8"))
+                    stage9_attackers = stage9_state.get("attackers", [])
                     
                     self._send(200, json.dumps({
                         "status": "ok", "run_id": run_id, "outdir": str(outdir),
@@ -218,12 +231,30 @@ def make_handler(ctx: DemoContext):
                         "stage4_invocation": str(outdir / "stage4_invocation.json"),
                         "stage5_execution": "EXISTING_STAGE5_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
                         "stage5_invocation": str(outdir / "stage5_invocation.json"),
+                        "stage5_result": {
+                            "selected_frame": stage5_handoff.get("selected_frame"),
+                            "assigned_count": assigned_count,
+                            "unknown_count": unknown_count,
+                            "attacking_team_not_resolved": stage5_handoff.get("attacking_team_not_resolved"),
+                            "track_team": track_team,
+                        },
                         "stage6_execution": "EXISTING_STAGE6_CONTACT_AWARE_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
                         "stage6_invocation": str(outdir / "stage6_invocation.json"),
                         "stage7_execution": "EXISTING_STAGE7_PIPELINE_FRESH_CONTEXT_RESOLUTION",
                         "stage7_invocation": str(outdir / "stage7_invocation.json"),
                         "stage8_execution": "EXISTING_STAGE8_PIPELINE_FRESH_REFERENCE_GEOMETRY",
                         "stage8_invocation": str(outdir / "stage8_invocation.json"),
+                        "stage9_execution": "EXISTING_STAGE9_PIPELINE_FRESH_STRICT_CLASSIFICATION",
+                        "stage9_invocation": str(outdir / "stage9_invocation.json"),
+                        "stage9_result": {
+                            "status": stage9_state.get("status"),
+                            "mode": stage9_state.get("mode"),
+                            "reference": stage9_state.get("reference"),
+                            "offside_position_count": sum(1 for row in stage9_attackers if row.get("label") == "OFFSIDE_POSITION"),
+                            "onside_count": sum(1 for row in stage9_attackers if row.get("label") == "ONSIDE"),
+                            "attackers": stage9_attackers,
+                            "note": "Position classification only; not an offside-offence decision.",
+                        },
                     }).encode("utf-8"), "application/json")
                 except Exception as e:
                     import traceback
