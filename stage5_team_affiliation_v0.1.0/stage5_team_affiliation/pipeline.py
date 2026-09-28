@@ -150,19 +150,34 @@ def run_stage5(
             },
         }
 
+    track_image_x: Dict[str, List[float]] = {}
+    for t in candidate_tracks:
+        tid = str(t["track_id"])
+        for o in t.get("observations", []):
+            box = o.get("source_bbox_xyxy") or o.get("bbox_xyxy")
+            if box is not None and len(box) >= 4:
+                track_image_x.setdefault(tid, []).append(float(box[0] + box[2]) / 2.0)
+
     outfield = {
         tid: fused_features[tid]
         for tid, rec in per_track.items()
         if rec["role"] == "player" and tid in fused_features and rec["appearance"]["valid_torso_frames"] >= config.min_valid_torso_frames
     }
     cluster_error = None
+    team_image_x: Dict[int, List[float]] = {}
     try:
         cluster = fit_two_teams(outfield, config)
         team_lower_centroids = lower_body_centroids_by_team(cluster.labels, cluster.status, lower_features)
+        team_image_x = {
+            team: [x for tid, lab in cluster.labels.items() if lab == team and cluster.status.get(tid) == "VALID" for x in track_image_x.get(tid, [])]
+            for team in (0, 1)
+        }
     except ValueError as exc:
         cluster = None
         cluster_error = str(exc)
         team_lower_centroids = {}
+
+    from .clustering import assign_to_centroids
 
     output_tracks: List[Dict[str, Any]] = []
     for tid in sorted(per_track):
@@ -175,8 +190,21 @@ def run_stage5(
                 "assignment_method": "REFEREE_EXCLUDED",
             })
         elif role == "player":
-            if cluster is None or tid not in cluster.labels:
-                rec.update({"team_id": None, "team_status": "UNKNOWN", "assignment_method": "INSUFFICIENT_APPEARANCE" if tid not in fused_features else "TEAM_CLUSTERING_UNAVAILABLE"})
+            if cluster is None:
+                rec.update({"team_id": None, "team_status": "UNKNOWN", "assignment_method": "TEAM_CLUSTERING_UNAVAILABLE"})
+            elif tid not in cluster.labels:
+                if tid in fused_features:
+                    assign_res = assign_to_centroids(fused_features[tid], cluster.centroids_raw, min_margin=config.min_cluster_margin)
+                    rec.update({
+                        "team_id": assign_res.get("team_id"),
+                        "team_status": assign_res.get("status"),
+                        "assignment_method": "OUTFIELD_CENTROID_RECOVERY",
+                        "cluster_id_raw": assign_res.get("team_id"),
+                        "cluster_distances": assign_res.get("distances"),
+                        "cluster_margin": assign_res.get("margin"),
+                    })
+                else:
+                    rec.update({"team_id": None, "team_status": "UNKNOWN", "assignment_method": "INSUFFICIENT_APPEARANCE"})
             else:
                 status = cluster.status[tid]
                 rec.update({
@@ -188,7 +216,13 @@ def run_stage5(
                     "cluster_margin": cluster.margins[tid],
                 })
         elif role == "goalkeeper":
-            result = assign_goalkeeper(lower_features.get(tid), team_lower_centroids, config)
+            result = assign_goalkeeper(
+                lower_features.get(tid),
+                team_lower_centroids,
+                config,
+                gk_image_x=track_image_x.get(tid),
+                team_image_x=team_image_x,
+            )
             rec.update({
                 "team_id": result.get("team_id"),
                 "team_status": result.get("status"),
