@@ -11,11 +11,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any, Dict
 
 import cv2
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from stage3_pose2d.crop_qa import analyze_crop
 from stage3_pose2d.quality import evaluate_pose
 from stage3_pose2d.rtmw_onnx import RTMWOpenCVDNN
 from stage3_pose2d.schemas import Stage3Config
@@ -41,6 +47,9 @@ def build_pseudo_labels(
     model = RTMWOpenCVDNN(model_path, input_width=288, input_height=384, device="cpu")
     config = Stage3Config()
     tasks = document.get("tasks") or []
+    tasks_by_image: Dict[str, list[Dict[str, Any]]] = {}
+    for task in tasks:
+        tasks_by_image.setdefault(str(task.get("image_path")), []).append(task)
     accepted = rejected = skipped = processed = 0
 
     for task in tasks:
@@ -57,17 +66,47 @@ def build_pseudo_labels(
             processed += 1
             continue
         result = model.infer_one(image, task["bbox_xyxy"])
-        qa, records = evaluate_pose(result.keypoints_xy, result.scores, task["bbox_xyxy"], config)
+        neighbors = [
+            {"track_id": str(other.get("track_id") or other.get("task_id")), "bbox_xyxy": other["bbox_xyxy"]}
+            for other in tasks_by_image.get(str(task.get("image_path")), [])
+            if other is not task and other.get("bbox_xyxy")
+        ]
+        crop_diagnostics = analyze_crop(
+            task["bbox_xyxy"],
+            (image.shape[1], image.shape[0]),
+            neighbors=neighbors,
+            pose_xy=result.keypoints_xy,
+            pose_scores=result.scores,
+            bbox_padding=config.bbox_padding,
+            input_size_wh=(config.rtmw_input_width, config.rtmw_input_height),
+        )
+        qa, records = evaluate_pose(
+            result.keypoints_xy,
+            result.scores,
+            task["bbox_xyxy"],
+            config,
+            crop_diagnostics=crop_diagnostics,
+        )
         median_score = float(qa.get("median_positive_raw_score", 0.0))
-        accepted_by_gate = qa.get("pose_status") == "VALID" and median_score >= float(min_median_score)
+        crop_status = str(crop_diagnostics.get("crop_status", "UNKNOWN"))
+        ownership_status = str(crop_diagnostics.get("ownership_status", "UNKNOWN"))
+        accepted_by_gate = (
+            qa.get("pose_status") == "VALID"
+            and crop_status == "OK"
+            and ownership_status in {"SUPPORTED", "UNKNOWN"}
+            and median_score >= float(min_median_score)
+        )
         task["pseudo_label_qa"] = qa
+        task["pseudo_label_crop_diagnostics"] = crop_diagnostics
         task["pseudo_label_provenance"] = {
             "annotation_source": "PSEUDO_LABEL",
             "teacher_model": "RTMW-L",
             "teacher_model_path": str(model_path.resolve()),
             "teacher_model_sha256": _sha256(model_path),
+            "input_size_wh": [config.rtmw_input_width, config.rtmw_input_height],
+            "bbox_padding": config.bbox_padding,
             "is_ground_truth": False,
-            "selection_policy": "Stage3_VALID_and_median_raw_score_floor",
+            "selection_policy": "Stage3_VALID_with_crop_ownership_QA_and_median_raw_score_floor",
             "min_median_raw_score": float(min_median_score),
         }
         if accepted_by_gate:
@@ -102,6 +141,7 @@ def build_pseudo_labels(
         "skipped_train_tasks": skipped,
         "min_median_raw_score": float(min_median_score),
         "validation_test_pseudo_labels_created": 0,
+        "crop_ownership_qa_enabled": True,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(document, indent=2, ensure_ascii=False), encoding="utf-8")

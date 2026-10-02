@@ -60,16 +60,37 @@ Generate a separate pre-annotation artifact without modifying the empty ground
 truth fields:
 
 ```powershell
-python tools/phase8_preannotate_tasks.py `
+python tools/preannotate_tasks.py `
   --manifest ".\runs\phase8_annotation_tasks_gsr_valid.json" `
   --rtmw-model "D:\GitHub\NCKH\datasets\stage3_assets\rtmw_l_384x288.onnx" `
-  --max-tasks 10 `
-  --output ".\runs\phase8_preannotated.json"
+  --output ".\runs\phase8_preannotated_full.json" `
+  --checkpoint ".\runs\phase8_preannotation.checkpoint" `
+  --chunk-size 32
 ```
 
 The output is explicitly marked `MODEL_PREANNOTATION_ONLY` and remains
 ineligible for training until human review replaces the empty ground-truth
-fields.
+fields. The checkpoint stores manifest/model/config hashes and immutable task
+chunks. If a long CPU run is interrupted, continue it with the same inputs:
+
+```powershell
+python tools/preannotate_tasks.py `
+  --manifest ".\runs\phase8_annotation_tasks_gsr_valid.json" `
+  --rtmw-model "D:\GitHub\NCKH\datasets\stage3_assets\rtmw_l_384x288.onnx" `
+  --output ".\runs\phase8_preannotated_full.json" `
+  --checkpoint ".\runs\phase8_preannotation.checkpoint" `
+  --resume
+```
+
+Resume is rejected if the source manifest, model bytes, Stage-3 config, task
+order or ground-truth fields differ from the checkpoint provenance. Completed
+tasks are not inferred from the output JSON; they are recovered only from
+validated checkpoint chunks.
+
+The real RTMW-L smoke artifact `runs/phase8_preannotated_checkpoint_smoke2.json`
+processed two tasks, resumed for two additional tasks, and preserved empty
+human-label fields for all four tasks. It is only a checkpoint/reproducibility
+check, not evidence of reduced hallucination.
 
 ## Human review gate
 
@@ -82,16 +103,38 @@ Before training, every selected task must contain:
 - reviewer ID and review timestamp;
 - source/rights record for the SoccerNet-GSR images and annotations.
 
+Start the local reviewer against a separate output manifest. It preserves the
+source manifest and keeps model predictions in `model_preannotation_133`:
+
+```powershell
+python tools/annotation_reviewer.py `
+  --manifest ".\runs\phase8_annotation_tasks_gsr_valid.json" `
+  --preannotations ".\runs\phase8_preannotated_full.json" `
+  --output ".\runs\phase8_reviewed_annotations.json"
+```
+
 Run the validator after annotation:
 
 ```powershell
-python tools/phase8_validate_annotations.py `
-  --annotations ".\runs\phase8_annotation_tasks_gsr_valid.json" `
-  --output ".\runs\phase8_annotation_validation.json"
+python tools/validate_annotations.py `
+  --annotations ".\runs\phase8_reviewed_annotations.json" `
+  --output ".\runs\phase8_human_validation.json"
 ```
 
 The validator must return `PASS` before any training command is added.
 `--allow-pending` only checks task structure and cannot authorize training.
+
+After validation, export each split independently. The exporter refuses
+pending, pseudo-label, incomplete or non-approved tasks:
+
+```powershell
+python tools/export_human_coco.py --manifest ".\runs\phase8_reviewed_annotations.json" --split train --output ".\runs\phase8_human_coco_train.json"
+python tools/export_human_coco.py --manifest ".\runs\phase8_reviewed_annotations.json" --split validation --output ".\runs\phase8_human_coco_validation.json"
+python tools/export_human_coco.py --manifest ".\runs\phase8_reviewed_annotations.json" --split test --output ".\runs\phase8_human_coco_test.json"
+```
+
+Only the exported human-reviewed files may become fine-tuning inputs. The
+reviewer and exporter do not train or promote a model.
 
 ## Existing data that is not ground truth
 

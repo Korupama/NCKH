@@ -40,6 +40,8 @@ def _empty_summary(config: Stage3Config) -> Dict[str, Any]:
         "normalized_temporal_jitter_p90": None,
         "temporal_outlier_fraction": 0.0,
         "left_right_swap_suspected_frames": [],
+        "ownership_switch_suspected_frames": [],
+        "temporal_downgraded_frames": [],
         "temporal_estimates": {
             "enabled": enabled,
             "created": 0,
@@ -68,7 +70,30 @@ def annotate_temporal(track_observations: Sequence[Mapping[str, Any]], config: S
     temporal_outliers = 0
     temporal_checks = 0
     swap_frames: List[int] = []
+    ownership_switch_frames: List[int] = []
+    temporal_downgraded_frames: List[int] = []
     accelerations: List[float] = []
+
+    def ownership_status(item: Mapping[str, Any]) -> str:
+        qa = item.get("qa") or {}
+        ownership = qa.get("ownership") or {}
+        status = ownership.get("ownership_status")
+        if status is None:
+            status = (item.get("crop_diagnostics") or {}).get("ownership_status")
+        return str(status or "UNKNOWN")
+
+    def downgrade_for_temporal(item: Dict[str, Any], reason: str) -> None:
+        qa = item.setdefault("qa", {})
+        reasons = qa.setdefault("status_reasons", [])
+        if reason not in reasons:
+            reasons.append(reason)
+        item.setdefault("temporal_qa", {})[reason] = True
+        if item.get("pose_status") == "VALID":
+            item["pose_status"] = "DEGRADED"
+            qa["pose_status"] = "DEGRADED"
+            frame_index = int(item["frame_index"])
+            if frame_index not in temporal_downgraded_frames:
+                temporal_downgraded_frames.append(frame_index)
 
     # Per-frame left/right swap suspicion against the previous observation.
     for i in range(1, len(obs)):
@@ -90,6 +115,33 @@ def annotate_temporal(track_observations: Sequence[Mapping[str, Any]], config: S
                 for idx in (a, b):
                     if idx < len(obs[i].get("keypoints_133", [])) and obs[i]["keypoints_133"][idx]["state"] == "VALID":
                         obs[i]["keypoints_133"][idx]["state"] = "LEFT_RIGHT_SUSPECT"
+            if config.temporal_downgrade_on_swap:
+                downgrade_for_temporal(obs[i], "temporal_left_right_swap_suspected")
+
+    # Ownership evidence is derived only from the pose QA already computed
+    # against the fixed Stage-2 bbox and neighboring tracks.  A transition from
+    # supported ownership to a strong failure state is useful evidence of a
+    # crop/identity switch, but UNKNOWN is never treated as a failure.
+    strong_ownership_failure = {"NEIGHBOR_DOMINANT", "OUTSIDE_SOURCE", "CENTER_MISMATCH"}
+    weak_ownership = {"WEAK_SUPPORT"}
+    for i in range(1, len(obs)):
+        if int(obs[i]["frame_index"]) - int(obs[i - 1]["frame_index"]) != 1:
+            continue
+        previous = ownership_status(obs[i - 1])
+        current = ownership_status(obs[i])
+        switched = (
+            current in strong_ownership_failure
+            and previous in {"SUPPORTED", "WEAK_SUPPORT"}
+        ) or (current == "NEIGHBOR_DOMINANT")
+        if not switched:
+            continue
+        frame = int(obs[i]["frame_index"])
+        ownership_switch_frames.append(frame)
+        obs[i].setdefault("temporal_qa", {})["ownership_switch_suspected"] = True
+        obs[i]["temporal_qa"]["previous_ownership_status"] = previous
+        obs[i]["temporal_qa"]["current_ownership_status"] = current
+        if config.temporal_downgrade_on_ownership_switch:
+            downgrade_for_temporal(obs[i], "temporal_ownership_switch_suspected")
 
     # Second-difference jitter/outlier diagnostic in bbox-normalized coordinates.
     for i in range(1, len(obs) - 1):
@@ -164,6 +216,8 @@ def annotate_temporal(track_observations: Sequence[Mapping[str, Any]], config: S
         "normalized_temporal_jitter_p90": None if not accelerations else float(np.quantile(accelerations, 0.90)),
         "temporal_outlier_fraction": float(temporal_outliers / max(1, temporal_checks)),
         "left_right_swap_suspected_frames": swap_frames,
+        "ownership_switch_suspected_frames": ownership_switch_frames,
+        "temporal_downgraded_frames": temporal_downgraded_frames,
         "temporal_estimates": {
             "enabled": bool(config.emit_temporal_estimates),
             "created": estimate_created,

@@ -2,10 +2,10 @@ import json
 
 import numpy as np
 
-from tools.phase8_build_pseudo_labels import build_pseudo_labels
-from tools.phase8_export_pseudo_coco import export_pseudo_coco
-from tools.phase8_prepare_annotation_tasks import _split_sequences
-from tools.phase8_validate_annotations import validate
+from tools.build_pseudo_labels import build_pseudo_labels
+from tools.export_pseudo_coco import export_pseudo_coco
+from tools.prepare_annotation_tasks import _split_sequences
+from tools.validate_annotations import validate
 
 
 class _FakePoseResult:
@@ -25,10 +25,10 @@ class _FakeTeacher:
 def _manifest(tmp_path):
     import cv2
 
-    image = tmp_path / "frame.jpg"
-    cv2.imwrite(str(image), np.zeros((64, 64, 3), np.uint8))
     tasks = []
     for split, sequence in (("train", "seq_train"), ("validation", "seq_val"), ("test", "seq_test")):
+        image = tmp_path / f"frame_{split}.jpg"
+        cv2.imwrite(str(image), np.zeros((128, 128, 3), np.uint8))
         tasks.append({
             "task_id": f"{sequence}:1:1",
             "split": split,
@@ -36,7 +36,7 @@ def _manifest(tmp_path):
             "image_id": f"{sequence}:1",
             "image_path": str(image),
             "track_id": 1,
-            "bbox_xyxy": [0.0, 0.0, 64.0, 64.0],
+            "bbox_xyxy": [5.0, 9.0, 27.0, 39.0],
             "keypoints_133": [{"index": i, "x": None, "y": None, "visibility": None} for i in range(133)],
             "annotation_source": "UNANNOTATED",
             "review_status": "PENDING",
@@ -61,10 +61,10 @@ def test_pseudo_labels_are_train_only_and_do_not_change_ground_truth(monkeypatch
     model = tmp_path / "teacher.onnx"
     model.write_bytes(b"teacher")
     output = tmp_path / "pseudo.json"
-    monkeypatch.setattr("tools.phase8_build_pseudo_labels.RTMWOpenCVDNN", _FakeTeacher)
+    monkeypatch.setattr("tools.build_pseudo_labels.RTMWOpenCVDNN", _FakeTeacher)
     monkeypatch.setattr(
-        "tools.phase8_build_pseudo_labels.evaluate_pose",
-        lambda xy, scores, bbox, config: (
+        "tools.build_pseudo_labels.evaluate_pose",
+        lambda xy, scores, bbox, config, **kwargs: (
             {
                 "pose_status": "VALID",
                 "median_positive_raw_score": 3.0,
@@ -102,10 +102,10 @@ def test_pseudo_coco_export_is_train_only_and_non_ground_truth(monkeypatch, tmp_
     model.write_bytes(b"teacher")
     pseudo = tmp_path / "pseudo.json"
     coco = tmp_path / "pseudo_coco.json"
-    monkeypatch.setattr("tools.phase8_build_pseudo_labels.RTMWOpenCVDNN", _FakeTeacher)
+    monkeypatch.setattr("tools.build_pseudo_labels.RTMWOpenCVDNN", _FakeTeacher)
     monkeypatch.setattr(
-        "tools.phase8_build_pseudo_labels.evaluate_pose",
-        lambda xy, scores, bbox, config: (
+        "tools.build_pseudo_labels.evaluate_pose",
+        lambda xy, scores, bbox, config, **kwargs: (
             {"pose_status": "VALID", "median_positive_raw_score": 3.0},
             [
                 {
@@ -130,3 +130,44 @@ def test_pseudo_coco_export_is_train_only_and_non_ground_truth(monkeypatch, tmp_
     assert len(result["annotations"][0]["keypoints"]) == 51
     assert len(result["annotations"][0]["foot_kpts"]) == 18
     assert len(result["annotations"][0]["face_kpts"]) == 204
+
+
+def test_pseudo_label_rejects_high_overlap_even_with_strong_model_scores(monkeypatch, tmp_path):
+    manifest_data = _manifest(tmp_path)
+    train = manifest_data["tasks"][0]
+    neighbor = dict(train)
+    neighbor["task_id"] = "seq_train:1:2"
+    neighbor["track_id"] = 2
+    neighbor["bbox_xyxy"] = [5.0, 9.0, 27.0, 39.0]
+    manifest_data["tasks"].append(neighbor)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps(manifest_data), encoding="utf-8")
+    model = tmp_path / "teacher.onnx"
+    model.write_bytes(b"teacher")
+    output = tmp_path / "pseudo.json"
+    monkeypatch.setattr("tools.build_pseudo_labels.RTMWOpenCVDNN", _FakeTeacher)
+    monkeypatch.setattr(
+        "tools.build_pseudo_labels.evaluate_pose",
+        lambda xy, scores, bbox, config, **kwargs: (
+            {"pose_status": "VALID", "median_positive_raw_score": 3.0},
+            [
+                {
+                    "index": i,
+                    "x": float(xy[i, 0]),
+                    "y": float(xy[i, 1]),
+                    "raw_model_score": float(scores[i]),
+                    "state": "VALID",
+                }
+                for i in range(133)
+            ],
+        ),
+    )
+    monkeypatch.setattr(
+        "tools.build_pseudo_labels.analyze_crop",
+        lambda *args, **kwargs: {"crop_status": "HIGH_OVERLAP", "ownership_status": "SUPPORTED"},
+    )
+
+    summary = build_pseudo_labels(manifest, model, output, min_median_score=1.0)
+    result = json.loads(output.read_text(encoding="utf-8"))
+    assert summary["accepted_train_tasks"] == 0
+    assert result["tasks"][0]["pseudo_label_status"] == "REJECTED_QA"

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stage 3 WholeBody133 Reviewer</title>
+  <style>
+    :root { color-scheme: dark; font-family: Segoe UI, sans-serif; background: #10151b; color: #e8edf2; }
+    * { box-sizing: border-box; } body { margin: 0; } button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: 1px solid #3b4a57; background: #1b2630; color: inherit; padding: 8px 12px; border-radius: 4px; }
+    button:hover { background: #273743; } button.primary { background: #147d67; border-color: #28b99a; } button.danger { background: #733746; border-color: #bd617a; }
+    .shell { display: grid; grid-template-columns: 330px 1fr; height: 100vh; } aside { border-right: 1px solid #2a3741; padding: 14px; overflow: auto; }
+    main { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; padding: 14px; gap: 10px; }
+    h1 { font-size: 19px; margin: 0 0 12px; } h2 { font-size: 14px; margin: 0 0 6px; } .muted { color: #9caab5; font-size: 12px; }
+    .toolbar, .review-toolbar, .fields { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .toolbar { margin-bottom: 10px; }
+    input, select, textarea { background: #111b22; color: inherit; border: 1px solid #3b4a57; border-radius: 4px; padding: 7px; }
+    #reviewer { width: 150px; } #filter { width: 100%; margin: 8px 0; } .task-list { display: grid; gap: 4px; }
+    .task { text-align: left; padding: 7px 8px; display: grid; grid-template-columns: 1fr auto; gap: 5px; font-size: 12px; } .task.active { border-color: #3dd0ac; background: #16372f; }
+    .task small { color: #9caab5; } .status { font-size: 10px; padding: 2px 4px; border: 1px solid #526270; border-radius: 3px; }
+    .status.APPROVED { color: #62e4ba; border-color: #248c70; } .status.REJECTED { color: #ff8fa8; border-color: #9b465c; }
+    .top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; } .top strong { color: #65e8c4; }
+    .canvas-wrap { min-height: 0; overflow: auto; display: grid; place-items: center; background: #080c10; border: 1px solid #2a3741; }
+    canvas { max-width: 100%; max-height: 100%; object-fit: contain; cursor: crosshair; }
+    .point-panel { min-height: 0; overflow: auto; border: 1px solid #2a3741; background: #131d25; padding: 8px; }
+    .point-row { display: grid; grid-template-columns: 32px 1fr 75px 75px 52px; gap: 5px; align-items: center; margin-bottom: 3px; font-size: 11px; }
+    .point-row input { width: 100%; padding: 4px; } .point-row.active { outline: 1px solid #42d4ae; background: #1b3b33; }
+    .footer { display: flex; gap: 12px; align-items: center; justify-content: space-between; border-top: 1px solid #2a3741; padding-top: 10px; }
+    #message { color: #9caab5; font-size: 12px; } @media (max-width: 900px) { .shell { grid-template-columns: 1fr; height: auto; } aside { max-height: 38vh; border-right: 0; border-bottom: 1px solid #2a3741; } main { height: 62vh; } }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <h1>Stage 3 / WholeBody133 Review</h1>
+    <div class="muted">Model points are preannotations only. Approval writes a separate human-reviewed manifest.</div>
+    <div class="toolbar"><input id="reviewer" placeholder="Reviewer ID" autocomplete="off" /><button id="copyPre">Copy preannotation</button></div>
+    <input id="filter" placeholder="Filter task / sequence / status" />
+    <div id="taskCount" class="muted"></div><div id="tasks" class="task-list"></div>
+  </aside>
+  <main>
+    <div class="top"><div><h2 id="taskTitle">Select a task</h2><div id="taskMeta" class="muted"></div></div><div class="toolbar"><button id="previous">← Previous</button><button id="next">Next →</button></div></div>
+    <div class="canvas-wrap"><canvas id="canvas" width="1280" height="720"></canvas></div>
+    <div class="point-panel"><div class="fields"><label>Selected point <select id="pointSelect"></select></label><label>Visibility <select id="visibility"><option value="2">2 visible</option><option value="1">1 occluded</option><option value="0">0 not visible</option></select></label><button id="clearPoint">Clear point</button><button id="savePending">Save pending</button><button id="approve" class="primary">Approve task</button><button id="reject" class="danger">Reject task</button></div><div id="points"></div></div>
+    <div class="footer"><span id="message">Loading tasks…</span><span class="muted">Click a point on the image to move the selected keypoint. Coordinates stay in source-image pixels.</span></div>
+  </main>
+</div>
+<script>
+const state = { tasks: [], filtered: [], current: null, names: [], image: null, points: [] };
+const $ = (id) => document.getElementById(id);
+const canvas = $('canvas'), ctx = canvas.getContext('2d');
+function message(text, bad=false) { $('message').textContent = text; $('message').style.color = bad ? '#ff8fa8' : '#9caab5'; }
+function esc(text) { return String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function loadTasks() { const response = await fetch('/api/tasks'); const data = await response.json(); state.tasks = data.tasks || []; applyFilter(); if (state.filtered.length) await selectTask(state.filtered[0].task_id); }
+function applyFilter() { const q = $('filter').value.trim().toLowerCase(); state.filtered = state.tasks.filter(t => !q || JSON.stringify(t).toLowerCase().includes(q)); $('taskCount').textContent = `${state.filtered.length} / ${state.tasks.length} tasks`; $('tasks').innerHTML = state.filtered.map(t => `<button class="task ${state.current && state.current.task_id === t.task_id ? 'active':''}" data-id="${esc(t.task_id)}"><span>${esc(t.sequence_id)} / ${esc(t.image_id)}<small>${esc(t.role)} · ${t.has_preannotation ? 'preannotated' : 'no preannotation'}</small></span><span class="status ${esc(t.review_status)}">${esc(t.review_status)}</span></button>`).join(''); document.querySelectorAll('.task').forEach(b => b.onclick = () => selectTask(b.dataset.id)); }
+async function selectTask(id) { const response = await fetch('/api/task?task_id=' + encodeURIComponent(id)); if (!response.ok) return; state.current = await response.json(); state.names = state.current.keypoint_names; state.points = (state.current.keypoints_133 || []).map((p, i) => ({ index:i, name:state.names[i], x:Number.isFinite(Number(p.x)) ? Number(p.x) : null, y:Number.isFinite(Number(p.y)) ? Number(p.y) : null, visibility:[0,1,2].includes(Number(p.visibility)) ? Number(p.visibility) : null })); $('taskTitle').textContent = state.current.task_id; $('taskMeta').textContent = `${state.current.split} · ${state.current.role} · bbox ${state.current.bbox_xyxy.map(v => Number(v).toFixed(1)).join(', ')}`; $('pointSelect').innerHTML = state.names.map((name,i) => `<option value="${i}">${String(i).padStart(3,'0')} · ${esc(name)}</option>`).join(''); const img = new Image(); img.onload = () => { state.image=img; canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; draw(); }; img.src = '/api/image?task_id=' + encodeURIComponent(id); renderPoints(); applyFilter(); message('Task loaded.'); }
+function draw() { if (!state.image) return; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(state.image,0,0); const b=state.current.bbox_xyxy; ctx.strokeStyle='#48d5b1'; ctx.lineWidth=Math.max(2,canvas.width/800); ctx.strokeRect(b[0],b[1],b[2]-b[0],b[3]-b[1]); state.points.forEach((p,i) => { if (p.x===null||p.y===null) return; const group=i<23?'#64e8bc':i<91?'#e5bc64':'#a58cff'; ctx.fillStyle=p.visibility===0?'#71808c':group; ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(3,canvas.width/350),0,Math.PI*2); ctx.fill(); if (i===Number($('pointSelect').value)) { ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); } }); }
+function renderPoints() { $('points').innerHTML = state.points.map((p,i) => `<div class="point-row ${i===Number($('pointSelect').value)?'active':''}" data-index="${i}"><span>${String(i).padStart(3,'0')}</span><span>${esc(p.name)}</span><input data-field="x" value="${p.x ?? ''}" placeholder="x" /><input data-field="y" value="${p.y ?? ''}" placeholder="y" /><select data-field="visibility"><option value="" ${p.visibility===null?'selected':''}>?</option><option value="2" ${p.visibility===2?'selected':''}>2</option><option value="1" ${p.visibility===1?'selected':''}>1</option><option value="0" ${p.visibility===0?'selected':''}>0</option></select></div>`).join(''); document.querySelectorAll('.point-row').forEach(row => { const i=Number(row.dataset.index); row.onclick = () => { $('pointSelect').value=i; renderPoints(); draw(); }; row.querySelectorAll('input,select').forEach(input => input.onchange = () => { const value=input.value; state.points[i][input.dataset.field] = input.dataset.field === 'visibility' ? (value === '' ? null : Number(value)) : (value === '' ? null : Number(value)); draw(); }); }); }
+function canvasPoint(event) { const rect=canvas.getBoundingClientRect(); return { x:(event.clientX-rect.left)*canvas.width/rect.width, y:(event.clientY-rect.top)*canvas.height/rect.height }; }
+canvas.onclick = event => { const p=canvasPoint(event), i=Number($('pointSelect').value); state.points[i].x=p.x; state.points[i].y=p.y; if (state.points[i].visibility===null) state.points[i].visibility=2; renderPoints(); draw(); };
+$('pointSelect').onchange=()=>{renderPoints();draw();}; $('visibility').onchange=()=>{const i=Number($('pointSelect').value); state.points[i].visibility=Number($('visibility').value); renderPoints();draw();}; $('clearPoint').onclick=()=>{const i=Number($('pointSelect').value); state.points[i].x=null;state.points[i].y=null;state.points[i].visibility=null;renderPoints();draw();}; $('filter').oninput=applyFilter;
+function step(delta) { const i=state.filtered.findIndex(t=>t.task_id===state.current?.task_id); const next=state.filtered[Math.max(0,Math.min(state.filtered.length-1,i+delta))]; if(next) selectTask(next.task_id); } $('previous').onclick=()=>step(-1); $('next').onclick=()=>step(1);
+$('copyPre').onclick=()=>{ const p=state.current.model_preannotation_133 || []; if(!p.length){message('No model preannotation for this task.',true);return;} state.points=p.map((x,i)=>({index:i,name:state.names[i],x:Number.isFinite(Number(x.x))?Number(x.x):null,y:Number.isFinite(Number(x.y))?Number(x.y):null,visibility:Number.isFinite(Number(x.x))&&Number.isFinite(Number(x.y))?2:null})); renderPoints();draw();message('Copied model preannotation into the editable draft. Approve only after human review.'); };
+async function save(status) { if(!state.current)return; const body={task_id:state.current.task_id,keypoints_133:state.points,review_status:status,reviewer_id:$('reviewer').value,reviewer_notes:''}; const response=await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await response.json(); if(!response.ok){message(data.error || 'Save failed.',true);return;} const item=state.tasks.find(t=>t.task_id===state.current.task_id);if(item)item.review_status=status;state.current.review_status=status;applyFilter();message(`${status} saved to the output manifest.`); } $('savePending').onclick=()=>save('PENDING'); $('approve').onclick=()=>save('APPROVED'); $('reject').onclick=()=>save('REJECTED');
+loadTasks().catch(error=>message(String(error),true));
+</script>
+</body>
+</html>

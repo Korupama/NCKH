@@ -53,3 +53,26 @@ def test_temporal_estimate_marks_track_boundaries():
     assert out[0]["keypoints_133"][0]["temporal_estimate_reason"]=="track_boundary"
     assert out[2]["keypoints_133"][0]["temporal_estimate_reason"]=="track_boundary"
     assert summary["temporal_estimates"]["insufficient_context_reasons"]["track_boundary"] >= 2
+
+
+def test_temporal_ownership_switch_downgrades_valid_pose_without_changing_raw_points():
+    seq = [obs(1), obs(2), obs(3)]
+    for item in seq:
+        item["qa"]["ownership"] = {
+            "ownership_status": "SUPPORTED",
+            "body17_fraction_inside_source_bbox": 1.0,
+            "body17_center_to_source_center_normalized": 0.1,
+        }
+        item["crop_diagnostics"] = {"ownership_status": "SUPPORTED"}
+    seq[1]["qa"]["ownership"]["ownership_status"] = "CENTER_MISMATCH"
+    seq[1]["crop_diagnostics"]["ownership_status"] = "CENTER_MISMATCH"
+    raw_before = [(kp["x"], kp["y"]) for kp in seq[1]["keypoints_133"]]
+
+    out, summary = annotate_temporal(seq, Stage3Config())
+
+    assert out[1]["pose_status"] == "DEGRADED"
+    assert out[1]["qa"]["pose_status"] == "DEGRADED"
+    assert "temporal_ownership_switch_suspected" in out[1]["qa"]["status_reasons"]
+    assert summary["ownership_switch_suspected_frames"] == [2]
+    assert summary["temporal_downgraded_frames"] == [2]
+    assert raw_before == [(kp["x"], kp["y"]) for kp in out[1]["keypoints_133"]]

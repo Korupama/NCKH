@@ -173,9 +173,9 @@ Internal holdout:
 - development: 160 shots;
 - holdout: 40 shots / 800 ảnh;
 - seed: `20260926`;
-- RTMW-L PDJ: `0.903125`;
-- RTMW-L AUC: `0.669442`;
-- mean normalized error: `0.214667`;
+- RTMW-L PDJ: `0.903214` (current-code rerun);
+- RTMW-L AUC: `0.669479` (current-code rerun);
+- mean normalized error: `0.214582` (current-code rerun);
 - median normalized error: `0.115142`.
 
 Contract smoke:
@@ -187,7 +187,7 @@ Contract smoke:
 - valid coverage tại `t0`: `1.0`;
 - foot coverage tại `t0`: `1.0`.
 
-Regression cuối: **35 tests passed**.
+Regression cuối: **58 tests passed**.
 
 ## 4. Kết luận hiện tại
 

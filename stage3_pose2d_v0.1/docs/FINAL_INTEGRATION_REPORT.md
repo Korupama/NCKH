@@ -10,7 +10,7 @@ claimed because the legacy handoff has no accessible source video.
 ## Regression and contract
 
 ```text
-pytest: 35 passed
+pytest: 58 passed
 selected frame: 86
 candidate tracks: 10
 pose coverage at t0: 1.0
@@ -19,6 +19,14 @@ valid pose coverage at t0: 1.0
 foot pose coverage at t0: 1.0
 production fallback validation: DEFERRED
 ```
+
+The final acceptance artifact is
+`runs/phase8_final_acceptance.json`. It records a conditional structural pass:
+the Stage-2 read-only contract, crop/ownership QA, temporal raw-coordinate
+invariant, sequence-disjoint split, 3DSP non-regression, frozen RTMW-L
+rollback and full preannotation/checkpoint integrity gates pass. The
+human-reviewed pose-accuracy and fine-tuning gates remain blocked because all
+4,286 tasks are still `PENDING`; model preannotations are not ground truth.
 
 Final contract output:
 
@@ -50,12 +58,22 @@ seed: 20260926
 RTMW-L holdout result, same full-image bbox/CPU/metric protocol:
 
 ```text
-PDJ: 0.903125
-AUC: 0.669442
-mean normalized error: 0.214667
+PDJ: 0.903214
+AUC: 0.669479
+mean normalized error: 0.214582
 median normalized error: 0.115142
 valid joint observations: 11200
 ```
+
+Current rerun artifact:
+
+```text
+benchmark_results/3dsp_phase_current_holdout_rtmw_l/3dsp_benchmark_summary.json
+```
+
+The rerun uses the same 40-shot manifest and frozen RTMW-L model as the
+reference. It is non-regressed versus the prior artifact (PDJ `0.903125`, AUC
+`0.669442`, mean error `0.214667`).
 
 This is an **internal shot holdout**, not a fully untouched public test:
 aggregate train results were observed during earlier phases. It is not a

@@ -32,14 +32,29 @@ default; RTMW-X is offline-only and no Stage-2 input or contract was changed.
 ## Phase 8 decision
 
 Phase 8 is **ANNOTATION_READY, not TRAIN_READY**. A sequence-disjoint
-SoccerNet-GSR task manifest and WholeBody133 validator are now available.
-Training remains gated on human-verified keypoints, reviewer metadata and
-confirmed data rights. See [`docs/MODEL_FINE_TUNING.md`](docs/MODEL_FINE_TUNING.md).
+SoccerNet-GSR task manifest, resumable RTMW-L preannotation tool, local reviewer,
+WholeBody133 validator and human-COCO exporter are now available. The reviewer
+writes to a separate manifest and keeps model predictions separate from human
+ground truth. Training remains gated on human-verified keypoints, reviewer
+metadata and confirmed data rights. See [`docs/MODEL_FINE_TUNING.md`](docs/MODEL_FINE_TUNING.md).
 
 Phase 8A pseudo-label self-training preparation is complete: 2,936/2,986 train
 tasks passed RTMW-L QA and were exported as train-only pseudo-labels. No
 validation/test pseudo-labels were created; no student checkpoint or final
 accuracy claim exists yet.
+
+The current acceptance report records the full Stage-3 test result as
+`58 passed` and includes hashes for the annotation reviewer, validator and
+human COCO exporter. The full RTMW-L preannotation run completed all 4,286
+tasks with `ground_truth_unchanged=true`; its artifact and 134 chunk
+checkpoint files pass model/manifest/config provenance and tamper checks.
+The preannotation tool writes chunked checkpoints with
+manifest/model/config provenance and rejects resume after source or
+ground-truth changes. The current 40-shot/800-image 3DSP holdout rerun is
+non-regressed against the frozen reference (PDJ `0.903214`, AUC `0.669479`,
+mean normalized error `0.214582`). The overall status remains
+`CONDITIONAL_PASS_BLOCKED_ON_HUMAN_LABELS`; no hallucination reduction claim
+is made until approved broadcast WholeBody133 labels exist.
 
 ## Phase 9 decision
 
