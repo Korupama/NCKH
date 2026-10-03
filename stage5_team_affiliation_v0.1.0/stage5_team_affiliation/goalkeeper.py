@@ -102,29 +102,52 @@ def assign_goalkeeper_spatial(
         ):
             med0 = float(np.median(team_image_x[0]))
             med1 = float(np.median(team_image_x[1]))
-            gk_med = float(np.median(gk_image_x))
-            d0 = abs(gk_med - med0)
-            d1 = abs(gk_med - med1)
-            margin = abs(d0 - d1)
-            min_margin = getattr(config, "goalkeeper_min_spatial_margin_px", 30.0)
-            if margin >= min_margin:
-                team_id = 0 if d0 < d1 else 1
-                return {
-                    "team_id": team_id,
-                    "status": "VALID",
-                    "method": "SPATIAL_IMAGE_CENTROID_AFFINITY",
-                    "margin": margin,
-                    "d0_px": d0,
-                    "d1_px": d1,
-                    "gk_image_median_px": gk_med,
-                }
-            elif not getattr(config, "goalkeeper_fallback_to_color", True):
-                return {
-                    "team_id": None,
-                    "status": "UNKNOWN",
-                    "method": "AMBIGUOUS_IMAGE_SPATIAL_SEPARATION",
-                    "margin": margin,
-                }
+            team_sep = abs(med0 - med1)
+            min_team_sep = getattr(config, "goalkeeper_min_team_image_separation_px", 80.0)
+            if team_sep < min_team_sep:
+                if not getattr(config, "goalkeeper_fallback_to_color", True):
+                    return {
+                        "team_id": None,
+                        "status": "UNKNOWN",
+                        "method": "AMBIGUOUS_TEAM_IMAGE_SEPARATION",
+                        "team_separation_px": team_sep,
+                    }
+            else:
+                gk_med = float(np.median(gk_image_x))
+                # In soccer, a goalkeeper is at the defensive extremity.
+                # If GK is located between team centroids (interior), image X distance is unreliable (e.g. set-piece scramble).
+                is_interior = min(med0, med1) < gk_med < max(med0, med1)
+                if is_interior:
+                    if not getattr(config, "goalkeeper_fallback_to_color", True):
+                        return {
+                            "team_id": None,
+                            "status": "UNKNOWN",
+                            "method": "AMBIGUOUS_GK_INTERIOR_POSITION",
+                            "gk_image_median_px": gk_med,
+                        }
+                else:
+                    d0 = abs(gk_med - med0)
+                    d1 = abs(gk_med - med1)
+                    margin = abs(d0 - d1)
+                    min_margin = getattr(config, "goalkeeper_min_spatial_margin_px", 30.0)
+                    if margin >= min_margin:
+                        team_id = 0 if d0 < d1 else 1
+                        return {
+                            "team_id": team_id,
+                            "status": "VALID",
+                            "method": "SPATIAL_IMAGE_CENTROID_AFFINITY",
+                            "margin": margin,
+                            "d0_px": d0,
+                            "d1_px": d1,
+                            "gk_image_median_px": gk_med,
+                        }
+                    elif not getattr(config, "goalkeeper_fallback_to_color", True):
+                        return {
+                            "team_id": None,
+                            "status": "UNKNOWN",
+                            "method": "AMBIGUOUS_IMAGE_SPATIAL_SEPARATION",
+                            "margin": margin,
+                        }
 
     return {"team_id": None, "status": "UNKNOWN", "method": "SPATIAL_UNAVAILABLE"}
 

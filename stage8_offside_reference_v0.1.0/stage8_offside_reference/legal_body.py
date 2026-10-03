@@ -29,7 +29,13 @@ def goalward_coordinate(x_world_m: float, s: int) -> float:
     return float(s) * float(x_world_m)
 
 
-def legal_landmark_extent(track: Mapping[str, Any], frame_index: int, s: int) -> Dict[str, Any]:
+def legal_landmark_extent(
+    track: Mapping[str, Any],
+    frame_index: int,
+    s: int,
+    *,
+    allow_root_fallback: bool = False,
+) -> Dict[str, Any]:
     tid = str(track.get("track_id")) if track.get("track_id") is not None else None
     obs = selected_stage4_observation(track, frame_index)
     if obs is None:
@@ -62,6 +68,24 @@ def legal_landmark_extent(track: Mapping[str, Any], frame_index: int, s: int) ->
         })
 
     if not candidates:
+        if allow_root_fallback:
+            root = finite_xyz(obs.get("root_world_m") or track.get("root_world_m"))
+            if root is not None:
+                q_val = goalward_coordinate(root[0], s)
+                return {
+                    "track_id": tid,
+                    "status": "DEGRADED",
+                    "reason": "ROOT_WORLD_FALLBACK_ACTIVE",
+                    "legal_landmark_count": 0,
+                    "goalward_q_m": float(q_val),
+                    "goalward_x_m": float(root[0]),
+                    "anchor": {
+                        "name": "root_world_fallback",
+                        "xyz_world_m": [float(root[0]), float(root[1]), float(root[2])],
+                    },
+                    "selected_frame_status": "DEGRADED",
+                    "candidate_names": ["root_world_fallback"],
+                }
         return {
             "track_id": tid,
             "status": "UNUSABLE",

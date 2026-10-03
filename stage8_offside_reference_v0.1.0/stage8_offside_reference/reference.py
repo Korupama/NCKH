@@ -27,18 +27,28 @@ def ball_goalward_extent(x_extent_m: List[float], s: int) -> Dict[str, Any]:
     }
 
 
-def build_reference(second_last: Dict[str, Any], ball: Dict[str, Any], s: int, *, epsilon_m: float = DEFAULT_COMPARISON_EPSILON_M) -> Dict[str, Any]:
+def build_reference(
+    second_last: Dict[str, Any],
+    ball: Optional[Dict[str, Any]],
+    s: int,
+    *,
+    epsilon_m: float = DEFAULT_COMPARISON_EPSILON_M
+) -> Dict[str, Any]:
     q_second = float(second_last["goalward_q_m"])
-    q_ball = float(ball["goalward_q_m"])
-    if q_ball > q_second + epsilon_m:
-        source = "BALL"
-        q_ref = q_ball
-    elif q_second > q_ball + epsilon_m:
+    if ball is None or ball.get("goalward_q_m") is None:
         source = "SECOND_LAST_OPPONENT"
         q_ref = q_second
     else:
-        source = "BALL_AND_SECOND_LAST_OPPONENT_LEVEL"
-        q_ref = max(q_ball, q_second)
+        q_ball = float(ball["goalward_q_m"])
+        if q_ball > q_second + epsilon_m:
+            source = "BALL"
+            q_ref = q_ball
+        elif q_second > q_ball + epsilon_m:
+            source = "SECOND_LAST_OPPONENT"
+            q_ref = q_second
+        else:
+            source = "BALL_AND_SECOND_LAST_OPPONENT_LEVEL"
+            q_ref = max(q_ball, q_second)
     x_ref = float(s) * q_ref
     return {
         "source": source,

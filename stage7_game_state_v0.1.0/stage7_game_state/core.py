@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Tuple
 
 from .adapters import (
+    _dig,
+    _first_non_none,
     extract_stage1_view,
     extract_stage5_players,
     extract_stage6_contact,
@@ -96,13 +98,48 @@ def build_game_state_context(
     if toucher is not None and toucher["team_key"] is None:
         reasons.append("TOUCHER_TEAM_UNRESOLVED")
 
-    if x_view is None:
-        if hit is not None and view_meta.get("valid") is False:
-            reasons.append("CENTRE_RAY_PITCH_HIT_INVALID")
-        else:
-            reasons.append("CENTRE_RAY_PITCH_HIT_MISSING")
-    elif abs(x_view) <= centre_ray_epsilon_m:
-        reasons.append("CENTRE_RAY_X_AMBIGUOUS")
+    # Multi-tier attack direction resolution:
+    # Tier 1: Primary - Stage-1 camera optical centre-ray pitch hit X coordinate
+    # Tier 2: Secondary - Explicit attack direction from Stage 1 or Stage 6 metadata
+    # Tier 3: Tertiary - View pitch half label ("LEFT" or "RIGHT")
+    resolved_s = None
+    direction_source = None
+    if x_view is not None and abs(x_view) > centre_ray_epsilon_m:
+        resolved_s = 1 if x_view > 0 else -1
+        direction_source = view_meta.get("source") or "stage1.centre_ray_pitch_hit"
+    else:
+        # Check explicit upstream attack direction
+        explicit_s = _first_non_none(
+            stage1.get("attack_direction_s"),
+            _dig(stage1, ["attack_direction", "s"]),
+            _dig(stage6, ["stage7", "attack_direction_s"]),
+            stage6.get("attack_direction_s"),
+            _dig(stage5, ["attack_direction_s"]),
+        )
+        if explicit_s in (-1, 1, "-1", "1"):
+            resolved_s = int(explicit_s)
+            direction_source = "upstream_explicit_attack_direction"
+
+        # Check view pitch half from calibrated camera
+        if resolved_s is None:
+            v_half = str(view_meta.get("view_pitch_half") or _dig(stage1, ["view", "view_pitch_half"]) or "").upper()
+            if v_half == "RIGHT":
+                resolved_s = 1
+                direction_source = "stage1.view_pitch_half_label"
+            elif v_half == "LEFT":
+                resolved_s = -1
+                direction_source = "stage1.view_pitch_half_label"
+
+    if resolved_s is None:
+        if x_view is None:
+            if hit is not None and view_meta.get("valid") is False:
+                reasons.append("CENTRE_RAY_PITCH_HIT_INVALID")
+            else:
+                reasons.append("CENTRE_RAY_PITCH_HIT_MISSING")
+        elif abs(x_view) <= centre_ray_epsilon_m:
+            reasons.append("CENTRE_RAY_X_AMBIGUOUS")
+    elif x_view is None or abs(x_view) <= centre_ray_epsilon_m:
+        reasons.append("ATTACK_DIRECTION_RESOLVED_VIA_FALLBACK")
 
     attacking_team_key = toucher["team_key"] if toucher is not None else None
     attacking_team_raw = toucher["team_id"] if toucher is not None else None
@@ -146,14 +183,13 @@ def build_game_state_context(
     }
     ctx.attacking_team_id = attacking_team_raw
 
-    if x_view is not None and abs(x_view) > centre_ray_epsilon_m:
-        s = 1 if x_view > 0 else -1
+    if resolved_s is not None:
         ctx.attack_direction = {
-            "s": s,
-            "label": "LEFT_TO_RIGHT" if s == 1 else "RIGHT_TO_LEFT",
-            "centre_ray_x_m": float(x_view),
+            "s": resolved_s,
+            "label": "LEFT_TO_RIGHT" if resolved_s == 1 else "RIGHT_TO_LEFT",
+            "centre_ray_x_m": float(x_view) if x_view is not None else None,
             "view_pitch_half": view_meta.get("view_pitch_half"),
-            "source": view_meta.get("source"),
+            "source": direction_source,
         }
 
     ctx.sets = {

@@ -20,7 +20,15 @@ def _coord_ok(coord: Mapping[str, Any]) -> bool:
     return all(coord.get(k) == v for k, v in EXPECTED_COORDINATE_FRAME.items())
 
 
-def build_preflight(stage4_input: Any, stage6_input: Any, stage7_input: Any) -> Dict[str, Any]:
+def build_preflight(
+    stage4_input: Any,
+    stage6_input: Any,
+    stage7_input: Any,
+    *,
+    allow_partial_opponents: bool = False,
+    allow_ball_fallback: bool = False,
+    allow_root_fallback: bool = False,
+) -> Dict[str, Any]:
     stage4 = load_json(stage4_input)
     stage6 = load_json(stage6_input)
     stage7 = load_json(stage7_input)
@@ -65,29 +73,46 @@ def build_preflight(stage4_input: Any, stage6_input: Any, stage7_input: Any) -> 
             if track is None:
                 missing_tracks.append(tid)
                 continue
-            row = legal_landmark_extent(track, s4["selected_frame"], s7["s"])
+            row = legal_landmark_extent(track, s4["selected_frame"], s7["s"], allow_root_fallback=allow_root_fallback)
             extent_rows.append(row)
             if row["status"] not in {"VALID", "DEGRADED"} or row.get("goalward_q_m") is None:
                 unusable_tracks.append(tid)
 
-    if missing_tracks:
-        blockers.append("OPPONENT_STAGE4_TRACK_MISSING")
-    if unusable_tracks:
-        blockers.append("OPPONENT_LEGAL_GEOMETRY_UNUSABLE")
     usable_count = sum(1 for row in extent_rows if row.get("goalward_q_m") is not None and row.get("status") in {"VALID", "DEGRADED"})
+
+    if allow_partial_opponents and usable_count >= 2:
+        if missing_tracks:
+            warnings.append("OPPONENT_STAGE4_TRACK_MISSING_FALLBACK_ACTIVE")
+        if unusable_tracks:
+            warnings.append("OPPONENT_LEGAL_GEOMETRY_UNUSABLE_FALLBACK_ACTIVE")
+        if missing_tracks or unusable_tracks:
+            warnings.append("OPPONENT_GEOMETRY_PARTIAL_DEGRADED")
+    else:
+        if missing_tracks:
+            blockers.append("OPPONENT_STAGE4_TRACK_MISSING")
+        if unusable_tracks:
+            blockers.append("OPPONENT_LEGAL_GEOMETRY_UNUSABLE")
+        if missing_tracks or unusable_tracks:
+            blockers.append("OPPONENT_GEOMETRY_INCOMPLETE")
+
     if usable_count < 2:
         blockers.append("FEWER_THAN_TWO_USABLE_OPPONENTS")
-    # Missing any opponent can alter who is first/second-last; fail closed.
-    if missing_tracks or unusable_tracks:
-        blockers.append("OPPONENT_GEOMETRY_INCOMPLETE")
 
-    if not s6["usable_for_offside"]:
-        blockers.append("BALL_LONGITUDINAL_GEOMETRY_UNUSABLE")
     extent = s6["ball_center_x_extent_m"]
-    if extent is None:
-        blockers.append("BALL_X_EXTENT_MISSING")
-    elif extent[0] > extent[1]:
-        blockers.append("BALL_X_EXTENT_ORDER_INVALID")
+    if allow_ball_fallback:
+        if not s6["usable_for_offside"]:
+            warnings.append("BALL_LONGITUDINAL_GEOMETRY_UNUSABLE_FALLBACK_ACTIVE")
+        if extent is None:
+            warnings.append("BALL_X_EXTENT_MISSING_FALLBACK_ACTIVE")
+        elif extent[0] > extent[1]:
+            blockers.append("BALL_X_EXTENT_ORDER_INVALID")
+    else:
+        if not s6["usable_for_offside"]:
+            blockers.append("BALL_LONGITUDINAL_GEOMETRY_UNUSABLE")
+        if extent is None:
+            blockers.append("BALL_X_EXTENT_MISSING")
+        elif extent[0] > extent[1]:
+            blockers.append("BALL_X_EXTENT_ORDER_INVALID")
 
     if not s6["accuracy_validated"]:
         warnings.append("BALL_METRIC_ACCURACY_NOT_VALIDATED")
@@ -97,7 +122,12 @@ def build_preflight(stage4_input: Any, stage6_input: Any, stage7_input: Any) -> 
 
     blockers = list(dict.fromkeys(blockers))
     warnings = list(dict.fromkeys(warnings))
-    status = "BLOCKED" if blockers else ("DEGRADED_READY" if stage7_tentative_only else "READY")
+    is_degraded = bool(
+        stage7_tentative_only
+        or (allow_partial_opponents and (missing_tracks or unusable_tracks) and usable_count >= 2)
+        or (allow_ball_fallback and (not s6["usable_for_offside"] or extent is None))
+    )
+    status = "BLOCKED" if blockers else ("DEGRADED_READY" if is_degraded else "READY")
     return {
         "schema_version": "stage8-preflight-1.0",
         "status": status,
