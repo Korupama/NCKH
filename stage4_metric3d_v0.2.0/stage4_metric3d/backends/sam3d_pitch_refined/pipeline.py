@@ -13,12 +13,12 @@ from .ground_anchor import choose_ground_anchor
 from .joint_mapping import DEFAULT_MAPPING, mapping_provenance
 from .metrics import summarize_observations
 from .quality import ground_quality_reasons
-from .refiner import FrameEvidence, refine_translation_sequence
+from .refiner import FrameEvidence, refine_translation_sequence, temporal_triplet_indices
 from .visualization import save_topdown_world_pose, save_selected_frame_overlay
 
 STATE_SCHEMA = "world-grounded-pose-state-1.1"
 HANDOFF_SCHEMA = "stage4-downstream-handoff-2.1"
-STAGE4_VERSION = "stage4-sam3d-pitch-refined-0.5.1"
+STAGE4_VERSION = "stage4-sam3d-pitch-refined-0.5.2"
 
 
 def _eligible_tracks(s3: Stage3State) -> list[str]:
@@ -43,6 +43,14 @@ def _frames_in_window(s3: Stage3State, track_ids: list[str], radius: int) -> lis
     lo, hi = int(s3.selected_frame) - radius, int(s3.selected_frame) + radius
     wanted = set(track_ids)
     return sorted({int(o.frame_index) for t in s3.tracks if t.track_id in wanted for o in t.observations if lo <= int(o.frame_index) <= hi})
+
+
+def _temporal_triplets_for_frame_indices(frame_indices: list[int]) -> list[list[int]]:
+    return [
+        [int(a), int(b), int(c)]
+        for a, b, c in zip(frame_indices, frame_indices[1:], frame_indices[2:])
+        if int(b) - int(a) == 1 and int(c) - int(b) == 1
+    ]
 
 
 def _camera_convention_report(cache: Sam3DNativeCache, cams: CameraTimelineLite, frames: list[int], track_ids: list[str], cfg: Sam3DPitchRefinedConfig) -> dict:
@@ -117,19 +125,40 @@ def preflight_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cac
     if selected_valid == 0: errors.append("no_valid_sam3d_player_at_selected_frame")
     if ground_usable < selected_valid: warnings.append("some_selected_players_have_no_usable_ground_anchor")
     temporal_status = "DISABLED" if not cfg.use_temporal else "TEMPORAL_NOT_AVAILABLE"
+    temporal_track_diagnostics: list[dict] = []
     if cfg.use_temporal:
         for tid in track_ids:
             pj = track_pos.get(tid)
-            valid_frames = [f for f in frames if f in frame_pos and pj is not None and cache.valid_mask[frame_pos[f], pj]]
-            if any(b-a == c-b for a,b,c in zip(valid_frames, valid_frames[1:], valid_frames[2:])):
+            valid_frames = [
+                f for f in frames
+                if f in frame_pos
+                and pj is not None
+                and cache.valid_mask[frame_pos[f], pj]
+                and cams.by_frame(f) is not None
+                and str(cams.by_frame(f).status).upper() == "VALID"
+            ]
+            triplets = _temporal_triplets_for_frame_indices(valid_frames)
+            temporal_track_diagnostics.append({
+                "track_id": tid,
+                "valid_frame_count": len(valid_frames),
+                "triplet_count": len(triplets),
+                "triplets": triplets,
+            })
+            if triplets:
                 temporal_status = "AVAILABLE_FOR_SOME_TRACKS"
-                break
+        if not temporal_track_diagnostics:
+            temporal_track_diagnostics = []
         if temporal_status == "TEMPORAL_NOT_AVAILABLE": warnings.append(temporal_status)
     return {
         "schema_version": "stage4-v05-preflight-1.0",
         "ready": not errors,
         "selected_frame": int(s3.selected_frame),
         "temporal_status": temporal_status,
+        "temporal_diagnostics": {
+            "tracks": temporal_track_diagnostics,
+            "track_count_with_triplets": sum(item["triplet_count"] > 0 for item in temporal_track_diagnostics),
+            "triplet_count": sum(item["triplet_count"] for item in temporal_track_diagnostics),
+        },
         "source_fps": source_fps,
         "image_size": [image_width, image_height],
         "window_frames": frames,
@@ -218,14 +247,18 @@ def run_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cache: st
         obs_states=[]
         for root, ev in zip(roots,evidences):
             jcam_native=ev.relative_joints_m+root[None,:]; jworld_native=camera_to_world(ev.camera,jcam_native)
-            joints=[]; reproj_errors=[]
+            joints=[]; reproj_errors=[]; reproj_invalid_count=0; reproj_candidate_count=0
             for entry in DEFAULT_MAPPING:
                 rel=ev.relative_joints_m[entry.sam3d_index]; jcam=jcam_native[entry.sam3d_index]; jw=jworld_native[entry.sam3d_index]
                 uv_pred=project_camera_points(ev.camera,jcam,distort=True)
                 uv_rtmw=np.asarray(ev.observation.uv23[entry.rtmw_index],dtype=np.float64); w=float(ev.observation.state_weights23[entry.rtmw_index])
                 err=None
-                if np.isfinite(uv_pred).all() and np.isfinite(uv_rtmw).all() and w>=cfg.min_rtmw_joint_weight:
-                    err=float(np.linalg.norm(uv_pred-uv_rtmw)); reproj_errors.append(err)
+                if np.isfinite(uv_rtmw).all() and np.isfinite(rel).all() and w>=cfg.min_rtmw_joint_weight:
+                    reproj_candidate_count += 1
+                    if np.isfinite(uv_pred).all():
+                        err=float(np.linalg.norm(uv_pred-uv_rtmw)); reproj_errors.append(err)
+                    else:
+                        reproj_invalid_count += 1
                 joints.append({
                     "canonical_name":entry.canonical_name,"sam3d_index":entry.sam3d_index,"sam3d_name":entry.sam3d_name,
                     "xyz_relative_cam_m":rel.tolist() if np.isfinite(rel).all() else None,
@@ -244,10 +277,13 @@ def run_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cache: st
                 if ge is not None and np.isfinite(jworld_native[ge.sam3d_index]).all(): ground_res=float(abs(jworld_native[ge.sam3d_index,2])*100.0)
             correction=float(np.linalg.norm(root-ev.sam_prior_cam_m)); obs_valid=all(np.isfinite(root))
             q={
-                "root_refinement":"VALID" if obs_valid and (not refine or rr.success) else "DEGRADED",
+                "root_refinement":"VALID" if obs_valid and (not refine or (rr.success and not rr.fallback_to_initial)) else "DEGRADED",
                 "ground_anchor": None if ev.ground_anchor is None else {"name":ev.ground_anchor.canonical_name,"usable":ev.ground_anchor.usable,"fallback":ev.ground_anchor.fallback,"distance_to_sam_prior_m":ev.ground_anchor.distance_to_sam_prior_m},
                 "ground_contact_residual_cm":ground_res,
                 "reprojection_p95_px":None if not reproj_errors else float(np.percentile(reproj_errors,95)),
+                "reprojection_valid_joint_count":len(reproj_errors),
+                "reprojection_invalid_joint_count":reproj_invalid_count,
+                "reprojection_candidate_count":reproj_candidate_count,
                 "initialization": "GROUND_CONSENSUS" if refine and ev.ground_anchor is not None and ev.ground_anchor.usable else "SAM_PRIOR",
                 "ground_candidate_spread_m": None if ev.ground_anchor is None else ev.ground_anchor.candidate_spread_m,
                 "ground_consensus_count": 0 if ev.ground_anchor is None else ev.ground_anchor.consensus_count,
@@ -270,11 +306,30 @@ def run_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cache: st
             }
             obs_states.append(obs_state); all_obs.append(obs_state)
         selected_obs=next((o for o in obs_states if o["frame_index"]==s3.selected_frame),None)
+        temporal_triplets = temporal_triplet_indices(evidences) if refine and cfg.use_temporal else ()
+        skipped_temporal_triplets = max(0, len(evidences) - 2 - len(temporal_triplets)) if refine and cfg.use_temporal else 0
         tracks_state.append({
             "track_id":tid,"role":tr.role,"observations":obs_states,
             "selected_frame_status":"VALID" if selected_obs and selected_obs.get("valid") else "MISSING",
-            "optimizer":None if rr is None else {"success":rr.success,"status":rr.status,"message":rr.message,"nfev":rr.nfev,"initial_cost":rr.initial_cost,"final_cost":rr.final_cost},
-            "temporal_status": "APPLIED" if refine and cfg.use_temporal and any(b.frame_index-a.frame_index == c.frame_index-b.frame_index for a,b,c in zip(evidences,evidences[1:],evidences[2:])) else "DISABLED" if not refine or not cfg.use_temporal else "TEMPORAL_NOT_AVAILABLE",
+            "optimizer":None if rr is None else {
+                "success":rr.success,"status":rr.status,"message":rr.message,"nfev":rr.nfev,
+                "initial_cost":rr.initial_cost,"final_cost":rr.final_cost,
+                "fallback_to_initial":rr.fallback_to_initial,
+                "bounds_active_count":rr.bounds_active_count,
+                "reprojection_joint_count":rr.reprojection_joint_count,
+                "invalid_reprojection_joint_count":rr.invalid_reprojection_joint_count,
+            },
+            "temporal_status": (
+                "DISABLED" if not refine or not cfg.use_temporal
+                else "APPLIED" if rr is not None and rr.success and not rr.fallback_to_initial and temporal_triplets
+                else "AVAILABLE_NOT_APPLIED" if temporal_triplets
+                else "TEMPORAL_NOT_AVAILABLE"
+            ),
+            "temporal_diagnostics": {
+                "triplet_count": len(temporal_triplets),
+                "skipped_triplet_count": skipped_temporal_triplets,
+                "triplets": [[evidences[i].frame_index for i in triplet] for triplet in temporal_triplets],
+            },
         })
     metrics=summarize_observations(all_obs,below_pitch_tolerance_m=cfg.below_pitch_tolerance_m)
     spans=metrics["skeleton_span_m"]; reproj=metrics["reprojection_error_px"]; geometry_fail=False; reasons=[]
@@ -290,6 +345,7 @@ def run_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cache: st
         "selected_frame":int(s3.selected_frame),
         "coordinate_frame":{"name":"STAGE1_PITCH_WORLD","units":"m","x":"goal-to-goal","y":"touchline-to-touchline","z":"up","pitch_plane":"z=0"},
         "provenance":{"stage3_state":str(Path(stage3_state).resolve()),"camera_dir":str(Path(camera_dir).resolve()),"sam3d_cache":str(Path(sam3d_cache).resolve()),"selected_frame_override":None if selected_frame is None else int(selected_frame),"joint_mapping":mapping_provenance()},
+        "camera_uncertainty":"NOT_PROVIDED_CAMERA_TREATED_AS_FIXED",
         "preflight":pre,"tracks":tracks_state,"metrics":metrics,
         "quality_gates":{"implementation_gate":"PASS","geometric_quality_gate":"FAIL" if geometry_fail else "PASS_SANITY","metric_accuracy_gate":"NOT_EVALUATED","downstream_offside_gate":"NOT_EVALUATED","research_accuracy_frozen":False,"geometry_reasons":reasons},
         "not_owned_by_stage4":["team_id","attacking_team","attack_direction","toucher","ball_state","legal_body_mask","second_last_opponent","offside_decision"],

@@ -1,0 +1,27 @@
+{
+  "schema_version": "stage4-model-only-systems-1.0",
+  "benchmark_manifest": "manifest.json",
+  "benchmark_manifest_sha256": "RECORD_AFTER_VALIDATION",
+  "systems": [
+    {
+      "name": "sam3d_direct",
+      "backend": "SAM3D-Body",
+      "variant": "direct",
+      "coordinate_scope": "PITCH_WORLD_METRIC",
+      "output": "runs/model_only/sam3d_direct.npz",
+      "checkpoint_sha256": "RECORD_FROM_OUTPUT_METADATA",
+      "repository_revision": "RECORD_OFFICIAL_REPOSITORY_REVISION",
+      "config_sha256": "RECORD_PREPROCESSING_CONFIG_HASH"
+    },
+    {
+      "name": "sam3d_ground_first",
+      "backend": "SAM3D-Body",
+      "variant": "ground_first",
+      "coordinate_scope": "PITCH_WORLD_METRIC",
+      "output": "runs/model_only/sam3d_direct.npz",
+      "checkpoint_sha256": "RECORD_FROM_OUTPUT_METADATA",
+      "repository_revision": "RECORD_OFFICIAL_REPOSITORY_REVISION",
+      "config_sha256": "RECORD_PREPROCESSING_CONFIG_HASH"
+    }
+  ]
+}

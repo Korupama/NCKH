@@ -10,7 +10,7 @@ claimed because the legacy handoff has no accessible source video.
 ## Regression and contract
 
 ```text
-pytest: 58 passed
+pytest: 59 passed
 selected frame: 86
 candidate tracks: 10
 pose coverage at t0: 1.0
@@ -21,12 +21,18 @@ production fallback validation: DEFERRED
 ```
 
 The final acceptance artifact is
-`runs/phase8_final_acceptance.json`. It records a conditional structural pass:
+`runs/phase8_final_acceptance.json`. It records `PASS_WITH_RESEARCH_LIMITS`:
 the Stage-2 read-only contract, crop/ownership QA, temporal raw-coordinate
 invariant, sequence-disjoint split, 3DSP non-regression, frozen RTMW-L
 rollback and full preannotation/checkpoint integrity gates pass. The
-human-reviewed pose-accuracy and fine-tuning gates remain blocked because all
-4,286 tasks are still `PENDING`; model preannotations are not ground truth.
+pretrained 3DSP accuracy benchmark, frozen RTMW-L rollback and full
+preannotation/checkpoint integrity gates pass. Human-review/fine-tuning is not
+part of the pretrained-only release path. Broadcast wrong-person and
+hallucinated-`VALID` precision remain unmeasured because the available audit
+has no independent WholeBody133 target.
+
+See [`docs/STAGE3_BENCHMARK_REPORT.md`](STAGE3_BENCHMARK_REPORT.md) for the
+development/holdout results.
 
 Final contract output:
 
@@ -65,10 +71,10 @@ median normalized error: 0.115142
 valid joint observations: 11200
 ```
 
-Current rerun artifact:
+Current final holdout artifact:
 
 ```text
-benchmark_results/3dsp_phase_current_holdout_rtmw_l/3dsp_benchmark_summary.json
+benchmark_results/3dsp_phase_final_holdout_rtmw_l/3dsp_benchmark_summary.json
 ```
 
 The rerun uses the same 40-shot manifest and frozen RTMW-L model as the
@@ -79,6 +85,10 @@ This is an **internal shot holdout**, not a fully untouched public test:
 aggregate train results were observed during earlier phases. It is not a
 generalization claim.
 
+The matching development split contains 160 shots / 3,200 images and reaches
+PDJ `0.910022`, AUC `0.665081`, mean normalized error `0.214363` and median
+normalized error `0.118684`.
+
 ## Remaining limits
 
 - 3DSP public test images have no posture JSON in the local inventory.
@@ -86,8 +96,8 @@ generalization claim.
   environment; no substitute evaluator was used.
 - Production fallback was not validated because the source video is not
   accessible from the immutable legacy handoff.
-- Phase 8 pseudo-label self-training remains exploratory and has no human-
-  verified validation/test accuracy claim.
+- No broadcast wrong-person/hallucination precision benchmark is available in
+  the current artifacts.
 
 ## Production decision
 

@@ -92,17 +92,32 @@ class DSP3Sample:
     gt_h36m17: np.ndarray
 
 
-def _load_shot_manifest(shot_manifest: str | Path | None) -> Optional[set[str]]:
+def _load_shot_manifest(
+    shot_manifest: str | Path | None,
+    *,
+    shot_group: str = "auto",
+) -> Optional[set[str]]:
     if shot_manifest is None:
         return None
+    if shot_group not in {"auto", "shot_ids", "development", "holdout"}:
+        raise ValueError("shot_group must be auto, shot_ids, development or holdout")
     path = Path(shot_manifest).expanduser().resolve()
     data = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(data, list):
+        if shot_group not in {"auto", "shot_ids"}:
+            raise ValueError(f"Manifest list does not contain shot group: {shot_group}")
         shot_ids = data
     else:
-        shot_ids = data.get("shot_ids") or data.get("holdout_shots")
+        if shot_group == "development":
+            shot_ids = data.get("development_shots")
+        elif shot_group == "holdout":
+            shot_ids = data.get("holdout_shots")
+        elif shot_group == "shot_ids":
+            shot_ids = data.get("shot_ids")
+        else:
+            shot_ids = data.get("shot_ids") or data.get("holdout_shots")
     if not isinstance(shot_ids, list) or not all(isinstance(x, (str, int)) for x in shot_ids):
-        raise ValueError(f"Shot manifest must contain a shot_ids list: {path}")
+        raise ValueError(f"Shot manifest lacks the requested shot group {shot_group!r}: {path}")
     return {str(x) for x in shot_ids}
 
 
@@ -111,6 +126,7 @@ def iter_3dsp(
     split: str = "train",
     *,
     shot_manifest: str | Path | None = None,
+    shot_group: str = "auto",
 ) -> Iterator[DSP3Sample]:
     base = Path(root).expanduser().resolve()
     split_dir = base / split
@@ -118,7 +134,7 @@ def iter_3dsp(
         split_dir = base
     if not split_dir.is_dir():
         raise FileNotFoundError(f"3DSP split not found: {split_dir}")
-    allowed_shots = _load_shot_manifest(shot_manifest)
+    allowed_shots = _load_shot_manifest(shot_manifest, shot_group=shot_group)
     for shot_dir in sorted(p for p in split_dir.iterdir() if p.is_dir()):
         if allowed_shots is not None and shot_dir.name not in allowed_shots:
             continue
@@ -206,6 +222,7 @@ def run_3dsp_benchmark(
     crop_scale: Optional[float] = None,
     crop_scales: Optional[Sequence[float]] = None,
     shot_manifest: str | Path | None = None,
+    shot_group: str = "auto",
 ) -> Dict[str, object]:
     if crop_scales is not None and crop_scale is not None:
         raise ValueError("Use either crop_scale or crop_scales, not both")
@@ -225,7 +242,9 @@ def run_3dsp_benchmark(
     predictions_by_scale: Dict[float, List[np.ndarray]] = {scale: [] for scale in scales}
     samples: List[Dict[str, object]] = []
     qa_config = Stage3Config()
-    for i, sample in enumerate(iter_3dsp(root, split, shot_manifest=shot_manifest)):
+    for i, sample in enumerate(
+        iter_3dsp(root, split, shot_manifest=shot_manifest, shot_group=shot_group)
+    ):
         if max_samples is not None and i >= int(max_samples):
             break
         image = cv2.imread(str(sample.image_path))
@@ -274,6 +293,7 @@ def run_3dsp_benchmark(
         "dataset": "3D Shot Posture Dataset (3DSP)",
         "split": split,
         "shot_manifest": None if shot_manifest is None else str(Path(shot_manifest).expanduser().resolve()),
+        "shot_group": shot_group,
         "shot_ids": sorted({str(sample["shot_id"]) for sample in samples}),
         "samples": len(gt_all),
         "model": str(Path(model_path).expanduser().resolve()),

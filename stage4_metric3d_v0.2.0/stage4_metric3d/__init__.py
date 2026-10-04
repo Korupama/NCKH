@@ -6,7 +6,7 @@ from .backends.field_converter import FieldConverterV04Config, preflight_v04, ru
 from .backends.fixed_height_v03 import run_fixed_height_v03
 from .backends.sam3d_pitch_refined import Sam3DPitchRefinedConfig, preflight_v05, run_v05
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 __all__ = [
     "Stage4Config", "run_stage4_legacy3d", "preflight_stage4_legacy3d",

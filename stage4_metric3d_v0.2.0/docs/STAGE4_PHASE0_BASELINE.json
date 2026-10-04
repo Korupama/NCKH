@@ -1,0 +1,522 @@
+{
+  "schema_version": "stage4-phase0-audit-1.0",
+  "generated_at_utc": "2026-10-04T06:06:15.422088+00:00",
+  "stage4_version": "0.5.2",
+  "runtime": {
+    "python": "3.12.14 | packaged by Anaconda, Inc. | (main, Aug 27 2026, 14:37:13) [MSC v.1942 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "repository": {
+    "head": "0c7058d1069e74dc2e268d620142e11dcde6ab87",
+    "stage4_worktree_entries": [
+      " M stage4_metric3d_v0.2.0/IMPLEMENTATION_STATUS.md",
+      " M stage4_metric3d_v0.2.0/QA_v0.5.0.md",
+      " M stage4_metric3d_v0.2.0/QUICKSTART.md",
+      " M stage4_metric3d_v0.2.0/V051_GROUND_FIRST_REPORT.md",
+      " M stage4_metric3d_v0.2.0/docs/BENCHMARK.md",
+      " M stage4_metric3d_v0.2.0/docs/STAGE4_SPEC.md",
+      " M stage4_metric3d_v0.2.0/rerun_frame104_v051.ps1",
+      " M stage4_metric3d_v0.2.0/run_frame104_cpu.ps1",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/__init__.py",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/backends/sam3d_pitch_refined/config.py",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/backends/sam3d_pitch_refined/pipeline.py",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/backends/sam3d_pitch_refined/refiner.py",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/backends/sam3d_pitch_refined/visualization.py",
+      " M stage4_metric3d_v0.2.0/stage4_metric3d/visualization.py",
+      " M stage4_metric3d_v0.2.0/tests_v05/test_refinement.py",
+      "?? stage4_metric3d_v0.2.0/compare_model_only_systems.py",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_MODEL_ONLY_MANIFEST.example.json",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_MODEL_ONLY_SYSTEMS.example.json",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE0_BASELINE.json",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE0_BASELINE_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE0_INPUT_MANIFEST.example.json",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE4_GROUND_GATE_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE5_TEMPORAL_REPROJECTION_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE6_7_SEMANTIC_SAFETY_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE8_CACHE_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE9_ACCEPTANCE.json",
+      "?? stage4_metric3d_v0.2.0/docs/STAGE4_PHASE9_ACCEPTANCE_REPORT.md",
+      "?? stage4_metric3d_v0.2.0/evaluate_model_only.py",
+      "?? stage4_metric3d_v0.2.0/run_sam3d_model_only.py",
+      "?? stage4_metric3d_v0.2.0/stage4_metric3d/model_only.py",
+      "?? stage4_metric3d_v0.2.0/stage4_metric3d/model_only_cache.py",
+      "?? stage4_metric3d_v0.2.0/stage4_metric3d/model_only_evaluation.py",
+      "?? stage4_metric3d_v0.2.0/stage4_metric3d/model_only_refinement.py",
+      "?? stage4_metric3d_v0.2.0/stage4_metric3d/model_only_systems.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_model_only_cache.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_model_only_evaluation.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_model_only_manifest.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_model_only_refinement.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_model_only_systems.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_phase0_audit.py",
+      "?? stage4_metric3d_v0.2.0/tests/test_phase9_acceptance.py",
+      "?? stage4_metric3d_v0.2.0/tests_v05/test_refiner_temporal.py",
+      "?? stage4_metric3d_v0.2.0/tools/"
+    ],
+    "available": true
+  },
+  "scope": "stage4_only",
+  "upstream_read_only": true,
+  "downstream_read_only": true,
+  "backends": [
+    {
+      "name": "sam3d-pitch-refined",
+      "production_candidate": true,
+      "coordinate_scope": "PITCH_WORLD_METRIC",
+      "role": "SAM3D MHR70 plus root-only pitch/ground refinement"
+    },
+    {
+      "name": "sam3d-direct",
+      "production_candidate": false,
+      "coordinate_scope": "PITCH_WORLD_METRIC",
+      "role": "SAM3D pred_cam_t direct ablation"
+    },
+    {
+      "name": "rtmw3d",
+      "production_candidate": false,
+      "coordinate_scope": "ROOT_RELATIVE_METRIC",
+      "role": "relative-depth initializer; not global pitch placement"
+    },
+    {
+      "name": "kasportsformer",
+      "production_candidate": false,
+      "coordinate_scope": "SCALE_AMBIGUOUS",
+      "role": "relative sports pose comparison"
+    },
+    {
+      "name": "field-converter-tcn",
+      "production_candidate": false,
+      "coordinate_scope": "PITCH_WORLD_METRIC",
+      "role": "retained optional backend; exact normalization artifact required"
+    }
+  ],
+  "production_source_files": {
+    "tools/stage4_phase0_audit.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tools\\stage4_phase0_audit.py",
+      "relative_to_stage4": "tools/stage4_phase0_audit.py",
+      "exists": true,
+      "bytes": 26500,
+      "sha256": "daaf69b071a5336e59d6217357fece594ba9ee484abfff03b107d1ee952e4450"
+    },
+    "run_sam3d_model_only.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\run_sam3d_model_only.py",
+      "relative_to_stage4": "run_sam3d_model_only.py",
+      "exists": true,
+      "bytes": 18805,
+      "sha256": "a6da9a2ff35a3ad647855e47b9749f6c633bce1e4d5e559e795d97d7a56df15e"
+    },
+    "evaluate_model_only.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\evaluate_model_only.py",
+      "relative_to_stage4": "evaluate_model_only.py",
+      "exists": true,
+      "bytes": 998,
+      "sha256": "f154e3d2d20632bdf45ac36b4b7a6bd2ad52600ca504c85070a7820c8d7b142d"
+    },
+    "compare_model_only_systems.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\compare_model_only_systems.py",
+      "relative_to_stage4": "compare_model_only_systems.py",
+      "exists": true,
+      "bytes": 890,
+      "sha256": "51b5029f1a5b6b885587b794a77dad56db25034b5c03edaf72bc1e23f3d38865"
+    },
+    "stage4_metric3d/model_only.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\model_only.py",
+      "relative_to_stage4": "stage4_metric3d/model_only.py",
+      "exists": true,
+      "bytes": 12860,
+      "sha256": "dc684e6c5ea5507f0c0f067faae0ed9891c6ea2d4ef0a5b7105200f3434752c3"
+    },
+    "stage4_metric3d/model_only_refinement.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\model_only_refinement.py",
+      "relative_to_stage4": "stage4_metric3d/model_only_refinement.py",
+      "exists": true,
+      "bytes": 9423,
+      "sha256": "fbd0d35b4b882d72c353ba0c97ebbae30edcb001e88a24f33f5b697063d6344a"
+    },
+    "stage4_metric3d/model_only_evaluation.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\model_only_evaluation.py",
+      "relative_to_stage4": "stage4_metric3d/model_only_evaluation.py",
+      "exists": true,
+      "bytes": 19941,
+      "sha256": "f78e337773908bfc218396688521701f88833f8e690b16d30d6c41249f18feb6"
+    },
+    "stage4_metric3d/model_only_systems.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\model_only_systems.py",
+      "relative_to_stage4": "stage4_metric3d/model_only_systems.py",
+      "exists": true,
+      "bytes": 9888,
+      "sha256": "5bf8823c431c5e08e7014ea6dc4ba0877ba69ec50551504e586e2b40abc11aa3"
+    },
+    "run_stage4.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\run_stage4.py",
+      "relative_to_stage4": "run_stage4.py",
+      "exists": true,
+      "bytes": 7659,
+      "sha256": "2899751157b8ba9aed9baf2546314f3bc710c86a06404f86284770d55d1dfb95"
+    },
+    "run_sam3d_body_worker.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\run_sam3d_body_worker.py",
+      "relative_to_stage4": "run_sam3d_body_worker.py",
+      "exists": true,
+      "bytes": 14223,
+      "sha256": "bf92a16b3da5206cf44c7a612fb1005b375c9a10bea32155c500eabd12cf095e"
+    },
+    "stage4_metric3d/camera.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\camera.py",
+      "relative_to_stage4": "stage4_metric3d/camera.py",
+      "exists": true,
+      "bytes": 5968,
+      "sha256": "8e935adb2048efe274628167a621c612613fb1f114eadc39e1cf4be0a4391b25"
+    },
+    "stage4_metric3d/stage3_adapter.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\stage3_adapter.py",
+      "relative_to_stage4": "stage4_metric3d/stage3_adapter.py",
+      "exists": true,
+      "bytes": 5182,
+      "sha256": "408defce31422fb80c8a6b9b1c122990631bfbdb78cd54581e785b61d53746b1"
+    },
+    "stage4_metric3d/schemas.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\schemas.py",
+      "relative_to_stage4": "stage4_metric3d/schemas.py",
+      "exists": true,
+      "bytes": 2014,
+      "sha256": "840dd5812b9ecf81b033f915a01e0c7622e17d9d087bb17aa435189543fc3496"
+    },
+    "stage4_metric3d/output_semantics.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\output_semantics.py",
+      "relative_to_stage4": "stage4_metric3d/output_semantics.py",
+      "exists": true,
+      "bytes": 10086,
+      "sha256": "ce69d5fae8d39f93be147676c42525033753bfb845e04358561d724b89009243"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/config.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\config.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/config.py",
+      "exists": true,
+      "bytes": 3279,
+      "sha256": "8db2fce9a964d42ba249e0b47d0b1818b05f72e8faa87e5d59452a145bc6fcb2"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/pipeline.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\pipeline.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/pipeline.py",
+      "exists": true,
+      "bytes": 24415,
+      "sha256": "807ce254aaeebe9d00f6816beac27d12319c057485e79f6bf386be661f09baf1"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/refiner.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\refiner.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/refiner.py",
+      "exists": true,
+      "bytes": 8203,
+      "sha256": "25e771ba3792b98f6d387827ed34f718a82e615216e987f350232f659ecdb348"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/ground_anchor.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\ground_anchor.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/ground_anchor.py",
+      "exists": true,
+      "bytes": 5410,
+      "sha256": "35ec1b13bcb83e03afd4337d7a9c82c81f968e4e915179c974f1ee51f856d3f4"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/geometry.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\geometry.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/geometry.py",
+      "exists": true,
+      "bytes": 1041,
+      "sha256": "a71b3273382e34db3a041b16ca371fc8fde334ca58da411d66313dc517807a20"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/quality.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\quality.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/quality.py",
+      "exists": true,
+      "bytes": 618,
+      "sha256": "2218e9c61581280d07d9f15a5deceff3fd0ad047d3f4470de216d434bf940a96"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/metrics.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\metrics.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/metrics.py",
+      "exists": true,
+      "bytes": 3408,
+      "sha256": "b346f78fec1c4a8d6e4136e7761162cbb247a132fff761db32cb938dbf36f54b"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/visualization.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\visualization.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/visualization.py",
+      "exists": true,
+      "bytes": 4411,
+      "sha256": "a3e7634c9e0e5f4470148aef2a1059e6d1690e8118dba0e8d6cf34b75dc1dc87"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/cache.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\cache.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/cache.py",
+      "exists": true,
+      "bytes": 7236,
+      "sha256": "c2adfc6ca1703a2490758b3c9d4ef015eda0a4d4c198abbe782daba28933c8bc"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/joint_mapping.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\joint_mapping.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/joint_mapping.py",
+      "exists": true,
+      "bytes": 2385,
+      "sha256": "b2af5b7004e93bd00d66d5226dfaf889a98d1b9f0dd4d8a16786fb8d44723ee0"
+    },
+    "stage4_metric3d/backends/sam3d_pitch_refined/__init__.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\stage4_metric3d\\backends\\sam3d_pitch_refined\\__init__.py",
+      "relative_to_stage4": "stage4_metric3d/backends/sam3d_pitch_refined/__init__.py",
+      "exists": true,
+      "bytes": 297,
+      "sha256": "3822f81c856285e00f5c0965d08fb4faff8b6f75ee68fd961a818536736b39f0"
+    },
+    "tests_v05/test_refinement.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests_v05\\test_refinement.py",
+      "relative_to_stage4": "tests_v05/test_refinement.py",
+      "exists": true,
+      "bytes": 2992,
+      "sha256": "aa4fce6009b188a79515d4981a0e88591b7d1ddd1ea546b2e641d2bc0442a441"
+    },
+    "tests_v05/test_ground_first.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests_v05\\test_ground_first.py",
+      "relative_to_stage4": "tests_v05/test_ground_first.py",
+      "exists": true,
+      "bytes": 1579,
+      "sha256": "fa18b2e0771b8aaf4e6c5b6c358bc291e2e33955eec7b66dd13b8a9114554822"
+    },
+    "tests_v05/test_cache_and_mapping.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests_v05\\test_cache_and_mapping.py",
+      "relative_to_stage4": "tests_v05/test_cache_and_mapping.py",
+      "exists": true,
+      "bytes": 926,
+      "sha256": "31c1aa9451f4113a5143a9cfe48d90487514fb85dc3a37ad6bdffa60cdfee2fe"
+    },
+    "tests/test_output_semantics.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_output_semantics.py",
+      "relative_to_stage4": "tests/test_output_semantics.py",
+      "exists": true,
+      "bytes": 3808,
+      "sha256": "25eacd813dc843e0cda72547dec8a88164e3b4280f3f8080761272ac0108ced2"
+    },
+    "tests/test_visualization.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_visualization.py",
+      "relative_to_stage4": "tests/test_visualization.py",
+      "exists": true,
+      "bytes": 707,
+      "sha256": "205d0b766ee944763b59cee597d49891aa93ead98704f849be0d210e26a436cc"
+    },
+    "tests/test_phase0_audit.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_phase0_audit.py",
+      "relative_to_stage4": "tests/test_phase0_audit.py",
+      "exists": true,
+      "bytes": 3883,
+      "sha256": "f94ef5defd469211f41419212114f8e888a6245728a1ef4f0722e8004590a939"
+    },
+    "tests/test_model_only_manifest.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_model_only_manifest.py",
+      "relative_to_stage4": "tests/test_model_only_manifest.py",
+      "exists": true,
+      "bytes": 6343,
+      "sha256": "cb4e66da5cebc122b9634ab2f21ace38978f1a83a9aacca182c3bb097043d414"
+    },
+    "tests/test_model_only_refinement.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_model_only_refinement.py",
+      "relative_to_stage4": "tests/test_model_only_refinement.py",
+      "exists": true,
+      "bytes": 7362,
+      "sha256": "2767b6d3d1af869d6f20218e6fd1eb6d475b95834b32135cb91c0d322a141ae0"
+    },
+    "tests/test_model_only_evaluation.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_model_only_evaluation.py",
+      "relative_to_stage4": "tests/test_model_only_evaluation.py",
+      "exists": true,
+      "bytes": 7622,
+      "sha256": "f05b246ef5c983ec26434ea0060bf701854b3c587bf805539cac214b123a6f67"
+    },
+    "tests/test_model_only_systems.py": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\tests\\test_model_only_systems.py",
+      "relative_to_stage4": "tests/test_model_only_systems.py",
+      "exists": true,
+      "bytes": 6084,
+      "sha256": "17bad61ac87fb9167ba31298db249760564cbe47678781d849995f48951e8725"
+    }
+  },
+  "configs_and_mappings": {
+    "stage4_v05_config": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\configs\\stage4_v05_sam3d_pitch_refined.json",
+      "relative_to_stage4": "configs/stage4_v05_sam3d_pitch_refined.json",
+      "exists": true,
+      "bytes": 775,
+      "sha256": "9a280ddceea6b78b800e5569b426443947d7f9efd56107025abfe842eee8b886"
+    },
+    "mhr70_mapping": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\schemas\\sam3d_mhr70_to_rtmw_wholebody_v1.json",
+      "relative_to_stage4": "schemas/sam3d_mhr70_to_rtmw_wholebody_v1.json",
+      "exists": true,
+      "bytes": 931,
+      "sha256": "37f6fd90122f1a4269f419c7e1bb52972148bf928fbb6a7130182fd948886eb7"
+    }
+  },
+  "inputs": {
+    "stage3_state": {
+      "path": "D:\\GitHub\\NCKH\\stage3_pose2d_v0.1\\runs\\stage3_real_1920\\tracked_pose_2d_state.json",
+      "relative_to_stage4": "D:/GitHub/NCKH/stage3_pose2d_v0.1/runs/stage3_real_1920/tracked_pose_2d_state.json",
+      "exists": false,
+      "summary": null
+    },
+    "stage1_camera_dir": {
+      "path": "D:\\GitHub\\NCKH\\stage_1_camera_v12\\outputs\\temporal_v13\\batch_video\\shot_ptz\\optimized_camera_states",
+      "exists": false,
+      "usable": false,
+      "file_count": 0,
+      "manifest_sha256": null,
+      "files": []
+    },
+    "source_video": {
+      "path": "D:\\GitHub\\NCKH\\stage_1_camera_v12\\download.mp4",
+      "relative_to_stage4": "D:/GitHub/NCKH/stage_1_camera_v12/download.mp4",
+      "exists": false
+    },
+    "frames_dir": {
+      "path": "D:\\GitHub\\NCKH\\stage_1_camera_v12\\frames",
+      "exists": false,
+      "usable": false,
+      "file_count": 0,
+      "manifest_sha256": null,
+      "files": []
+    },
+    "sam3d_native_cache": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\runs\\stage4_v051_frame104\\sam3d_native_frame104.npz",
+      "relative_to_stage4": "runs/stage4_v051_frame104/sam3d_native_frame104.npz",
+      "exists": false
+    },
+    "sam3d_checkpoint": {
+      "path": "D:\\GitHub\\NCKH\\pretrained_models\\sam3d_body\\model.ckpt",
+      "relative_to_stage4": "D:/GitHub/NCKH/pretrained_models/sam3d_body/model.ckpt",
+      "exists": false
+    },
+    "mhr_model": {
+      "path": "D:\\GitHub\\NCKH\\pretrained_models\\sam3d_body\\assets\\mhr_model.pt",
+      "relative_to_stage4": "D:/GitHub/NCKH/pretrained_models/sam3d_body/assets/mhr_model.pt",
+      "exists": false
+    },
+    "sam3d_repository": {
+      "path": "D:\\GitHub\\NCKH\\third_party\\sam-3d-body",
+      "exists": false,
+      "usable": false,
+      "file_count": 0,
+      "manifest_sha256": null,
+      "files": []
+    }
+  },
+  "outputs": {
+    "sam3d_pitch_refined": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\runs\\stage4_v051_frame104\\sam3d-pitch-refined\\world_grounded_pose_state.json",
+      "relative_to_stage4": "runs/stage4_v051_frame104/sam3d-pitch-refined/world_grounded_pose_state.json",
+      "exists": false,
+      "summary": null
+    },
+    "sam3d_direct": {
+      "path": "D:\\GitHub\\NCKH\\stage4_metric3d_v0.2.0\\runs\\stage4_v051_frame104\\sam3d-direct\\world_grounded_pose_state.json",
+      "relative_to_stage4": "runs/stage4_v051_frame104/sam3d-direct/world_grounded_pose_state.json",
+      "exists": false,
+      "summary": null
+    }
+  },
+  "test_evidence": {
+    "command": "PYTHONPATH=. C:\\Users\\Admin\\anaconda3\\envs\\nckh-env\\python.exe -m pytest -q tests tests_v04 tests_v05",
+    "passed": 91,
+    "failed": 0,
+    "status": "PASS"
+  },
+  "acceptance": {
+    "implementation_gate": "PASS_IMPLEMENTATION",
+    "model_only_development": "ALLOWED",
+    "model_only_pretrained_inference": "BLOCKED_MISSING_STAGE4_MODEL_ASSETS",
+    "model_only_accuracy": "NOT_EVALUATED_NO_INDEPENDENT_BENCHMARK_RECORDED",
+    "integration_frame104": "NOT_AVAILABLE_INTEGRATION_INPUTS",
+    "baseline_frame104": "NOT_AVAILABLE_INTEGRATION_INPUTS",
+    "integration_metric_accuracy": "NOT_EVALUATED",
+    "metric_accuracy": "NOT_EVALUATED",
+    "self_consistency": "NOT_AVAILABLE",
+    "baseline_inputs_available": false,
+    "replay_inputs_available": false,
+    "pretrained_inference_assets_available": false,
+    "sam3d_package_available_in_audit_environment": false,
+    "integration_cache_generation_inputs_available": false,
+    "source_frame_input_available": false,
+    "baseline_outputs_available": false,
+    "research_accuracy_frozen": false,
+    "missing_input_keys": [
+      "stage3_state",
+      "stage1_camera_dir",
+      "sam3d_native_cache",
+      "sam3d_checkpoint",
+      "mhr_model",
+      "sam3d_repository_or_installed_package",
+      "source_video_or_frames_dir"
+    ],
+    "missing_model_only_keys": [
+      "sam3d_checkpoint",
+      "mhr_model",
+      "sam3d_repository_or_installed_package"
+    ],
+    "missing_integration_keys": [
+      "stage3_state",
+      "stage1_camera_dir",
+      "sam3d_native_cache"
+    ],
+    "missing_baseline_keys": [
+      "stage3_state",
+      "stage1_camera_dir",
+      "sam3d_native_cache"
+    ],
+    "no_upstream_regeneration": true,
+    "accuracy_claim_allowed": false
+  },
+  "semantics": {
+    "canonical_coordinate_scope": "PITCH_WORLD_METRIC",
+    "root_only_refinement": true,
+    "self_consistency_is_not_metric_ground_truth": true,
+    "metric_ground_truth_required_for_accuracy": true,
+    "selected_frame": 104
+  },
+  "commands": {
+    "audit_invocation": "tools/stage4_phase0_audit.py --tests-passed 91 --tests-failed 0 --test-command PYTHONPATH=. C:\\Users\\Admin\\anaconda3\\envs\\nckh-env\\python.exe -m pytest -q tests tests_v04 tests_v05",
+    "baseline_run": "powershell -ExecutionPolicy Bypass -File .\\rerun_frame104_v051.ps1",
+    "test_run": "PYTHONPATH=. C:\\Users\\Admin\\anaconda3\\envs\\nckh-env\\python.exe -m pytest -q tests tests_v04 tests_v05"
+  },
+  "recovery": {
+    "replay_cache": {
+      "ready": false,
+      "missing": [
+        "stage3_state",
+        "stage1_camera_dir",
+        "sam3d_native_cache"
+      ],
+      "action": "Restore the matching Stage-3 state, Stage-1 camera directory and native SAM3D cache; do not substitute another frame or sequence."
+    },
+    "model_only": {
+      "development_allowed": "ALLOWED",
+      "pretrained_inference_ready": false,
+      "missing_model_assets": [
+        "sam3d_checkpoint",
+        "mhr_model",
+        "sam3d_repository_or_installed_package"
+      ],
+      "upstream_stage1_stage3_required": false,
+      "action": "Use Stage-4 pretrained backends on benchmark RGB/person crops and benchmark GT; use benchmark-provided metric camera/pose only for global-coordinate claims. Stage-1/3 integration is a separate gate."
+    },
+    "generate_integration_cache": {
+      "ready": false,
+      "missing": [
+        "stage3_state",
+        "stage1_camera_dir",
+        "stage4_pretrained_model_assets",
+        "source_video_or_frames_dir"
+      ],
+      "action": "Optional integration lane only: after restoring matching upstream inputs and Stage-4 SAM3D assets, run the Stage-4 worker to create a native cache. This is not a prerequisite for Stage-4-only model development."
+    }
+  },
+  "limitations": [
+    "The audit does not create Stage-1, Stage-3, SAM3D or metric-GT artifacts.",
+    "Ground/contact and reprojection residuals are self-consistency diagnostics because they are optimization evidence.",
+    "Metric accuracy and temporal refinement accuracy remain NOT_EVALUATED without independent metric ground truth and real cache inputs."
+  ]
+}

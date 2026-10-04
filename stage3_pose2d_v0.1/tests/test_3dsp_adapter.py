@@ -40,6 +40,22 @@ def test_iter_shot_manifest_filters_and_preserves_order(tmp_path):
     assert [s.shot_id for s in samples] == ["00001", "00003"]
 
 
+def test_iter_shot_manifest_selects_named_development_group(tmp_path):
+    import cv2
+    for shot_id in ("00001", "00002", "00003"):
+        shot = tmp_path / "train" / shot_id
+        (shot / "img").mkdir(parents=True)
+        (shot / "posture").mkdir()
+        cv2.imwrite(str(shot / "img" / "001.jpg"), np.zeros((32, 24, 3), np.uint8))
+        (shot / "posture" / "001.json").write_text(
+            json.dumps({"keypont_2d": {str(i): {"x": i, "y": i} for i in range(17)}})
+        )
+    manifest = tmp_path / "split.json"
+    manifest.write_text(json.dumps({"development_shots": ["00002", "00001"], "holdout_shots": ["00003"]}))
+    samples = list(iter_3dsp(tmp_path, "train", shot_manifest=manifest, shot_group="development"))
+    assert [s.shot_id for s in samples] == ["00001", "00002"]
+
+
 def test_crop_scales_keep_control_first_and_remove_duplicates():
     assert normalize_crop_scales([1.1, 1.0, 1.1, 0.9]) == [1.0, 1.1, 0.9]
     assert normalize_crop_scales([0.9, 1.1]) == [1.0, 0.9, 1.1]

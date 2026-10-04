@@ -36,6 +36,9 @@ def main() -> None:
                    help="Comma-separated scales for QA-only multi-crop selection; always includes scale 1.0.")
     q.add_argument("--shot-manifest", type=Path, default=None,
                    help="JSON shot-level manifest; only its shot_ids are evaluated.")
+    q.add_argument("--shot-group", default="auto",
+                   choices=["auto", "shot_ids", "development", "holdout"],
+                   help="Named shot list inside --shot-manifest.")
     q.add_argument("--output-dir", required=True, type=Path)
 
     q = sub.add_parser("run-coco-wholebody")
@@ -70,6 +73,7 @@ def main() -> None:
                 if args.crop_scales is not None else None
             ),
             shot_manifest=args.shot_manifest,
+            shot_group=args.shot_group,
         )
         out = args.output_dir / "3dsp_benchmark_summary.json"
         _write(out, report)

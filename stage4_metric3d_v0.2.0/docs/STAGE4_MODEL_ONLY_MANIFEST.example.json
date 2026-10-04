@@ -1,0 +1,33 @@
+{
+  "schema_version": "stage4-model-only-benchmark-manifest-1.0",
+  "dataset": {
+    "name": "WorldPose-or-equivalent-real-release",
+    "release": "RECORD_THE_EXACT_RELEASE_VERSION",
+    "license_id": "RECORD_DATASET_LICENSE",
+    "license_url": "https://example.org/dataset-license"
+  },
+  "split": "development",
+  "coordinate_frame": {
+    "name": "BENCHMARK_PITCH_WORLD",
+    "origin": "pitch_center",
+    "scope": "PITCH_WORLD_METRIC",
+    "units": "m",
+    "axes": {
+      "x": "goal-to-goal",
+      "y": "touchline-to-touchline",
+      "z": "up"
+    }
+  },
+  "records": [
+    {
+      "record_id": "sequence_0001_frame_000120_person_0007",
+      "sequence_id": "sequence_0001",
+      "split": "development",
+      "frame_index": 120,
+      "image": "images/sequence_0001/frame_000120.jpg",
+      "bbox_xyxy": [412.0, 188.0, 486.0, 408.0],
+      "camera": "cameras/sequence_0001/frame_000120.json",
+      "gt": "gt/sequence_0001/frame_000120_person_0007.json"
+    }
+  ]
+}

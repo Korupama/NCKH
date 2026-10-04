@@ -30,6 +30,8 @@ def _joint_dict(obs: dict) -> dict[str, np.ndarray]:
 
 
 def save_topdown_world_pose(state: dict, output_path: str | Path) -> Path:
+    import matplotlib
+    matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
     out = Path(output_path).expanduser().resolve(); out.parent.mkdir(parents=True, exist_ok=True)
     selected = int(state.get("selected_frame", -1))

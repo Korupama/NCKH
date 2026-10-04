@@ -43,8 +43,14 @@ tasks passed RTMW-L QA and were exported as train-only pseudo-labels. No
 validation/test pseudo-labels were created; no student checkpoint or final
 accuracy claim exists yet.
 
+The pretrained RTMW-L benchmark is recorded in
+[`docs/STAGE3_BENCHMARK_REPORT.md`](docs/STAGE3_BENCHMARK_REPORT.md): 160-shot
+development PDJ `0.910022` / AUC `0.665081` and 40-shot holdout PDJ `0.903214`
+/ AUC `0.669479`. The holdout is the final non-regression metric. These are
+top-down 3DSP pose metrics and do not measure broadcast wrong-person rate.
+
 The current acceptance report records the full Stage-3 test result as
-`58 passed` and includes hashes for the annotation reviewer, validator and
+`59 passed` and includes hashes for the annotation reviewer, validator and
 human COCO exporter. The full RTMW-L preannotation run completed all 4,286
 tasks with `ground_truth_unchanged=true`; its artifact and 134 chunk
 checkpoint files pass model/manifest/config provenance and tamper checks.
@@ -52,9 +58,9 @@ The preannotation tool writes chunked checkpoints with
 manifest/model/config provenance and rejects resume after source or
 ground-truth changes. The current 40-shot/800-image 3DSP holdout rerun is
 non-regressed against the frozen reference (PDJ `0.903214`, AUC `0.669479`,
-mean normalized error `0.214582`). The overall status remains
-`CONDITIONAL_PASS_BLOCKED_ON_HUMAN_LABELS`; no hallucination reduction claim
-is made until approved broadcast WholeBody133 labels exist.
+mean normalized error `0.214582`). The overall status is
+`PASS_WITH_RESEARCH_LIMITS`; no broadcast hallucination-reduction claim is
+made because 3DSP does not measure wrong-person precision.
 
 ## Phase 9 decision
 
@@ -70,9 +76,9 @@ A real legacy Stage-2 migration output was regenerated from the supplied histori
 
 The historical RTMW raw scores in that smoke run have a median around 3 for a typical pose, which directly demonstrates why Stage 3 does not interpret the score as a probability.
 
-## Still requires user's real benchmark run
+## Remaining research benchmarks
 
-- full 3DSP RTMW-L PDJ/AUC;
+- independent broadcast correct-person/hallucinated-`VALID` benchmark;
 - COCO-WholeBody Body/Foot/Whole AP sanity result;
 - project-specific SoccerNet-Pose23 annotation and foot PCK;
 - production Stage-3 coverage distribution on replay cases;

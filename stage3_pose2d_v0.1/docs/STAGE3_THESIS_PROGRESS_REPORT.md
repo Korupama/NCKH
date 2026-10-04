@@ -178,6 +178,17 @@ Internal holdout:
 - mean normalized error: `0.214582` (current-code rerun);
 - median normalized error: `0.115142`.
 
+Development split:
+
+- 160 shots / 3,200 images;
+- PDJ: `0.910022`;
+- AUC: `0.665081`;
+- mean normalized error: `0.214363`;
+- median normalized error: `0.118684`.
+
+The detailed Vietnamese benchmark report is
+[`docs/STAGE3_BENCHMARK_REPORT.md`](STAGE3_BENCHMARK_REPORT.md).
+
 Contract smoke:
 
 - selected frame: `86`;
@@ -187,7 +198,7 @@ Contract smoke:
 - valid coverage tại `t0`: `1.0`;
 - foot coverage tại `t0`: `1.0`.
 
-Regression cuối: **58 tests passed**.
+Regression cuối: **59 tests passed**.
 
 ## 4. Kết luận hiện tại
 

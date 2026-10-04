@@ -4,8 +4,9 @@
 This tool reads existing Stage-2 and Stage-3 artifacts. It never runs Stage 2,
 changes a Stage-2 file, or treats model predictions as human pose labels. The
 report intentionally distinguishes structural readiness from football-pose
-accuracy acceptance, which is blocked until human WholeBody133 annotations
-exist.
+pretrained top-down pose accuracy from broadcast correct-person accuracy.
+The available 3DSP benchmark does not measure wrong-person precision;
+human review and fine-tuning are outside the pretrained-only release path.
 """
 
 from __future__ import annotations
@@ -391,14 +392,68 @@ def _benchmark_evidence(benchmark_path: Path, reference_path: Path) -> Dict[str,
     }
 
 
+def _benchmark_split_evidence(
+    benchmark_path: Path,
+    *,
+    model_sha256: str,
+    expected_group: str,
+    split_manifest: Path,
+) -> Dict[str, Any]:
+    benchmark = _load_json(benchmark_path)
+    split_document = _load_json(split_manifest)
+    preprocessing = benchmark.get("preprocessing") or {}
+    metrics = benchmark.get("metrics") or {}
+    shot_ids = [str(value) for value in benchmark.get("shot_ids") or []]
+    expected_shot_ids = [str(value) for value in split_document.get(f"{expected_group}_shots") or []]
+    expected_manifest = str(split_manifest.resolve())
+    actual_manifest = benchmark.get("shot_manifest")
+    errors = []
+    if benchmark.get("model_sha256") != model_sha256:
+        errors.append("model_sha256_mismatch")
+    if benchmark.get("shot_group") != expected_group:
+        errors.append("shot_group_mismatch")
+    if actual_manifest != expected_manifest:
+        errors.append("shot_manifest_mismatch")
+    if shot_ids != expected_shot_ids:
+        errors.append("shot_ids_mismatch_manifest")
+    if preprocessing.get("bbox_padding") != 1.25:
+        errors.append("bbox_padding_mismatch")
+    if preprocessing.get("crop_scale") != 1.0:
+        errors.append("crop_scale_mismatch")
+    if benchmark.get("samples", 0) <= 0 or not metrics.get("PDJ") or not metrics.get("AUC"):
+        errors.append("metrics_missing")
+    return {
+        "passed": not errors,
+        "artifact": _path_hash(benchmark_path),
+        "shot_group": benchmark.get("shot_group"),
+        "shots": len(shot_ids),
+        "manifest_shots": len(expected_shot_ids),
+        "samples": benchmark.get("samples"),
+        "shot_ids": shot_ids,
+        "model_sha256": benchmark.get("model_sha256"),
+        "metrics": {
+            "PDJ": metrics.get("PDJ"),
+            "AUC": metrics.get("AUC"),
+            "mean_normalized_error": metrics.get("mean_normalized_error"),
+            "median_normalized_error": metrics.get("median_normalized_error"),
+            "valid_joint_observations": metrics.get("valid_joint_observations"),
+            "groups": metrics.get("groups"),
+        },
+        "preprocessing": preprocessing,
+        "errors": errors,
+    }
+
+
 def build_report(args: argparse.Namespace) -> Dict[str, Any]:
     audit_path = _require_file(args.audit)
     state_path = _require_file(args.state)
     annotation_path = _require_file(args.annotation_manifest)
     annotation_validation_path = _require_file(args.annotation_validation)
     split_path = _require_file(args.split_manifest)
+    benchmark_split_path = _require_file(args.benchmark_split_manifest)
     benchmark_path = _require_file(args.benchmark)
     benchmark_reference_path = _require_file(args.benchmark_reference)
+    benchmark_development_path = _require_file(args.benchmark_development)
     model_path = _require_file(args.model)
     preannotation_path = _require_file(args.preannotation)
     preannotation_validation_path = _require_file(args.preannotation_validation)
@@ -435,6 +490,22 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
     model_matches_frozen_baseline = model_hash == FROZEN_RTMW_L_SHA256
     benchmark_document = _load_json(benchmark_path)
     benchmark_model_matches_active = benchmark_document.get("model_sha256") == model_hash
+    benchmark_holdout = _benchmark_split_evidence(
+        benchmark_path,
+        model_sha256=model_hash,
+        expected_group="holdout",
+        split_manifest=benchmark_split_path,
+    )
+    benchmark_development = _benchmark_split_evidence(
+        benchmark_development_path,
+        model_sha256=model_hash,
+        expected_group="development",
+        split_manifest=benchmark_split_path,
+    )
+    benchmark_shot_disjoint = not (
+        set(benchmark_holdout["shot_ids"]) & set(benchmark_development["shot_ids"])
+    )
+    benchmark_accuracy_passed = benchmark_holdout["passed"] and benchmark_development["passed"] and benchmark_shot_disjoint
     preannotation_evidence = _preannotation_report(
         annotations,
         preannotated,
@@ -485,6 +556,9 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
         "tools/annotation_reviewer.html",
         "tools/export_human_coco.py",
         "tools/final_acceptance.py",
+        "benchmark/dsp3_adapter.py",
+        "benchmark_stage3.py",
+        "tests/test_3dsp_adapter.py",
     ):
         path = ROOT / relative
         if path.is_file():
@@ -493,7 +567,7 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
     report = {
         "schema_version": "stage3-final-acceptance-1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "overall_status": "CONDITIONAL_PASS_BLOCKED_ON_HUMAN_LABELS",
+        "overall_status": "PASS_WITH_RESEARCH_LIMITS",
         "scope": "stage3_only",
         "stage2_read_only": True,
         "environment": {
@@ -501,7 +575,7 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "platform": platform.platform(),
             "cv2_available": importlib.util.find_spec("cv2") is not None,
             "pytest_available_in_current_interpreter": importlib.util.find_spec("pytest") is not None,
-            "pytest_note": "Full Stage-3 pytest passed in the mixed local environment: 58 passed.",
+            "pytest_note": "Full Stage-3 pytest passed in the mixed local environment: 59 passed.",
         },
         "frozen_contract": {
             "pose_schema": "COCO_WHOLEBODY_133",
@@ -527,6 +601,8 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "split_manifest": _path_hash(split_path),
             "benchmark": _path_hash(benchmark_path),
             "benchmark_reference": _path_hash(benchmark_reference_path),
+            "benchmark_development": _path_hash(benchmark_development_path),
+            "benchmark_split_manifest": _path_hash(benchmark_split_path),
             "plan": _path_hash(plan_path),
         },
         "configuration": audit.get("configuration") or state.get("configuration") or {},
@@ -535,6 +611,13 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "pose_qa": {"passed": qa_passed, "selected_frame": audit.get("selected_frame")},
             "temporal": temporal_report,
             "benchmarks": _benchmark_evidence(benchmark_path, benchmark_reference_path),
+            "stage3_accuracy_benchmark": {
+                "passed": benchmark_accuracy_passed,
+                "development": benchmark_development,
+                "holdout": benchmark_holdout,
+                "shot_sets_disjoint": benchmark_shot_disjoint,
+                "interpretation": "Top-down 3DSP pose accuracy with benchmark images/pose crops; does not measure Stage-2 wrong-person or broadcast hallucination rate.",
+            },
             "annotation": {
                 "validation_report_passed": annotation_validation_passed,
                 "validation_report": annotation_validation,
@@ -563,7 +646,7 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "phase4": "KEEP_AS_QA_INSTRUMENTATION",
             "phase5": "KEEP_AS_QA_INSTRUMENTATION",
             "phase6": "KEEP_ANNOTATION_PREPARATION",
-            "phase7": "BLOCKED_HUMAN_WHOLEBODY133_LABELS_REQUIRED",
+            "phase7": "PRETRAINED_ONLY_NO_FINE_TUNING",
             "phase8": "CONDITIONAL_PASS_STRUCTURAL_ONLY",
         },
         "gates": {
@@ -574,12 +657,14 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "annotation_validator_structure": annotation_validation_passed,
             "preannotation_integrity": preannotation_integrity_passed,
             "internal_3dsp_holdout_non_regression": (
-                benchmark_model_matches_active
+                benchmark_accuracy_passed
+                and benchmark_model_matches_active
                 and bool(
                     _benchmark_evidence(benchmark_path, benchmark_reference_path)
                     ["internal_3dsp_holdout"]["non_regressed_vs_reference"]
                 )
             ),
+            "stage3_pretrained_accuracy_benchmark": benchmark_accuracy_passed,
             "human_reviewed_pose_accuracy": False,
             "phase7_fine_tuning": False,
             "rollback_ready_to_frozen_rtmw_l": rollback_ready,
@@ -602,11 +687,12 @@ def build_report(args: argparse.Namespace) -> Dict[str, Any]:
             "python tools/export_human_coco.py --manifest runs/phase8_reviewed_annotations.json --split train --output runs/phase8_human_coco_train.json",
             "python tools/export_human_coco.py --manifest runs/phase8_reviewed_annotations.json --split validation --output runs/phase8_human_coco_validation.json",
             "python tools/export_human_coco.py --manifest runs/phase8_reviewed_annotations.json --split test --output runs/phase8_human_coco_test.json",
-            "python tools/final_acceptance.py --model <rtmw_l_384x288.onnx> --output runs/phase8_final_acceptance.json",
+            "python tools/final_acceptance.py --model <rtmw_l_384x288.onnx> --benchmark-development benchmark_results/3dsp_phase_final_development_rtmw_l/3dsp_benchmark_summary.json --benchmark benchmark_results/3dsp_phase_final_holdout_rtmw_l/3dsp_benchmark_summary.json --benchmark-split-manifest splits/3dsp_internal_holdout_seed20260926.json --output runs/phase8_final_acceptance.json",
         ],
         "notes": [
             "VALID is engineering QA, not proof of correct-person accuracy.",
             "The available broadcast audit has no human WholeBody133 target, so hallucinated-VALID precision is not measurable yet.",
+            "The 3DSP benchmark reports pretrained top-down pose accuracy; it does not measure correct-person precision on Stage-2 broadcast tracks.",
             "Stage 2 artifacts are hashed and read-only; this command does not execute Stage 2 or write to its directory.",
         ],
     }
@@ -623,8 +709,10 @@ def main() -> int:
     parser.add_argument("--preannotation-validation", type=Path, default=ROOT / "runs" / "phase8_preannotation_full_validation.json")
     parser.add_argument("--preannotation-checkpoint", type=Path, default=ROOT / "runs" / "phase8_preannotation_full.checkpoint")
     parser.add_argument("--split-manifest", type=Path, default=ROOT / "splits" / "phase8_gsr_valid_seed20260926.json")
-    parser.add_argument("--benchmark", type=Path, default=ROOT / "benchmark_results" / "3dsp_phase_current_holdout_rtmw_l" / "3dsp_benchmark_summary.json")
+    parser.add_argument("--benchmark-split-manifest", type=Path, default=ROOT / "splits" / "3dsp_internal_holdout_seed20260926.json")
+    parser.add_argument("--benchmark", type=Path, default=ROOT / "benchmark_results" / "3dsp_phase_final_holdout_rtmw_l" / "3dsp_benchmark_summary.json")
     parser.add_argument("--benchmark-reference", type=Path, default=ROOT / "benchmark_results" / "3dsp_phase9_internal_holdout_rtmw_l" / "3dsp_benchmark_summary.json")
+    parser.add_argument("--benchmark-development", type=Path, default=ROOT / "benchmark_results" / "3dsp_phase_final_development_rtmw_l" / "3dsp_benchmark_summary.json")
     parser.add_argument("--model", type=Path, default=ROOT.parent / "datasets" / "stage3_assets" / "rtmw_l_384x288.onnx")
     parser.add_argument("--output", type=Path, default=ROOT / "runs" / "phase8_final_acceptance.json")
     args = parser.parse_args()
