@@ -29,6 +29,8 @@ def build_offside_position_state(
     stage6_input: Any = None,
     epsilon_m: float = DEFAULT_EPSILON_M,
     best_effort: bool = True,
+    allow_defender_only: bool = False,
+    allow_tentative_context: bool = False,
 ) -> OffsidePositionState:
     stage4_raw = load_json(stage4_input)
     stage7_raw = load_json(stage7_input)
@@ -50,9 +52,53 @@ def build_offside_position_state(
     }
     state.toucher_track_id = s7["toucher_track_id"]
 
-    ref = reference_from_stage8_best_effort(stage8_raw, s)
+    ref_input = stage8_raw if best_effort else {"reference": stage8_raw.get("reference")}
+    ref = reference_from_stage8_best_effort(ref_input, s)
+    # Explicit demo policy: missing ball/contact does not block a measured
+    # second-last-defender reference. Other unresolved geometry still blocks it.
+    defender_only = bool(
+        allow_defender_only
+        and s8['reference'].get('kind') == 'DEFENDER_ONLY'
+        and s8['reference'].get('reference_only')
+        and s8['reference_source'] == 'SECOND_LAST_OPPONENT'
+        and s8['reference_q_m'] is not None
+        and s8['second_last'].get('goalward_q_m') == s8['reference_q_m']
+        and len(s8['opponent_ranking']) >= 2
+        and s7['attackers'] and len(s7['opponents']) >= 2
+        and s8['status'] == 'DEGRADED'
+        and (s7['status'] == 'VALID' or (
+            s7['status'] == 'DEGRADED'
+            and ('ATTACKING_TEAM_INFERRED_FROM_GOALKEEPER' in (stage7_raw.get('reasons') or [])
+                 or (allow_tentative_context
+                     and set(stage7_raw.get('reasons') or []) == {'CONTACT_TENTATIVE_SPATIAL_ONLY'}
+                     and (stage7_raw.get('toucher') or {}).get('evidence_level') == 'TENTATIVE_SPATIAL_ONLY'))
+        ))
+        and s7['s'] == s8['s'] and s in (-1, 1)
+        and s4['frame_index'] == s7['frame_index'] == s8['frame_index']
+        and s4['frame_index'] is not None
+    )
+    if defender_only:
+        state.mode = 'DEFENDER_REFERENCE'
+    tentative_context = bool(
+        allow_tentative_context
+        and s7['status'] == s8['status'] == 'DEGRADED'
+        and set(stage7_raw.get('reasons') or []) == {'CONTACT_TENTATIVE_SPATIAL_ONLY'}
+        and set(stage8_raw.get('reasons') or []) == {'STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY'}
+        and (stage7_raw.get('toucher') or {}).get('evidence_level') == 'TENTATIVE_SPATIAL_ONLY'
+        and s7['toucher_track_id'] in s7['attackers']
+        and s8['reference_q_m'] is not None
+        and s8['second_last'].get('goalward_q_m') is not None
+        and len(s8['opponent_ranking']) >= 2 and len(s7['opponents']) >= 2
+        and s7['s'] == s8['s'] and s in (-1, 1)
+        and s4['frame_index'] == s7['frame_index'] == s8['frame_index']
+        and s4['frame_index'] is not None
+    )
+    if tentative_context:
+        state.mode = 'TENTATIVE_CONTACT_REFERENCE'
+    relaxed_reference = defender_only or tentative_context
+    basis = 'DEFENDER_ONLY' if defender_only else 'STAGE8_REFERENCE_TENTATIVE_CONTACT' if tentative_context else 'STANDARD'
     reference_fallback_rows: List[Dict[str, Any]] = []
-    if ref.get("goalward_q_m") is None and s in (-1, 1) and state.frame_index is not None:
+    if best_effort and ref.get("goalward_q_m") is None and s in (-1, 1) and state.frame_index is not None:
         for tid in list(dict.fromkeys(s7["opponents"])):
             track = s4["tracks"].get(tid)
             if track is None:
@@ -82,6 +128,7 @@ def build_offside_position_state(
         **ref,
         "epsilon_m": float(epsilon_m),
         "upstream_stage8_status": s8["status"],
+        "classification_basis": basis,
     }
     state.ball = dict(s8.get("ball") or {}) or (
         {"X_world_m": s6.get("X_world_m"), "ball_center_x_extent_m": s6.get("ball_center_x_extent_m"), "center_xyz_world_m": s6.get("center_xyz_world_m"), "source": "stage6"}
@@ -109,6 +156,15 @@ def build_offside_position_state(
             epsilon_m=epsilon_m,
             geometry_source=extent.get("source"),
         )
+        if not best_effort and not relaxed_reference and (s7["status"] != "VALID" or s8["status"] != "VALID"
+                                or (stage8_raw.get("reference") or {}).get("reference_only")):
+            classification.update(label="UNAVAILABLE", flag="?", is_offside_position=None,
+                                  candidate=False, reason="UPSTREAM_CONTEXT_OR_REFERENCE_NOT_CONFIRMED")
+        if relaxed_reference:
+            classification['classification_basis'] = basis
+            if extent.get('goalward_q_m') is None:
+                classification.update(label='UNAVAILABLE', flag='?', is_offside_position=None,
+                                      candidate=False, reason='PLAYER_GEOMETRY_MISSING')
         if extent.get("status") == "FALLBACK":
             fallback_count += 1
         if extent.get("goalward_q_m") is None:
@@ -148,13 +204,19 @@ def build_offside_position_state(
     )
 
     critical_missing = s not in (-1, 1) or ref.get("goalward_q_m") is None
-    if best_effort:
+    if relaxed_reference:
+        state.status = 'DEGRADED' if missing_count < len(attackers) else 'UNRESOLVED'
+    elif best_effort:
         state.status = "DEMO_BEST_EFFORT" if not critical_missing else "DEMO_PARTIAL"
     else:
         state.status = "VALID" if not critical_missing and missing_count == 0 and s7["status"] == "VALID" and s8["status"] == "VALID" else "UNRESOLVED"
 
     state.diagnostics = {
         "ignore_upstream_status_for_demo": bool(best_effort),
+        "classification_basis": basis,
+        "allow_defender_only": bool(allow_defender_only),
+        "allow_tentative_context": bool(allow_tentative_context),
+        "ball_used_for_reference": not defender_only,
         "upstream_status": {"stage7": s7["status"], "stage8": s8["status"]},
         "frame_alignment": {"stage4": s4["frame_index"], "stage7": s7["frame_index"], "stage8": s8["frame_index"]},
         "attacker_count": len(attackers),
@@ -165,7 +227,10 @@ def build_offside_position_state(
         "fallback_geometry_count": fallback_count,
         "missing_geometry_defaulted_onside_count": missing_count,
         "stage9_reference_fallback_opponent_rows": reference_fallback_rows,
-        "warning": "DEMO MODE intentionally ignores DEGRADED/UNRESOLVED/uncertainty gates; labels are visualization outputs, not validated referee decisions.",
+        "warning": ("Position classified against the Stage 8 reference; toucher/team context is based on tentative spatial contact."
+                    if tentative_context else "Position classified against the second-last defender only; ball/contact unavailable or unconfirmed."
+                    if defender_only else "DEMO MODE intentionally ignores DEGRADED/UNRESOLVED/uncertainty gates; labels are visualization outputs, not validated referee decisions."
+                    if best_effort else "STRICT: unconfirmed context or reference does not produce offside/onside labels."),
     }
     state.provenance = {
         "stage4": source_path(stage4_input),

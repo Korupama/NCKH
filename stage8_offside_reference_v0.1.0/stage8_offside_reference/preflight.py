@@ -51,7 +51,14 @@ def build_preflight(
         and set(stage7.get("reasons") or []) == {"CONTACT_TENTATIVE_SPATIAL_ONLY"}
         and ((stage7.get("toucher") or {}).get("evidence_level") == "TENTATIVE_SPATIAL_ONLY")
     )
-    if s7["status"] == "DEGRADED" and stage7_tentative_only:
+    goalkeeper_reference_only = bool(
+        allow_ball_fallback and s7["status"] == "DEGRADED"
+        and "ATTACKING_TEAM_INFERRED_FROM_GOALKEEPER" in (stage7.get("reasons") or [])
+        and (stage7.get("diagnostics", {}).get("team_resolution") or {}).get("reference_only")
+    )
+    if goalkeeper_reference_only:
+        warnings.append("GOALKEEPER_TEAM_ASSUMPTION_DEFENDER_REFERENCE_ONLY")
+    elif s7["status"] == "DEGRADED" and stage7_tentative_only:
         warnings.append("STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY")
     elif s7["status"] != "VALID":
         blockers.append("STAGE7_CONTEXT_UNRESOLVED")
@@ -99,7 +106,9 @@ def build_preflight(
         blockers.append("FEWER_THAN_TWO_USABLE_OPPONENTS")
 
     extent = s6["ball_center_x_extent_m"]
-    if allow_ball_fallback:
+    if goalkeeper_reference_only:
+        warnings.append("BALL_EXCLUDED_FROM_DEFENDER_REFERENCE")
+    elif allow_ball_fallback:
         if not s6["usable_for_offside"]:
             warnings.append("BALL_LONGITUDINAL_GEOMETRY_UNUSABLE_FALLBACK_ACTIVE")
         if extent is None:
@@ -123,7 +132,7 @@ def build_preflight(
     blockers = list(dict.fromkeys(blockers))
     warnings = list(dict.fromkeys(warnings))
     is_degraded = bool(
-        stage7_tentative_only
+        stage7_tentative_only or goalkeeper_reference_only
         or (allow_partial_opponents and (missing_tracks or unusable_tracks) and usable_count >= 2)
         or (allow_ball_fallback and (not s6["usable_for_offside"] or extent is None))
     )
@@ -137,6 +146,7 @@ def build_preflight(
             "s": s7["s"],
             "opponents": opponents,
             "tentative_spatial_contact_only": stage7_tentative_only,
+            "goalkeeper_reference_only": goalkeeper_reference_only,
         },
         "stage4": {
             "schema_version": s4["schema_version"],

@@ -101,6 +101,12 @@ def ground_anchor(handoff, track_id, t0):
     if handoff is None:
         return {'status':'MISSING','xy_world_m':None,'source':None}
     if handoff.get('selected_frame')!=t0: raise ValueError('Stage4 selected_frame mismatch')
+    # SAM3D's pose-only handoff has no quality-gated distal-foot anchor.
+    # Missing optional evidence is not a coordinate-convention violation.
+    track = next((t for t in handoff.get('tracks',[]) if track_id is not None and t.get('track_id')==track_id), None)
+    if track is None or not track.get('selected_frame_ground_anchor'):
+        return {'status':'MISSING','xy_world_m':None,'source':None,
+                'upstream_reason':'NO_QUALITY_GATED_GROUND_ANCHOR'}
     axes=handoff.get('coordinate_frame',{})
     # This adapter deliberately accepts the quality-gated distal-foot contract only.
     if axes.get('units') not in ('m','meters','metres'): raise ValueError('Stage4 metric units required')
@@ -139,12 +145,13 @@ def apply_contact(source, poses, handoff, camera):
         raise ValueError('Camera image dimensions mismatch')
     contact=associate_contact(poses,source['frames'],t0)
     is_foot=contact.get('region')=='FOOT'
-    anchor=({'status':'NOT_REQUIRED','xy_world_m':None,'source':None} if is_foot
+    supported=contact['status'] in ('SUPPORTED','VALID')
+    # An unconfirmed toucher cannot supply a contact-plane anchor.
+    anchor=({'status':'NOT_REQUIRED','xy_world_m':None,'source':None} if is_foot or not supported
             else ground_anchor(handoff,contact.get('track_id'),t0))
     frame=next(f for f in result['frames'] if int(f['frame_index'])==t0)
     old=source['selected_frame_ball']; candidate=frame.get('candidate'); radius=float(source.get('ball_radius_m',.11))
     xyz=None; method=None; rejection=None; sensitivity=None
-    supported=contact['status'] in ('SUPPORTED','VALID')
     camera_usable=camera.status in ('VALID','DEGRADED') if is_foot else camera.status=='VALID'
     if not supported:
         rejection=contact['status']

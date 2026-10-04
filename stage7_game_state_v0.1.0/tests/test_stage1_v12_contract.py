@@ -56,7 +56,7 @@ def test_fallback_understands_actual_stage1_v12_extrinsics_keys():
     assert meta["valid"] is True
 
 
-def test_explicit_invalid_view_is_not_silently_rederived():
+def test_outside_pitch_view_resolves_direction_without_rederiving_geometry():
     s1 = {
         "view": {
             "centre_ray_pitch_hit_m": [80.0, 0.0, 0.0],
@@ -70,6 +70,37 @@ def test_explicit_invalid_view_is_not_silently_rederived():
         },
     }
     ctx = build_game_state_context(s1, _stage5(), _stage6())
-    assert ctx.status == "UNRESOLVED"
-    assert "CENTRE_RAY_PITCH_HIT_INVALID" in ctx.reasons
+    assert ctx.status == "DEGRADED"
+    assert ctx.attack_direction["s"] == 1
+    assert ctx.attack_direction["centre_ray_x_m"] == 80.0
+    assert "ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY" in ctx.reasons
+    assert ctx.diagnostics["centre_ray_valid"] is False
     assert ctx.diagnostics["centre_ray_derived"] is False
+
+
+def test_negative_outside_pitch_view_resolves_left():
+    s1 = {"view": {"centre_ray_pitch_hit_m": [-65.61, 20.1, 0],
+                   "centre_ray_pitch_hit_valid": False,
+                   "reason": "CENTRE_RAY_PITCH_HIT_OUT_OF_BOUNDS"}}
+    ctx = build_game_state_context(s1, _stage5(), _stage6())
+    assert ctx.attack_direction["s"] == -1
+    assert ctx.attack_direction["view_pitch_half"] == "LEFT"
+    assert ctx.status == "DEGRADED"
+
+
+def test_outside_pitch_midfield_stays_ambiguous():
+    s1 = {"view": {"centre_ray_pitch_hit_m": [0, 80, 0],
+                   "centre_ray_pitch_hit_valid": False,
+                   "reason": "CENTRE_RAY_PITCH_HIT_OUT_OF_BOUNDS"}}
+    ctx = build_game_state_context(s1, _stage5(), _stage6())
+    assert ctx.attack_direction is None
+    assert "CENTRE_RAY_X_AMBIGUOUS" in ctx.reasons
+
+
+def test_other_invalid_geometry_still_rejected():
+    s1 = {"view": {"centre_ray_pitch_hit_m": [80, 0, 0],
+                   "centre_ray_pitch_hit_valid": False,
+                   "reason": "PITCH_INTERSECTION_BEHIND_CAMERA"}}
+    ctx = build_game_state_context(s1, _stage5(), _stage6())
+    assert ctx.attack_direction is None
+    assert "CENTRE_RAY_PITCH_HIT_INVALID" in ctx.reasons

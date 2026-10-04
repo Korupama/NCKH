@@ -11,9 +11,30 @@
       <input type="file" id="video-upload" accept="video/mp4,video/webm" style="margin-bottom: 12px; color: #edf3f5;" />
       <div id="video-player-wrap" style="display:none;">
         <video id="video-player" controls style="max-width: 100%; max-height: 50vh; border: 1px solid #26333b; border-radius: 8px; width: 100%;"></video>
-        <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-          <span class="muted" style="font-size: 14px;">Thời gian: <span id="video-time" style="color: #edf3f5; font-variant-numeric: tabular-nums;">0.000</span>s <span style="margin: 0 8px;">·</span> Frame ước tính (30fps): <strong id="video-frame" style="color: #45c46a;">0</strong></span>
-          <button id="analyze-btn" style="background: #45c46a; color: #0b1114; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;">Chạy Pipeline Frame Này</button>
+        <div class="video-editor">
+          <p id="video-status" role="status" aria-live="polite">Chọn video để bắt đầu.</p>
+          <div class="timeline-track">
+            <div id="video-timeline" aria-hidden="true"></div>
+            <div id="timeline-playhead"></div>
+            <input id="frame-slider" data-frame-control type="range" min="0" max="0" step="1" value="0" aria-label="Kéo chọn frame trên timeline">
+          </div>
+          <div class="frame-controls">
+            <button id="frame-prev" data-frame-control aria-label="Frame trước">← 1 frame</button>
+            <label>Frame <input id="frame-number" data-frame-control type="number" min="0" max="0" step="1" value="0" inputmode="numeric"></label>
+            <button id="frame-next" data-frame-control aria-label="Frame sau">1 frame →</button>
+            <span class="muted"><span id="video-time">0.000</span>s · Frame <strong id="video-frame">0</strong></span>
+            <button id="analyze-btn" data-frame-control>Chạy pipeline frame đã chọn</button>
+          </div>
+          <div class="selected-frame"><img id="selected-preview" hidden alt="Ảnh nguồn của frame đã chọn"><span id="preview-caption">Kéo timeline hoặc nhập số frame, rồi nhấn Enter.</span></div>
+          <section id="analysis-progress" class="analysis-progress" hidden aria-label="Tiến độ xử lý pipeline">
+            <div class="progress-heading"><strong id="progress-title" role="status" aria-live="polite">Đang chuẩn bị</strong><span id="progress-elapsed"></span></div>
+            <progress id="progress-bar" max="9" value="0" aria-label="Số stage đã hoàn tất"></progress>
+            <p id="progress-summary">0 / 9 stage hoàn tất</p>
+            <ol id="progress-stages"></ol>
+            <p class="muted">Hoàn tất stage nghĩa là đã chạy xong; chất lượng và các cảnh báo nằm trong kết quả phân tích.</p>
+            <details id="progress-error-wrap" hidden><summary>Chi tiết lỗi xử lý</summary><pre id="progress-error"></pre></details>
+          </section>
+          <p class="muted">Ảnh trên timeline là các mốc xem nhanh. Dùng phím mũi tên trên thanh kéo hoặc nút ±1 frame để tinh chỉnh.</p>
         </div>
       </div>
     </div>
@@ -35,4 +56,4 @@
     <div class="panel roster"><div class="panel-head"><div><strong>Dấu vết từng cầu thủ</strong><span class="muted" id="track-count"></span></div><button id="clear-track">Bỏ chọn</button></div><div class="table-scroll"><table><thead><tr><th>Track</th><th>Đội / vai trò</th><th>2D</th><th>3D</th><th>Ngữ cảnh S7</th><th>Vị trí S9</th></tr></thead><tbody id="tracks"></tbody></table></div><div id="track-detail" class="footnote">Chọn một dòng để làm nổi bật cầu thủ và xem chất lượng pose.</div></div>
   </section>
   <footer><span>REPLAY LAB <span class="muted">/ nghiên cứu & quan sát</span></span><span id="source"></span><a href="/api/state" target="_blank" rel="noopener">Mở dữ liệu JSON ↗</a></footer>
-</main><script src="/static/pipeline.js"></script><script src="/static/stage7_degraded.js"></script><script src="/static/stage8_extension.js"></script><script src="/static/field3d.js"></script></body></html>
+</main><script src="/static/pipeline.js"></script><script src="/static/video_editor.js?v=progress-retry-2"></script><script src="/static/stage7_degraded.js"></script><script src="/static/stage8_extension.js"></script><script src="/static/field3d.js"></script></body></html>

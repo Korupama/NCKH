@@ -9,6 +9,10 @@ import json
 import mimetypes
 from datetime import datetime, timezone
 import uuid
+import threading
+import time
+import os
+from collections import deque
 
 from .adapters import load_json, replay_context
 from .core import build_offside_position_state
@@ -112,6 +116,15 @@ def make_handler(ctx: DemoContext):
     root = Path(__file__).resolve().parent.parent
     template = root / "templates" / ("pipeline.html" if ctx.state.get("mode") == "UPSTREAM_1_7" else "index.html")
     static_root = root / "static"
+    video_root = root / "outputs" / "video_sources"
+    progress = {}
+    progress_lock = threading.Lock()
+    analysis_lock = threading.Lock()
+
+    def update_progress(key, **values):
+        with progress_lock:
+            if key in progress:
+                progress[key].update(values)
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Stage9Demo/0.1"
@@ -128,6 +141,20 @@ def make_handler(ctx: DemoContext):
             parsed = urlparse(self.path)
             path = parsed.path
             query = parse_qs(parsed.query)
+            if path == "/api/analysis_progress":
+                with progress_lock:
+                    record = progress.get(query.get("request_id", [""])[0])
+                    body = json.dumps(record or {"status": "pending"}, ensure_ascii=False).encode("utf-8")
+                self._send(200, body, "application/json; charset=utf-8")
+                return
+            if path == "/api/video_source":
+                try:
+                    from .video_selection import validate_upload
+                    validate_upload(int(query.get("size", ["0"])[0]), video_root)
+                    self._send(200, b'{"ready":true}', "application/json")
+                except (ValueError, OSError) as exc:
+                    self._send(400, str(exc).encode("utf-8"), "text/plain; charset=utf-8")
+                return
             if path == "/":
                 self._send(200, template.read_bytes(), "text/html; charset=utf-8")
                 return
@@ -142,6 +169,18 @@ def make_handler(ctx: DemoContext):
             if path == "/api/frame.jpg":
                 self._send(200, render_frame_bytes(ctx, query), "image/jpeg")
                 return
+            if path == "/api/video_frame.jpg":
+                try:
+                    from .video_selection import read_video_frame
+                    frame = read_video_frame(video_root, query.get("video_id", [""])[0], query.get("frame", ["0"])[0])
+                    if query.get("thumb", ["0"])[0] == "1":
+                        import cv2
+                        h, w = frame.shape[:2]
+                        frame = cv2.resize(frame, (160, max(1, round(h * 160 / w))))
+                    self._send(200, encode_jpeg(frame), "image/jpeg")
+                except (ValueError, TypeError) as exc:
+                    self._send(400, str(exc).encode("utf-8"), "text/plain; charset=utf-8")
+                return
             if path.startswith("/static/"):
                 rel = path[len("/static/"):]
                 target = (static_root / rel).resolve()
@@ -149,17 +188,41 @@ def make_handler(ctx: DemoContext):
                     self._send(404, b"not found", "text/plain; charset=utf-8")
                     return
                 ctype = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-                self._send(200, target.read_bytes(), ctype, cache="public, max-age=60")
+                self._send(200, target.read_bytes(), ctype, cache="no-store")
                 return
             self._send(404, b"not found", "text/plain; charset=utf-8")
 
         def do_POST(self):
             parsed = urlparse(self.path)
+            if parsed.path == "/api/video_source":
+                size = self.headers.get("Content-Length", "0")
+                try:
+                    from .video_selection import register_video
+                    print(f"[stage9-web] Video upload: {size} bytes")
+                    result = register_video(self.rfile, int(size), video_root)
+                    self._send(200, json.dumps(result).encode("utf-8"), "application/json")
+                except Exception as exc:
+                    print(f"[stage9-web] Video upload failed ({size} bytes): {type(exc).__name__}: {exc}")
+                    self._send(400, str(exc).encode("utf-8"), "text/plain; charset=utf-8")
+                return
             if parsed.path == "/api/analyze_live":
                 content_length = int(self.headers.get("Content-Length", 0))
                 body = self.rfile.read(content_length)
+                request_id = None
+                acquired = False
                 try:
                     req_data = json.loads(body.decode("utf-8"))
+                    request_id = str(req_data.get("request_id") or uuid.uuid4().hex)
+                    if len(request_id) > 80:
+                        raise ValueError("Request ID không hợp lệ.")
+                    acquired = analysis_lock.acquire(blocking=False)
+                    if not acquired:
+                        self._send(409, 'Máy chủ đang xử lý một yêu cầu khác. Vui lòng chờ hoàn tất.'.encode('utf-8'), 'text/plain; charset=utf-8')
+                        return
+                    with progress_lock:
+                        while len(progress) >= 50:
+                            del progress[next(iter(progress))]
+                        progress[request_id] = {'status': 'running', 'stage': 0, 'stages': {}, 'started_at': time.time(), 'message': 'Đang chuẩn bị ảnh nguồn và nạp mô hình'}
                     frame_index = req_data.get("estimated_frame", 0)
                     print(f"[stage9-web] LIVE ANALYSIS REQUEST: frame={frame_index}")
                     
@@ -174,20 +237,24 @@ def make_handler(ctx: DemoContext):
                     run_id = f"{stamp}_f{int(frame_index):08d}_{uuid.uuid4().hex[:8]}"
                     outdir = root / "outputs" / "live_runs" / run_id
                     outdir.mkdir(parents=True, exist_ok=False)
+                    update_progress(request_id, run_id=run_id, frame_index=int(frame_index))
                     
-                    frame_path = outdir / f"frame_{frame_index}.jpg"
-                    if "image" in req_data:
-                        import cv2
-                        import numpy as np
-                        img_b64 = req_data["image"].split(",")[1]
-                        img_bytes = base64.b64decode(img_b64)
-                        img_array = np.frombuffer(img_bytes, dtype=np.uint8)
-                        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-                        if img is None:
-                            raise ValueError("Could not decode the submitted video frame")
-                        cv2.imwrite(str(frame_path), img)
-                    else:
-                        raise ValueError("A source-frame image is required for fresh inference")
+                    import cv2
+                    import hashlib
+                    from .video_selection import analysis_source_frame
+                    img, source_kind = analysis_source_frame(video_root, req_data)
+                    # Preserve the chosen pixels without another lossy JPEG pass.
+                    frame_path = outdir / f"frame_{frame_index}.png"
+                    if not cv2.imwrite(str(frame_path), img):
+                        raise ValueError("Không ghi được frame nguồn.")
+                    selection_info = {
+                        'kind': source_kind, 'frame_index': int(frame_index),
+                        'time_sec': req_data.get('time_sec'), 'video_id': req_data.get('video_id'),
+                        'frame_index_basis': 'MEDIA_TIME_ESTIMATE' if source_kind == 'DISPLAYED_VIDEO_FRAME' else 'EXACT_INDEX',
+                        'image_path': str(frame_path),
+                        'pixel_sha256': hashlib.sha256(img.tobytes()).hexdigest(),
+                    }
+                    (outdir / 'frame_selection.json').write_text(json.dumps(selection_info, indent=2), encoding='utf-8')
                     
                     cmd = [
                         sys.executable,
@@ -197,9 +264,26 @@ def make_handler(ctx: DemoContext):
                         "--outdir", str(outdir)
                     ]
                     
-                    proc = subprocess.run(cmd, capture_output=True, text=True)
-                    if proc.returncode != 0:
-                        raise RuntimeError(f"Orchestrator failed:\n{proc.stderr}\n{proc.stdout}")
+                    env = dict(os.environ, PYTHONUNBUFFERED='1', PYTHONIOENCODING='utf-8')
+                    tail = deque(maxlen=100)
+                    with (outdir / 'orchestrator.log').open('w', encoding='utf-8') as logfile:
+                        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                              text=True, encoding='utf-8', errors='replace', env=env, bufsize=1) as proc:
+                            for line in proc.stdout:
+                                logfile.write(line)
+                                logfile.flush()
+                                tail.append(line)
+                                if line.startswith('__STAGE_PROGRESS__'):
+                                    event = json.loads(line[len('__STAGE_PROGRESS__'):])
+                                    with progress_lock:
+                                        record = progress[request_id]
+                                        record['stage'] = event['stage']
+                                        record['stages'][str(event['stage'])] = event['status']
+                                        record['message'] = 'Đang xử lý' if event['status'] == 'running' else 'Đã chạy xong stage'
+                            returncode = proc.wait()
+                    if returncode != 0:
+                        raise RuntimeError('Orchestrator failed:\n' + ''.join(tail))
+                    update_progress(request_id, message='Đang tổng hợp kết quả để hiển thị')
                     
                     # Reload context and mutate global ctx
                     if type(ctx).__name__ == "PipelineContext":
@@ -211,6 +295,9 @@ def make_handler(ctx: DemoContext):
                         ctx.frame_source = new_ctx.frame_source
                         # Keep the UI on the exact frame selected by the user.
                         ctx.state["frame_index"] = int(frame_index)
+                        ctx.state["has_analysis_result"] = True
+                        ctx.state["timestamp_sec"] = req_data.get('time_sec')
+                        ctx.state["frame_selection"] = selection_info
 
                     stage5_handoff = json.loads((outdir / "stage5.json").read_text(encoding="utf-8"))
                     track_team = stage5_handoff.get("track_team", {})
@@ -225,8 +312,10 @@ def make_handler(ctx: DemoContext):
                     stage9_state = json.loads((outdir / "stage9.json").read_text(encoding="utf-8"))
                     stage9_attackers = stage9_state.get("attackers", [])
                     
+                    update_progress(request_id, status='completed', finished_at=time.time(), message='Pipeline đã hoàn tất')
                     self._send(200, json.dumps({
                         "status": "ok", "run_id": run_id, "outdir": str(outdir),
+                        "frame_selection": selection_info,
                         "stage4_execution": "EXISTING_STAGE4_PIPELINE_FRESH_INFERENCE",
                         "stage4_invocation": str(outdir / "stage4_invocation.json"),
                         "stage5_execution": "EXISTING_STAGE5_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
@@ -259,7 +348,12 @@ def make_handler(ctx: DemoContext):
                 except Exception as e:
                     import traceback
                     traceback.print_exc()
+                    if acquired:
+                        update_progress(request_id, status='failed', finished_at=time.time(), message='Xử lý thất bại', error=str(e)[-6000:])
                     self._send(400, str(e).encode("utf-8"), "text/plain; charset=utf-8")
+                finally:
+                    if acquired:
+                        analysis_lock.release()
                 return
             self._send(404, b"not found", "text/plain; charset=utf-8")
 
