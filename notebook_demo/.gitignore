@@ -1,0 +1,18 @@
+# Generated/runtime content
+third_party/
+outputs/*
+!outputs/stage1/
+outputs/stage1/*
+!outputs/stage1/.gitkeep
+
+# Large pretrained binaries (downloaded by the notebook)
+pretrained_models/stage1_pnlcalib/SV_kp
+pretrained_models/stage1_pnlcalib/SV_lines
+pretrained_models/stage1_pnlcalib/MV_kp
+pretrained_models/stage1_pnlcalib/MV_lines
+pretrained_models/stage2_sst_rtmw/model.pth
+pretrained_models/stage2_sst_rtmw/rtmw_l_384x288.onnx
+
+.ipynb_checkpoints/
+__pycache__/
+

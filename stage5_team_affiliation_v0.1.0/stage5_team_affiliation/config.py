@@ -32,6 +32,7 @@ class Stage5Config:
     goalkeeper_assignment_mode: str = "spatial_hybrid"
     goalkeeper_min_spatial_margin_px: float = 30.0
     goalkeeper_min_pitch_separation_m: float = 1.0
+    goalkeeper_min_team_image_separation_px: float = 80.0
     goalkeeper_fallback_to_color: bool = True
 
     def validate(self) -> None:

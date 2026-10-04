@@ -128,18 +128,48 @@ def build_preflight(
     elif camera_status in {"INVALID", "FAILED", "FAIL"}:
         blockers.append("CAMERA_INVALID")
 
-    if x_view is None:
-        if hit is not None and view_meta.get("valid") is False:
-            blockers.append("CENTRE_RAY_PITCH_HIT_INVALID")
+    # Multi-tier direction fallback check for preflight
+    resolved_s = None
+    if x_view is not None and abs(x_view) > 1e-6:
+        resolved_s = 1 if x_view > 0 else -1
+    else:
+        explicit_s = _first(
+            stage1.get("attack_direction_s"),
+            _dig(stage1, "attack_direction", "s"),
+            _dig(stage6, "stage7", "attack_direction_s"),
+            stage6.get("attack_direction_s"),
+            _dig(stage5, "attack_direction_s"),
+        )
+        if explicit_s in (-1, 1, "-1", "1"):
+            resolved_s = int(explicit_s)
+        elif str(view_meta.get("view_pitch_half") or "").upper() in {"LEFT", "RIGHT"}:
+            resolved_s = 1 if str(view_meta.get("view_pitch_half")).upper() == "RIGHT" else -1
+
+    if resolved_s is None:
+        if x_view is None:
+            if hit is not None and view_meta.get("valid") is False:
+                blockers.append("CENTRE_RAY_PITCH_HIT_INVALID")
+            else:
+                blockers.append("CENTRE_RAY_PITCH_HIT_MISSING")
         else:
-            blockers.append("CENTRE_RAY_PITCH_HIT_MISSING")
+            blockers.append("CENTRE_RAY_X_AMBIGUOUS")
+    elif x_view is None or abs(x_view) <= 1e-6:
+        warnings.append("ATTACK_DIRECTION_RESOLVED_VIA_FALLBACK")
 
     by_track = {p["track_id"]: p for p in players}
-    toucher_id = contact.get("track_id")
+    confirmed_toucher_id = contact.get("track_id")
+    tentative_contact = bool(
+        not confirmed_toucher_id
+        and contact.get("status") == "INSUFFICIENT_TEMPORAL_SUPPORT"
+        and contact.get("nearest_track_id")
+    )
+    toucher_id = contact.get("nearest_track_id") if tentative_contact else confirmed_toucher_id
     if toucher_id is None:
         blockers.append("MISSING_CONTACT_TRACK_ID")
         toucher = None
     else:
+        if tentative_contact:
+            warnings.append("CONTACT_TENTATIVE_SPATIAL_ONLY")
         toucher = by_track.get(toucher_id)
         if toucher is None:
             blockers.append("TOUCHER_TRACK_NOT_FOUND_IN_STAGE5")
@@ -163,8 +193,9 @@ def build_preflight(
         b.endswith("_FILE_MISSING") for b in blockers
     )
 
+    status = "BLOCKED" if blockers else ("DEGRADED_READY" if tentative_contact else "READY")
     return {
-        "status": "READY" if not blockers else "BLOCKED",
+        "status": status,
         "sources": sources,
         "frames": frames,
         "camera_status": camera_status,
@@ -210,7 +241,7 @@ def main() -> int:
         out = Path(args.output)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text + "\n", encoding="utf-8")
-    return 0 if report["status"] == "READY" else 2
+    return 0 if report["status"] in {"READY", "DEGRADED_READY"} else 2
 
 
 if __name__ == "__main__":

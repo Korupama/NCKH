@@ -299,7 +299,13 @@ def extract_stage1_view(stage1: Dict[str, Any]) -> Tuple[Optional[float], Option
 
     derived, geometry_meta = _derive_centre_ray_pitch_hit(stage1)
     if derived is None:
-        return None, None, {"source": None, "derived": False, "valid": False, **geometry_meta}
+        return None, None, {
+            "source": None,
+            "derived": False,
+            "valid": False,
+            "view_pitch_half": view.get("view_pitch_half") or stage1.get("view_pitch_half"),
+            **geometry_meta,
+        }
 
     in_bounds = geometry_meta.get("centre_ray_pitch_hit_in_bounds")
     valid = in_bounds is not False

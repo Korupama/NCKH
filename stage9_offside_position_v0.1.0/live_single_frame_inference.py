@@ -588,6 +588,7 @@ def process_stage7(out_dir, frame_index=104):
     stage7_command = [
         sys.executable, str(stage7_entry),
         *common_inputs,
+        '--allow-goalkeeper-fallback',
         '--output', str(state),
     ]
     execution = subprocess.run(stage7_command, cwd=str(stage7_root))
@@ -660,6 +661,7 @@ def process_stage8(out_dir, frame_index=104):
         '--stage4', str(inputs['stage4']),
         '--stage6', str(inputs['stage6']),
         '--stage7', str(inputs['stage7']),
+        '--allow-ball-fallback',
     ]
     preflight = subprocess.run(
         [sys.executable, str(preflight_entry), *common_inputs, '--output', str(preflight_report)],
@@ -752,6 +754,8 @@ def process_stage9(image_path, out_dir, frame_index=104):
         '--output', str(state),
         '--overlay', str(overlay),
         '--strict',
+        '--allow-defender-only',
+        '--allow-tentative-context',
     ]
     execution = subprocess.run(command, cwd=str(stage9_root))
     if execution.returncode not in (0, 2) or not state.is_file():
@@ -768,7 +772,9 @@ def process_stage9(image_path, out_dir, frame_index=104):
         'frame_index': int(frame_index),
         'pipeline_owner': str(stage9_root),
         'stage9_entry_point': str(stage9_entry),
-        'mode': 'STRICT',
+        'mode': stage9_state.get('mode'),
+        'allow_defender_only': True,
+        'allow_tentative_context': True,
         'pipeline_exit_code': int(execution.returncode),
         'semantic_status': stage9_state.get('status'),
         'stage4_handoff': str(inputs['stage4']),
@@ -785,7 +791,26 @@ def process_stage9(image_path, out_dir, frame_index=104):
     )
     print(f'[Real Inference] Existing Stage 9 pipeline saved {public_state} ({stage9_state.get("status")})')
 
+def _report_stage(number, function):
+    def run(*args, **kwargs):
+        import json
+        def emit(status):
+            print('__STAGE_PROGRESS__' + json.dumps({'stage': number, 'status': status}), flush=True)
+        emit('running')
+        try:
+            result = function(*args, **kwargs)
+        except Exception:
+            emit('failed')
+            raise
+        emit('completed')
+        return result
+    return run
+
+
 if __name__ == '__main__':
+    for _number in range(1, 10):
+        _name = f'process_stage{_number}'
+        globals()[_name] = _report_stage(_number, globals()[_name])
     image_path = sys.argv[1]
     out_dir = sys.argv[2]
     frame_index = int(sys.argv[3]) if len(sys.argv) > 3 else 104

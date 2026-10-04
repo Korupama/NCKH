@@ -22,7 +22,9 @@ document.addEventListener('click', function (event) {
   setTimeout(function () {
     const detail = document.getElementById('stage-detail');
     if (detail) {
-      detail.textContent += ' · Người chạm bóng tạm suy ra từ khoảng cách ảnh; thiếu xác nhận theo thời gian.';
+      detail.textContent += state.game_state.diagnostics?.team_resolution?.reference_only
+        ? ' · Đội phòng ngự suy luận từ thủ môn; chưa xác nhận người chạm bóng.'
+        : ' · Người chạm bóng tạm suy ra từ khoảng cách ảnh; thiếu xác nhận theo thời gian.';
     }
   }, 0);
 });

@@ -18,6 +18,8 @@ def main() -> int:
     p.add_argument("--output", required=True)
     p.add_argument("--epsilon-m", type=float, default=1e-9)
     p.add_argument("--strict", action="store_true", help="Honor upstream VALID status and missing-geometry gates")
+    p.add_argument("--allow-defender-only", action="store_true", help="Classify positions against an available Stage 8 defender-only reference when ball/contact is missing")
+    p.add_argument("--allow-tentative-context", action="store_true", help="Classify when the only Stage 7/8 limitation is tentative spatial contact")
     p.add_argument("--stage1")
     p.add_argument("--stage3")
     p.add_argument("--image")
@@ -25,7 +27,7 @@ def main() -> int:
     p.add_argument("--overlay")
     args = p.parse_args()
 
-    state = build_offside_position_state(args.stage4, args.stage7, args.stage8, stage6_input=args.stage6, epsilon_m=args.epsilon_m, best_effort=not args.strict)
+    state = build_offside_position_state(args.stage4, args.stage7, args.stage8, stage6_input=args.stage6, epsilon_m=args.epsilon_m, best_effort=not args.strict, allow_defender_only=args.allow_defender_only, allow_tentative_context=args.allow_tentative_context)
     payload = state.to_dict()
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -40,7 +42,7 @@ def main() -> int:
         save_overlay(args.overlay, overlay)
 
     print(json.dumps(payload, indent=2, ensure_ascii=False))
-    return 0 if payload["status"] in {"VALID", "DEMO_BEST_EFFORT", "DEMO_PARTIAL"} else 2
+    return 0 if payload["status"] in {"VALID", "DEGRADED", "DEMO_BEST_EFFORT", "DEMO_PARTIAL"} else 2
 
 
 if __name__ == "__main__":

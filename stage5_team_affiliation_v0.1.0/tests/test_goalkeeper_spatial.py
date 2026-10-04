@@ -63,3 +63,36 @@ def test_fallback_to_color_when_spatial_ambiguous():
     assert res["status"] == "VALID"
     assert res["team_id"] == 0
     assert res["method"] == "LOWER_BODY_APPEARANCE_AFFINITY"
+
+
+def test_corner_kick_scramble_interior_gk_fallback():
+    # Teams are separated: Team 0 med 400, Team 1 med 800
+    # But GK is at 600 (sandwiched in penalty box scramble between attacking attackers & defending players)
+    cfg = Stage5Config(goalkeeper_assignment_mode="spatial_image")
+    team_image = {0: [350.0, 450.0], 1: [750.0, 850.0]}
+    gk_x = [600.0]
+    
+    # Without fallback
+    cfg_no_fb = Stage5Config(goalkeeper_assignment_mode="spatial_image", goalkeeper_fallback_to_color=False)
+    res_no_fb = assign_goalkeeper_spatial(gk_image_x=gk_x, team_image_x=team_image, config=cfg_no_fb)
+    assert res_no_fb["status"] == "UNKNOWN"
+    assert res_no_fb["method"] == "AMBIGUOUS_GK_INTERIOR_POSITION"
+
+    # With fallback to color
+    team_lower = {0: np.array([1.0, 0.0], np.float32), 1: np.array([0.0, 1.0], np.float32)}
+    gk_color = np.array([0.05, 0.95], np.float32)  # Closer to team 1
+    res_fb = assign_goalkeeper(gk_color, team_lower, cfg, gk_image_x=gk_x, team_image_x=team_image)
+    assert res_fb["status"] == "VALID"
+    assert res_fb["team_id"] == 1
+    assert res_fb["method"] == "LOWER_BODY_APPEARANCE_AFFINITY"
+
+
+def test_overlapping_teams_fallback():
+    # Corner kick where both teams are completely jumbled: med0=500, med1=520 (sep=20px < 80px)
+    cfg_no_fb = Stage5Config(goalkeeper_assignment_mode="spatial_image", goalkeeper_fallback_to_color=False)
+    team_image = {0: [490.0, 510.0], 1: [510.0, 530.0]}
+    gk_x = [450.0]  # Outside, but teams are not separated
+    res = assign_goalkeeper_spatial(gk_image_x=gk_x, team_image_x=team_image, config=cfg_no_fb)
+    assert res["status"] == "UNKNOWN"
+    assert res["method"] == "AMBIGUOUS_TEAM_IMAGE_SEPARATION"
+

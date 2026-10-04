@@ -23,6 +23,8 @@
    - 3.3. Thuật toán Phục hồi Vai trò Tồn dư và Từ chối An toàn (Residual Recovery & Abstention)
    - 3.4. Nguyên tắc Không Rò rỉ Nhãn (Zero-Leakage Principle)
    - 3.5. Bảng Kết quả Thực nghiệm So sánh Toàn diện Stage 5 (58 Sequences)
+   - 3.6. Nguyên lý Toàn vẹn Luật Việt vị (Law 11 Invariants) cho Stage 7 & Stage 8
+   - 3.7. Bảng Kết quả Đánh giá Liên hoàn Toàn trình (Cascaded End-to-End Evaluation - 30 Windows)
 4. [HƯỚNG DẪN BIÊN SOẠN BÁO CÁO KHOA HỌC / LUẬN VĂN](#4-hướng-dẫn-biên-soạn-báo-cáo-khoa-học--luận-văn)
 5. [TÀI LIỆU THAM KHẢO HỌC THUẬT (BIBTEX CITATIONS)](#5-tài-liệu-tham-khảo-học-thuật-bibtex-citations)
 
@@ -219,8 +221,11 @@ flowchart TD
 ```
 
 1. **Tầng 1 - Pitch Geometry ($X_{\text{pitch}}$):** Thủ môn nằm ở nửa sân nào ($X < 0$ hay $X > 0$) sẽ được liên kết trực tiếp với đội bóng có cụm cầu thủ phòng ngự tương ứng (ngưỡng phân tách $\Delta X_{\text{sep}} \ge 1.0$m).
-2. **Tầng 2 - Image Centroid ($X_{\text{image}}$):** Khi chưa có tọa độ sân, sử dụng tọa độ X trên ảnh góc rộng để đo độ sâu phòng ngự và khoảng cách tới cụm cầu thủ 2 đội (ngưỡng phân tách $\ge 30$px).
-3. **Tầng 3 - Adaptive Color Fallback:** Khi thông số vị trí không gian không đủ độ phân tách, hệ thống chuyển sang so khớp màu quần thi đấu với tâm cụm hai đội.
+2. **Tầng 2 - Image Centroid ($X_{\text{image}}$) & Bộ lọc Biên phòng ngự (Defensive Extremity Guardrails):**
+   * Khi chưa có tọa độ sân 3D, hệ thống sử dụng tọa độ X trung vị trên khung hình 2D góc rộng.
+   * **Ngưỡng tách cụm đội bóng ($\Delta X_{\text{team\_sep}} \ge 80\text{px}$):** Hai đội bóng phải có khoảng cách trung vị trên trục X ảnh tối thiểu 80px. Nếu hai đội co cụm đè lên nhau (ví dụ: quả phạt góc hoặc lộn xộn trong vòng cấm), trục X 2D không còn ý nghĩa phân tách hình học và hệ thống từ chối gán nhãn không gian (`AMBIGUOUS_TEAM_IMAGE_SEPARATION`), chuyển ngay xuống Tầng 3 (màu sắc).
+   * **Quy tắc Vị trí Cận biên (Goalkeeper Exterior Invariant):** Trong bóng đá, thủ môn phòng ngự tại đường biên cuối sân (nằm ngoài cùng đội hình). Nếu tọa độ thủ môn rơi vào giữa trung vị hai đội ($\min(X_0, X_1) < X_{\text{gk}} < \max(X_0, X_1)$), thủ môn đang bị kẹp giữa các tiền đạo và hậu vệ trong một pha tranh chấp vòng cấm. Trường hợp này bị đánh dấu `AMBIGUOUS_GK_INTERIOR_POSITION` và an toàn chuyển giao về phân tích màu áo quần (Tầng 3) thay vì phán đoán cảm tính.
+3. **Tầng 3 - Adaptive Color Fallback:** Khi thông số vị trí không gian không đủ độ phân tách hoặc vi phạm điều kiện an toàn, hệ thống chuyển sang so khớp màu quần thi đấu với tâm cụm hai đội.
 
 ---
 
@@ -245,7 +250,11 @@ Nhằm đảm bảo tính khách quan học thuật tuyệt đối:
 
 ---
 
-### 3.5. Bảng Kết quả Thực nghiệm So sánh Toàn diện Stage 5 (58 Sequences)
+### 3.5. Bảng Kết quả Thực nghiệm So sánh Toàn diện Stage 5 (58 Sequences - Oracle-Box Baseline)
+
+> [!IMPORTANT]
+> **Lưu ý phương pháp luận khoa học (Evaluation Setting):**
+> Bảng kết quả dưới đây được đo lường dưới thiết lập **Oracle-Box Evaluation** (sử dụng ground-truth bounding box và tracklet ID từ SoccerNet-GSR `valid` split) nhằm cô lập và đánh giá chuẩn xác hiệu năng thuật toán trích xuất đặc trưng đa vùng, phân cụm màu sắc và suy luận không gian của Stage 5. Trong kịch bản ghép nối toàn trình (End-to-End Cascade) với Stage 2 detector, độ chính xác thực tế sẽ phụ thuộc thêm vào tỷ lệ nhận diện (Recall) và độ trôi ID (ID Switches) của mô hình SST.
 
 Toàn bộ 4 phương pháp được đánh giá trên cùng tập dữ liệu chuẩn **SoccerNet-GSR v1.3 `valid` split (58 sequences, 1,222 track người chơi, 127 track trọng tài)**:
 
@@ -267,6 +276,43 @@ Toàn bộ 4 phương pháp được đánh giá trên cùng tập dữ liệu c
 #### Ý nghĩa phân tích khoa học giữa 2 giải pháp:
 1. **Giải pháp M3 Spatial-Hybrid (Tối ưu cho Tự động hóa Toàn diện):** Phá vỡ hoàn toàn "điểm mù thủ môn" của các thuật toán phân cụm màu sắc truyền thống bằng cách kết hợp hình học không gian nửa sân và độ sâu phòng ngự. Tăng độ chính xác thủ môn từ $14.29\%$ lên **$97.40\%$** và nâng độ chính xác toàn hệ thống lên **$96.32\%$**.
 2. **Giải pháp `residual-v3` Abstention (Tối ưu cho Công nghệ VAR / Tiêu chuẩn An toàn Khắt khe):** Trong các ứng dụng trọng tài video bán tự động, việc đưa ra một phán quyết sai (False Positive) nguy hiểm hơn nhiều so với việc cảnh báo hệ thống không chắc chắn (`UNKNOWN`) để trọng tài con người can thiệp. Cơ chế Abstention chủ động loại bỏ $19.64\%$ ca mập mờ, đưa độ chính xác trên các ca chấp nhận phán quyết (**Selective Accuracy**) đạt mức kỷ lục **$99.80\%$** (chỉ sai đúng 2/982 ca trên toàn bộ 58 trận đấu).
+
+---
+
+### 3.6. Nguyên lý Toàn vẹn Luật Việt vị (Law 11 Invariants) cho Stage 7 & Stage 8
+
+Để đảm bảo kết quả từ Stage 7 và Stage 8 không bị overfit cục bộ vào một khung hình cụ thể (như Frame 104) và tuân thủ chặt chẽ Luật 11 IFAB:
+1. **Quy tắc Chiều Tấn công Không Giả định (Non-Overfitting Attack Direction):**
+   * Nghiêm cấm sử dụng heuristic phụ thuộc vị trí bóng như $X_{\text{ball}} > 0 \implies \text{tấn công sang phải}$. Trong các tình huống hậu vệ phá bóng hoặc triển khai bóng từ sân nhà, bóng nằm ở phần sân nhà nhưng đội bóng đang tấn công về hướng ngược lại.
+   * Chiều tấn công được giải quyết qua 3 tầng xác thực: (1) Chiếu tia quang học trung tâm camera từ Stage 1 lên mặt phẳng sân ($X_{\text{view}}$), (2) Hợp đồng tường minh từ dữ liệu upstream `attack_direction_s`, (3) Nhãn nửa sân đã hiệu chuẩn của góc máy (`view_pitch_half`).
+2. **Nguyên tắc Đóng An toàn theo Luật 11 (Fail-Closed Defending Horizon):**
+   * Luật 11 định nghĩa đường việt vị dựa trên **cầu thủ phòng ngự thứ hai từ dưới lên (hoặc quả bóng)**. Nếu dữ liệu định vị 3D của bất kỳ cầu thủ phòng ngự nào bị thiếu sót hoặc mất dấu (`PARTIAL_OPPONENTS`), hệ thống ở chế độ Nghiên cứu khoa học (Research Mode) bắt buộc phải trả về trạng thái từ chối phán quyết (`FAIL_CLOSED / UNKNOWN`) thay vì tự ý bỏ qua cầu thủ đó để kẻ vạch trên người còn lại (vì người bị thiếu có thể đứng sâu hơn tất cả).
+   * Chế độ nới lỏng suy thoái (`DEGRADED_READY`) chỉ được kích hoạt dưới dạng cờ tùy chọn có chủ đích (`--allow-partial-opponents`, `--allow-ball-fallback`) phục vụ riêng cho trực quan hóa Demo.
+
+---
+
+### 3.7. Bảng Kết quả Đánh giá Liên hoàn Toàn trình (Cascaded End-to-End Evaluation - 30 Windows)
+
+Để kiểm chứng trung thực hiện tượng tích lũy sai số khi ghép nối thực tế (không dùng Oracle Box), một đợt đánh giá liên hoàn tự động đã được thực hiện trên **toàn bộ 30 cửa sổ mục tiêu quanh $T_0$** (10 video sequences `SNGS-021` đến `SNGS-030` của SoccerNet-GSR `valid` split).
+
+Dữ liệu đầu ra của mô hình phát hiện SST và trích xuất tư thế RTMW-L từ Stage 2 được đưa thẳng vào Stage 5 để phân cụm màu áo, sau đó chuyển giao sang Stage 7 và Stage 8 để dựng vạch việt vị 3D:
+
+| Giai đoạn | Chỉ số đánh giá cốt lõi | Giá trị thực nghiệm | Số mẫu chi tiết | Đánh giá khoa học |
+| :--- | :--- | :---: | :---: | :--- |
+| **Stage 2** *(Detection & Roles)* | **Candidate Recall (Player + GK)** | **94.55%** | $382 / 404$ | Bắt trúng 94.55% người thi đấu tại khung hình va chạm bóng $T_0$ |
+| | **Candidate Precision** | **92.72%** | $382 / 412$ | 92.72% box dự đoán là cầu thủ/thủ môn thật |
+| | **Referee Leakage Rate** | **3.23%** | $1 / 31$ | Chỉ duy nhất 1 ca trọng tài bị phân loại nhầm |
+| **Stage 5** *(Cascaded Team)* | **Cascaded Team Accuracy (Đơn frame)** | **85.47%** | $306 / 358$ | Đo trực tiếp trên box phát hiện từ Stage 2 (không dùng GT box) |
+| | **Độ tinh khiết cụm trung bình (Mean Purity)** | **87.11%** | 30 windows | Hai cụm phân tách rõ ràng giữa 2 màu áo thi đấu |
+| | *So sánh với Oracle-Box Baseline (GT Box)* | *96.32%* | 58 sequences | Chênh lệch 10.85% do nhiễu cắt box đơn khung hình từ detector |
+| | *So sánh với Selective Abstention (Residual-v3)* | *99.80%* 🏆 | 982 ca | Đạt tiệm cận 100% khi loại trừ các ca mập mờ |
+| **Stage 7** *(Game State)* | **Tỷ lệ khởi tạo hợp lệ (Valid Rate)** | **100.00%** | $30 / 30$ | 100% cửa sổ xác định thành công đội tấn công & hướng $s$ |
+| | **Game State Invariants Pass Rate** | **100.00%** | $30 / 30$ | Tập tấn công/phòng ngự rời nhau, người chạm bóng $\in$ Tấn công |
+| **Stage 8** *(Offside Reference)* | **Tỷ lệ dựng vạch hợp lệ (Valid Rate)** | **96.67%** | $29 / 30$ | 29/30 ca xác lập vạch việt vị 3D chuẩn xác |
+| | **Tuân thủ Cơ chế An toàn (Fail-Closed)** | **96.67%** | $29 / 30$ | 1 ca thiếu đối thủ (SNGS-026 T0=374) được từ chối an toàn |
+| | **Law 11 Invariants Pass Rate** | **100.00%** | $29 / 29$ | Vạch không lùi sâu hơn người thứ 2 và không lùi sâu hơn bóng |
+
+*Tệp dữ liệu chi tiết:* `outputs/cascaded_evaluation/cascaded_benchmark_summary.json`.
 
 ---
 

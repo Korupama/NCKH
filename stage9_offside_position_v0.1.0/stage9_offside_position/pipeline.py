@@ -186,7 +186,8 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
         raise ValueError('stage6: selected ball frame does not match replay')
     pitch = s1.get('pitch', {})
     lines = _pitch_lines(pitch)
-    display_reference = s9.get('reference') or s8.get('reference')
+    # S8 owns the line. Never substitute a Stage-9 best-effort ball estimate.
+    display_reference = s8.get('reference') if s8.get('status') in {'VALID', 'DEGRADED'} else None
     reference_x = (display_reference or {}).get('X_world_m')
     projected_reference = None
     if reference_x is not None:
@@ -207,7 +208,7 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
                  f'{n4}/{len(s4.get("tracks", []))} track có pose 3D', f'{n5} người được gán đội',
                  f"Chạm bóng: {(ball.get('contact') or {}).get('track_id', 'chưa rõ')}",
                  f"{len(sets.get('attackers', []))} tấn công · {len(sets.get('opponents', []))} đối phương",
-                 (f"X = {(s8.get('reference') or {}).get('X_world_m'):.3f} m" if (s8.get('reference') or {}).get('X_world_m') is not None else 'Chưa xác định được mốc tham chiếu'),
+                 (("Vạch hậu vệ tham khảo · " if (display_reference or {}).get('reference_only') else "") + f"X = {reference_x:.3f} m" if reference_x is not None else 'Chưa xác định được mốc tham chiếu'),
                  f'{n9_off} vị trí việt vị · {n9_on} onside']
     statuses = [s1.get('status', 'UNKNOWN'), s2.get('status', 'UNKNOWN'),
                 'AVAILABLE' if n3 else 'MISSING', 'PARTIAL' if n4 < len(s4.get('tracks', [])) else 'AVAILABLE',
@@ -269,11 +270,11 @@ def render_pipeline_frame(ctx, query=None):
             for a, b in zip(poly, poly[1:]):
                 line(a, b, (212, 228, 100))
     occupied = []
-    focus = query.get('track', [''])[0]
+    focus = set(query.get('track', [])) - {''}
     enabled_layers = {i: flag(f's{i}') for i in range(1, 10)}
     raw_detection_view = enabled_layers[2] and not any(enabled_layers[i] for i in range(3, 10))
     for row in ctx.state['tracks']:
-        if focus and row['track_id'] != focus:
+        if focus and row['track_id'] not in focus:
             continue
         # Stage 2 remains an honest raw detector view. In every downstream
         # composition, detections without pose/context evidence are omitted so
@@ -308,8 +309,14 @@ def render_pipeline_frame(ctx, query=None):
                         'OFFSIDE_POSITION': ' OFFSIDE POSITION',
                         'ONSIDE': ' ONSIDE',
                         'TOUCHER_EXCLUDED': ' PASSER',
-                        'UNAVAILABLE': ' ON?',
+                        'UNAVAILABLE': ' UNKNOWN',
                     }.get(row.get('offside_label'), ' ?')
+                    if row.get('offside_label') == 'TOUCHER_EXCLUDED' and row.get('toucher_tentative'):
+                        suffix = ' PASSER?'
+                    if (row.get('offside_label') == 'UNAVAILABLE'
+                            and (ctx.state.get('reference') or {}).get('reference_only')
+                            and row.get('offside_delta_q_m') is not None):
+                        suffix = ' BEYOND DEF LINE*' if row['offside_delta_q_m'] > 1e-9 else ' BEHIND/LEVEL DEF LINE*'
                 elif enabled_layers[7]:
                     suffix = (' TOUCH?' if row.get('toucher_tentative') else ' TOUCH') if row['toucher'] else {'attackers':' ATT', 'opponents':' OPP'}.get(row['group'], ' ?')
                 elif enabled_layers[5]:
@@ -337,9 +344,12 @@ def render_pipeline_frame(ctx, query=None):
         reference_line = ctx.state.get('projected_reference') or []
         if len(reference_line) < 2:
             return encode_jpeg(img)
-        line(reference_line[0], reference_line[1], (80, 80, 255), 4)
+        reference_only = (ctx.state.get('reference') or {}).get('reference_only', False)
+        line_color = (80, 200, 255) if reference_only else (80, 80, 255)
+        line(reference_line[0], reference_line[1], line_color, 4)
         if flag('labels', True):
             anchor = next((p for p in reference_line if p is not None), None)
             if anchor is not None:
-                cv2.putText(img, 'OFFSIDE POSITION REFERENCE', point(anchor), cv2.FONT_HERSHEY_SIMPLEX, .55, (80,80,255), 2, cv2.LINE_AA)
+                caption = 'DEFENDER REFERENCE ONLY' if reference_only else 'OFFSIDE POSITION REFERENCE'
+                cv2.putText(img, caption, point(anchor), cv2.FONT_HERSHEY_SIMPLEX, .55, line_color, 2, cv2.LINE_AA)
     return encode_jpeg(img)

@@ -47,6 +47,8 @@ def main() -> int:
             if args.project and (not args.stage9 or not paths.get('stage9', Path()).is_file()):
                 paths['stage9'] = rebuild_project_stage9(root.parent, paths)
             ctx = build_pipeline_context(paths=paths, image_path=args.image, video_path=args.video)
+            if args.pipeline:
+                ctx.state['has_analysis_result'] = True
         except (ValueError, OSError) as exc:
             p.error(str(exc))
         server = serve_demo(ctx, args.host, args.port)

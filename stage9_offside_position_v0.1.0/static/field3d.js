@@ -20,7 +20,7 @@ function spatialTrackColor(row) {
 
 function spatialTrackLabel(row) {
   const suffix = {
-    OFFSIDE_POSITION: ' OFF', ONSIDE: ' ON', TOUCHER_EXCLUDED: ' PASSER', UNAVAILABLE: ' ON?'
+    OFFSIDE_POSITION: ' OFF', ONSIDE: ' ON', TOUCHER_EXCLUDED: ' PASSER', UNAVAILABLE: ' ?'
   }[row.offside_label] || '';
   return row.track_id.replace('track_', '#') + suffix;
 }
@@ -87,7 +87,8 @@ function drawStadium3D() {
     return row.root_world_m && row.joints_world && row.joints_world.some(Boolean);
   });
   let center = [0, 0];
-  const focused = rows.find(function (row) { return row.track_id === focus; });
+  const selected = rows.filter(row => selectedTracks.has(row.track_id));
+  const focused = selected.length ? {root_world_m: [0,1].map(axis => selected.reduce((sum,row) => sum + row.root_world_m[axis], 0) / selected.length)} : null;
   const toucher = rows.find(function (row) { return row.toucher; });
   if (focused || toucher) {
     const root = (focused || toucher).root_world_m;
@@ -121,7 +122,7 @@ function drawStadium3D() {
   const referenceX = state.reference && state.reference.X_world_m;
   if (referenceX != null) {
     field3dPath(context, [[referenceX, -pitchWidth / 2, 0.04], [referenceX, pitchWidth / 2, 0.04]], project, false);
-    context.strokeStyle = '#ff6969';
+    context.strokeStyle = state.reference.reference_only ? '#ffc850' : '#ff6969';
     context.lineWidth = 2;
     context.setLineDash([7, 5]);
     context.stroke();
@@ -131,11 +132,11 @@ function drawStadium3D() {
   rows.sort(function (a, b) {
     return project(a.root_world_m)[2] - project(b.root_world_m)[2];
   }).forEach(function (row) {
-    const dimmed = focus && row.track_id !== focus;
+    const dimmed = selectedTracks.size && !selectedTracks.has(row.track_id);
     context.globalAlpha = dimmed ? 0.28 : 1;
     context.strokeStyle = spatialTrackColor(row);
     context.fillStyle = spatialTrackColor(row);
-    context.lineWidth = row.track_id === focus ? 3 : 2;
+    context.lineWidth = selectedTracks.has(row.track_id) ? 3 : 2;
     state.skeleton_edges.forEach(function (edge) {
       const a = row.joints_world[edge[0]];
       const b = row.joints_world[edge[1]];
@@ -150,7 +151,7 @@ function drawStadium3D() {
     row.joints_world.filter(Boolean).forEach(function (joint) {
       const point = project(joint);
       context.beginPath();
-      context.arc(point[0], point[1], row.track_id === focus ? 2.5 : 1.8, 0, Math.PI * 2);
+      context.arc(point[0], point[1], selectedTracks.has(row.track_id) ? 2.5 : 1.8, 0, Math.PI * 2);
       context.fill();
     });
     const visibleJoints = row.joints_world.filter(Boolean).map(project);
@@ -230,7 +231,7 @@ function drawSideline() {
   const referenceX = state.reference && state.reference.X_world_m;
   if (referenceX != null) {
     const reference = project([referenceX, 0, 0]);
-    context.strokeStyle = '#ff6868';
+    context.strokeStyle = state.reference.reference_only ? '#ffc850' : '#ff6868';
     context.lineWidth = 2;
     context.setLineDash([7, 5]);
     context.beginPath();
@@ -240,7 +241,7 @@ function drawSideline() {
     context.setLineDash([]);
     context.fillStyle = '#ff9a9a';
     context.font = '10px Segoe UI';
-    context.fillText('MỐC S8', reference[0] + 6, 18);
+    context.fillText(state.reference.reference_only ? 'VẠCH HẬU VỆ THAM KHẢO' : 'MỐC S8', reference[0] + 6, 18);
   }
 
   const rows = state.tracks.filter(function (row) {
@@ -249,11 +250,11 @@ function drawSideline() {
     return b.root_world_m[1] - a.root_world_m[1];
   });
   rows.forEach(function (row) {
-    const dimmed = focus && row.track_id !== focus;
+    const dimmed = selectedTracks.size && !selectedTracks.has(row.track_id);
     context.globalAlpha = dimmed ? 0.25 : 1;
     context.strokeStyle = spatialTrackColor(row);
     context.fillStyle = spatialTrackColor(row);
-    context.lineWidth = row.track_id === focus ? 3.5 : 2.2;
+    context.lineWidth = selectedTracks.has(row.track_id) ? 3.5 : 2.2;
     state.skeleton_edges.forEach(function (edge) {
       const a = row.joints_world[edge[0]];
       const b = row.joints_world[edge[1]];
@@ -268,7 +269,7 @@ function drawSideline() {
     const joints = row.joints_world.filter(Boolean).map(project);
     joints.forEach(function (point) {
       context.beginPath();
-      context.arc(point[0], point[1], row.track_id === focus ? 2.7 : 2, 0, Math.PI * 2);
+      context.arc(point[0], point[1], selectedTracks.has(row.track_id) ? 2.7 : 2, 0, Math.PI * 2);
       context.fill();
     });
     const root = project(row.root_world_m);
@@ -313,6 +314,7 @@ function leaveSpatialView() {
   document.getElementById('angle-control').hidden = false;
   document.getElementById('pitch').style.cursor = '';
   document.getElementById('pitch').style.touchAction = '';
+  drawPitch();
 }
 
 document.getElementById('topdown').addEventListener('click', leaveSpatialView);
@@ -336,7 +338,8 @@ document.getElementById('sideline').addEventListener('click', function () {
   sidelineView = true;
   field3dView = false;
   poseView = false;
-  const preferred = state && state.tracks.find(function (row) { return row.track_id === focus && row.root_world_m; });
+  const selected = state ? state.tracks.filter(row => selectedTracks.has(row.track_id) && row.root_world_m) : [];
+  const preferred = selected.length ? {root_world_m: [selected.reduce((sum,row) => sum + row.root_world_m[0], 0) / selected.length]} : null;
   const toucher = state && state.tracks.find(function (row) { return row.toucher && row.root_world_m; });
   if (preferred || toucher) sidelineCenterX = Number((preferred || toucher).root_world_m[0]);
   document.getElementById('topdown').classList.remove('active');

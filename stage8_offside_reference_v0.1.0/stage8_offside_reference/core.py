@@ -27,6 +27,9 @@ def build_offside_reference(
     *,
     tie_epsilon_m: float = DEFAULT_TIE_EPSILON_M,
     comparison_epsilon_m: float = DEFAULT_COMPARISON_EPSILON_M,
+    allow_partial_opponents: bool = False,
+    allow_ball_fallback: bool = False,
+    allow_root_fallback: bool = False,
 ) -> OffsideReferenceState:
     stage4 = load_json(stage4_input)
     stage6 = load_json(stage6_input)
@@ -34,7 +37,14 @@ def build_offside_reference(
     s4 = extract_stage4_context(stage4)
     s6 = extract_stage6_ball(stage6)
     s7 = extract_stage7_context(stage7)
-    pre = build_preflight(stage4, stage6, stage7)
+    pre = build_preflight(
+        stage4,
+        stage6,
+        stage7,
+        allow_partial_opponents=allow_partial_opponents,
+        allow_ball_fallback=allow_ball_fallback,
+        allow_root_fallback=allow_root_fallback,
+    )
 
     state = OffsideReferenceState()
     state.frame_index = s7["frame_index"] if s7["frame_index"] is not None else s4["selected_frame"]
@@ -67,13 +77,14 @@ def build_offside_reference(
                     "legal_landmark_count": 0,
                 })
             else:
-                extent_rows.append(legal_landmark_extent(track, s4["selected_frame"], s7["s"]))
+                extent_rows.append(legal_landmark_extent(track, s4["selected_frame"], s7["s"], allow_root_fallback=allow_root_fallback))
 
     usable = [row for row in extent_rows if row.get("goalward_q_m") is not None and row.get("status") in {"VALID", "DEGRADED"}]
     state.opponent_ranking = rank_opponents(usable, tie_epsilon_m=tie_epsilon_m)
 
     ball = None
-    if s7["s"] in (-1, 1) and s6["ball_center_x_extent_m"] is not None:
+    defender_only = pre.get("stage7", {}).get("goalkeeper_reference_only", False)
+    if not defender_only and s6["usable_for_offside"] and s7["s"] in (-1, 1) and s6["ball_center_x_extent_m"] is not None:
         try:
             ball = ball_goalward_extent(s6["ball_center_x_extent_m"], s7["s"])
             ball.update({
@@ -90,12 +101,23 @@ def build_offside_reference(
 
     if pre["status"] in {"READY", "DEGRADED_READY"}:
         second = select_second_last(state.opponent_ranking, tie_epsilon_m=tie_epsilon_m)
-        if second is not None and ball is not None:
+        if second is not None and (ball is not None or allow_ball_fallback):
             state.second_last_opponent = second
             state.reference = build_reference(second, ball, s7["s"], epsilon_m=comparison_epsilon_m)
+            state.reference["reference_only"] = bool(defender_only or ball is None)
+            state.reference["kind"] = "DEFENDER_ONLY" if defender_only or ball is None else "OFFSIDE_REFERENCE"
             state.status = "DEGRADED" if pre["status"] == "DEGRADED_READY" else "VALID"
             if state.status == "DEGRADED":
-                state.reasons = ["STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY"]
+                reasons = []
+                if defender_only:
+                    reasons.append("GOALKEEPER_TEAM_ASSUMPTION_DEFENDER_REFERENCE_ONLY")
+                if pre.get("stage7", {}).get("tentative_spatial_contact_only"):
+                    reasons.append("STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY")
+                if allow_partial_opponents and (len(usable) < len(s7["opponents"])):
+                    reasons.append("OPPONENT_GEOMETRY_PARTIAL_DEGRADED")
+                if allow_ball_fallback and ball is None and not defender_only:
+                    reasons.append("BALL_GEOMETRY_UNAVAILABLE_FALLBACK_TO_SECOND_LAST")
+                state.reasons = reasons or ["DEGRADED_UPSTREAM_GEOMETRY"]
         else:
             state.status = "UNRESOLVED"
             state.reasons = ["REFERENCE_GEOMETRY_NOT_RESOLVED"]

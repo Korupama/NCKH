@@ -13,9 +13,10 @@ def main() -> int:
     parser.add_argument("--stage5", required=True, help="Stage 5 JSON")
     parser.add_argument("--stage6", required=True, help="Stage 6 JSON")
     parser.add_argument("--output", required=True, help="game_state_context.json")
+    parser.add_argument("--allow-goalkeeper-fallback", action="store_true", help="Infer defending team from a single affiliated visible goalkeeper when contact is missing")
     args = parser.parse_args()
 
-    ctx = build_game_state_context(args.stage1, args.stage5, args.stage6)
+    ctx = build_game_state_context(args.stage1, args.stage5, args.stage6, allow_goalkeeper_fallback=args.allow_goalkeeper_fallback)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(ctx.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
