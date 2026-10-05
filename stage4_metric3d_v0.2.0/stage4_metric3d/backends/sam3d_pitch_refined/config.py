@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 
 @dataclass(frozen=True)
@@ -39,9 +40,24 @@ class Sam3DPitchRefinedConfig:
             ("grounded_sam_prior_sigma_m", self.grounded_sam_prior_sigma_m),
             ("max_ground_refinement_m", self.max_ground_refinement_m),
         ):
-            if float(value) <= 0:
+            if not math.isfinite(float(value)) or float(value) <= 0:
                 raise ValueError(f"{name} must be > 0")
-        if any(float(x) <= 0 for x in self.sam_prior_sigma_xyz_m):
+        if any(not math.isfinite(float(x)) or float(x) <= 0 for x in self.sam_prior_sigma_xyz_m):
             raise ValueError("sam_prior_sigma_xyz_m must be positive")
-        if any(float(x) <= 0 for x in self.ground_sigma_xyz_m):
+        if any(not math.isfinite(float(x)) or float(x) <= 0 for x in self.ground_sigma_xyz_m):
             raise ValueError("ground_sigma_xyz_m must be positive")
+        if self.optimizer_max_nfev <= 0:
+            raise ValueError("optimizer_max_nfev must be > 0")
+        if self.optimizer_loss not in {"linear", "soft_l1", "huber", "cauchy", "arctan"}:
+            raise ValueError("optimizer_loss must be supported by scipy.optimize.least_squares")
+        if len(self.sam_prior_sigma_xyz_m) != 3 or len(self.ground_sigma_xyz_m) != 3:
+            raise ValueError("translation sigma vectors must have exactly three XYZ entries")
+        if (
+            not math.isfinite(self.camera_convention_pass_p95_px)
+            or not math.isfinite(self.camera_convention_warn_p95_px)
+            or self.camera_convention_pass_p95_px <= 0
+            or self.camera_convention_warn_p95_px <= 0
+        ):
+            raise ValueError("camera convention thresholds must be > 0")
+        if self.camera_convention_pass_p95_px > self.camera_convention_warn_p95_px:
+            raise ValueError("camera_convention_pass_p95_px must be <= warn threshold")

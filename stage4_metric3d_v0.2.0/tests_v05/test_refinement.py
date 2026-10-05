@@ -1,5 +1,6 @@
 import numpy as np
 from stage4_metric3d.backends.sam3d_pitch_refined.pipeline import preflight_v05, run_v05
+from stage4_metric3d.backends.sam3d_pitch_refined.config import Sam3DPitchRefinedConfig
 from .helpers import build_case
 
 
@@ -44,3 +45,16 @@ def test_selected_frame_override_targets_exact_zero_based_frame(tmp_path):
     assert state['selected_frame']==12
     assert state['provenance']['selected_frame_override']==12
     assert state['tracks'][0]['selected_frame_status']=='VALID'
+
+
+def test_temporal_status_requires_exact_consecutive_frames(tmp_path):
+    s3, cams, cache, true_trans, frames = build_case(tmp_path/'case')
+    state = run_v05(
+        stage3_state=s3, camera_dir=cams, sam3d_cache=cache,
+        output_dir=tmp_path/'nonconsecutive', config=Sam3DPitchRefinedConfig(window_radius_frames=2),
+        refine=True,
+    )
+    track = state['tracks'][0]
+    assert track['temporal_status'] == 'APPLIED'
+    assert track['temporal_diagnostics']['triplet_count'] == 1
+    assert track['temporal_diagnostics']['triplets'] == [[10, 11, 12]]

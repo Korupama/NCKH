@@ -6,12 +6,52 @@ from typing import List, Sequence, Tuple
 import cv2
 import numpy as np
 
+
+def compute_crop_geometry(
+    bbox: Sequence[float],
+    *,
+    input_width: int,
+    input_height: int,
+    bbox_padding: float = 1.25,
+    crop_scale: float = 1.0,
+) -> dict:
+    """Return the exact crop geometry shared by inference and crop QA."""
+    x1, y1, x2, y2 = map(float, bbox)
+    center = np.asarray([(x1 + x2) * 0.5, (y1 + y2) * 0.5], dtype=np.float32)
+    scale = np.asarray([max(x2 - x1, 1.0), max(y2 - y1, 1.0)], dtype=np.float32) * float(bbox_padding) * float(crop_scale)
+    aspect = float(input_width) / float(input_height)
+    if scale[0] > scale[1] * aspect:
+        scale[1] = scale[0] / aspect
+    else:
+        scale[0] = scale[1] * aspect
+    src_dir = np.asarray([0.0, -0.5 * float(scale[0])], dtype=np.float32)
+    dst_dir = np.asarray([0.0, -0.5 * float(input_width)], dtype=np.float32)
+    source = np.zeros((3, 2), dtype=np.float32)
+    destination = np.zeros((3, 2), dtype=np.float32)
+    source[0] = center
+    source[1] = center + src_dir
+    source_direction = source[0] - source[1]
+    source[2] = source[1] + np.asarray([-source_direction[1], source_direction[0]], dtype=np.float32)
+    destination[0] = (0.5 * float(input_width), 0.5 * float(input_height))
+    destination[1] = destination[0] + dst_dir
+    destination_direction = destination[0] - destination[1]
+    destination[2] = destination[1] + np.asarray([-destination_direction[1], destination_direction[0]], dtype=np.float32)
+    affine = cv2.getAffineTransform(source, destination)
+    rect = [float(center[0] - scale[0] * 0.5), float(center[1] - scale[1] * 0.5), float(center[0] + scale[0] * 0.5), float(center[1] + scale[1] * 0.5)]
+    return {
+        "crop_center_xy": [float(x) for x in center],
+        "crop_scale_xy": [float(x) for x in scale],
+        "crop_rect_xyxy": rect,
+        "affine_matrix_source_to_model": [[float(x) for x in row] for row in affine],
+    }
+
 @dataclass
 class PoseResult:
     keypoints_xy: np.ndarray
     scores: np.ndarray
     source_bbox_xyxy: Tuple[float, float, float, float]
     crop_scale: float
+    inference_diagnostics: dict
 
 class RTMWOpenCVDNN:
     """Minimal self-contained RTMW SimCC ONNX runner.
@@ -81,13 +121,16 @@ class RTMWOpenCVDNN:
         return cv2.getAffineTransform(src, dst)
 
     def _preprocess(self, image: np.ndarray, bbox: Sequence[float], crop_scale: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        center, scale = self._center_scale(bbox, self.bbox_padding * float(crop_scale))
-        aspect = self.input_width / self.input_height
-        if scale[0] > scale[1] * aspect:
-            scale[1] = scale[0] / aspect
-        else:
-            scale[0] = scale[1] * aspect
-        M = self._warp_matrix(center, scale, (self.input_width, self.input_height))
+        geometry = compute_crop_geometry(
+            bbox,
+            input_width=self.input_width,
+            input_height=self.input_height,
+            bbox_padding=self.bbox_padding,
+            crop_scale=crop_scale,
+        )
+        center = np.asarray(geometry["crop_center_xy"], dtype=np.float32)
+        scale = np.asarray(geometry["crop_scale_xy"], dtype=np.float32)
+        M = np.asarray(geometry["affine_matrix_source_to_model"], dtype=np.float32)
         warped = cv2.warpAffine(image, M, (self.input_width, self.input_height), flags=cv2.INTER_LINEAR).astype(np.float32)
         normalized = (warped - self.mean) / self.std
         blob = np.ascontiguousarray(normalized.transpose(2, 0, 1)[None], dtype=np.float32)
@@ -132,4 +175,40 @@ class RTMWOpenCVDNN:
         xy = xy + center - scale / 2.0
         if k != 133:
             raise RuntimeError(f"Expected 133 RTMW keypoints, got {k}")
-        return PoseResult(xy[0].astype(np.float32), scores[0], tuple(map(float, bbox_xyxy)), float(crop_scale))
+        finite_xy = np.isfinite(xy[0]).all(axis=1)
+        finite_scores = np.isfinite(scores[0])
+        positive_scores = scores[0][finite_scores & (scores[0] > 0.0)]
+        diagnostics = {
+            "backend": "opencv_dnn",
+            "device": self.device,
+            "input_size_wh": [self.input_width, self.input_height],
+            "bbox_padding": self.bbox_padding,
+            "crop_scale": float(crop_scale),
+            "source_bbox_xyxy": [float(x) for x in bbox_xyxy],
+            "crop_center_xy": [float(x) for x in center],
+            "crop_scale_xy": [float(x) for x in scale],
+            "crop_geometry": compute_crop_geometry(
+                bbox_xyxy,
+                input_width=self.input_width,
+                input_height=self.input_height,
+                bbox_padding=self.bbox_padding,
+                crop_scale=crop_scale,
+            ),
+            "image_size_hwc": [int(x) for x in image.shape],
+            "input_normalization": {"mean_bgr": [float(x) for x in self.mean.reshape(-1)], "std_bgr": [float(x) for x in self.std.reshape(-1)]},
+            "simcc_split_ratio": self.simcc_split_ratio,
+            "output_shapes": [list(np.asarray(x).shape) for x in outputs],
+            "keypoint_count": int(k),
+            "finite_keypoint_count": int(np.sum(finite_xy)),
+            "positive_score_count": int(positive_scores.size),
+            "raw_score_min": None if positive_scores.size == 0 else float(np.min(positive_scores)),
+            "raw_score_median": None if positive_scores.size == 0 else float(np.median(positive_scores)),
+            "raw_score_max": None if positive_scores.size == 0 else float(np.max(positive_scores)),
+        }
+        return PoseResult(
+            xy[0].astype(np.float32),
+            scores[0],
+            tuple(map(float, bbox_xyxy)),
+            float(crop_scale),
+            diagnostics,
+        )

@@ -42,6 +42,6 @@ Inspect `runs/stage4_v051_frame104/sam3d-pitch-refined/stage4_quality_report.jso
 
 ## Remaining evaluation
 
-Local automated verification: `48 passed` across `tests`, `tests_v04`, and `tests_v05` (49.94 s). Machine-readable results: `validation_reports/PYTEST_V051_ALL.xml`. Includes a synthetic SAM translation offset of (4, -3, 5) m, regression rejection of old frame-104 contact metrics, and missing-metric failure behavior.
+Historical local automated verification: `48 passed` across `tests`, `tests_v04`, and `tests_v05` (49.94 s). Current Phase-0 verification is `50 passed` in `nckh-env`, including provenance and headless visualization tests. The suite includes a synthetic SAM translation offset of (4, -3, 5) m, regression rejection of old frame-104 contact metrics, and missing-metric failure behavior.
 
 Metric GT and Stage-8/9 evaluation remain NOT_EVALUATED; `research_accuracy_frozen = false`. Next evaluate independent clips with known pitch positions/contact labels, include airborne/contact ambiguity, and run a multi-frame cache for temporal validation. Do not tune on a held-out test set.

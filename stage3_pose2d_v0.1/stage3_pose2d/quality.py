@@ -55,6 +55,8 @@ def evaluate_pose(
     scores: np.ndarray,
     bbox_xyxy: Sequence[float],
     config: Stage3Config,
+    *,
+    crop_diagnostics: Mapping[str, Any] | None = None,
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     xy = np.asarray(xy, dtype=float)
     scores = np.asarray(scores, dtype=float)
@@ -62,6 +64,8 @@ def evaluate_pose(
         return ({
             "pose_status": "REJECTED",
             "reason": f"invalid_shape xy={xy.shape}, scores={scores.shape}",
+            "status_reasons": ["invalid_shape"],
+            "gate_checks": {},
             "body_completeness": 0.0,
             "feet_completeness": 0.0,
             "core_completeness": 0.0,
@@ -82,9 +86,55 @@ def evaluate_pose(
     low_evidence = available & (scores < low_floor) if median_score > 0 else np.zeros(133, dtype=bool)
 
     bone_outlier_fraction, bone_outliers = _bone_length_outliers(xy, available, bbox_xyxy)
+    crop_diagnostics = dict(crop_diagnostics or {"crop_status": "OK", "status_reasons": ["crop_diagnostics_not_requested"]})
+    crop_status = str(crop_diagnostics.get("crop_status", "UNCERTAIN"))
+    crop_is_usable = crop_status == "OK"
+    body17_support = crop_diagnostics.get("body17_fraction_inside_source_bbox")
+    body_center_offset = crop_diagnostics.get("body17_center_to_source_center_normalized")
+    body17_support_available = body17_support is not None and np.isfinite(float(body17_support))
+    body_center_offset_available = body_center_offset is not None and np.isfinite(float(body_center_offset))
+    body17_support_valid = (
+        not body17_support_available
+        or float(body17_support) >= config.min_body17_support_valid
+    )
+    body17_support_safe = (
+        not body17_support_available
+        or float(body17_support) >= config.min_body17_support_reject
+    )
+    body_center_offset_valid = (
+        not body_center_offset_available
+        or float(body_center_offset) <= config.max_body_center_offset_valid
+    )
+    body_center_offset_safe = (
+        not body_center_offset_available
+        or float(body_center_offset) <= config.max_body_center_offset_reject
+    )
     geometry_valid = bool(inside_frac >= 0.60 and bone_outlier_fraction <= 0.35)
 
-    if body_comp < config.min_body_completeness_reject or core_comp < config.min_core_completeness_reject:
+    gate_checks = {
+        "body_above_reject_floor": bool(body_comp >= config.min_body_completeness_reject),
+        "core_above_reject_floor": bool(core_comp >= config.min_core_completeness_reject),
+        "body_meets_valid_threshold": bool(body_comp >= config.min_body_completeness_valid),
+        "core_meets_valid_threshold": bool(core_comp >= config.min_core_completeness_valid),
+        "feet_meets_valid_threshold": bool(feet_comp >= config.min_feet_completeness_valid),
+        "inside_meets_valid_threshold": bool(inside_frac >= config.min_inside_fraction_valid),
+        "geometry_valid": geometry_valid,
+        "crop_status_is_ok": crop_is_usable,
+        "crop_not_cross_person": crop_status != "LIKELY_CROSS_PERSON",
+        "body17_support_meets_valid_threshold": body17_support_valid,
+        "body17_support_above_reject_floor": body17_support_safe,
+        "body_center_offset_meets_valid_threshold": body_center_offset_valid,
+        "body_center_offset_not_extreme": body_center_offset_safe,
+    }
+
+    if (
+        body_comp < config.min_body_completeness_reject
+        or core_comp < config.min_core_completeness_reject
+        or not body17_support_safe
+        or not body_center_offset_safe
+    ):
+        status = "REJECTED"
+    elif crop_status == "LIKELY_CROSS_PERSON":
         status = "REJECTED"
     elif (
         body_comp >= config.min_body_completeness_valid
@@ -92,10 +142,45 @@ def evaluate_pose(
         and feet_comp >= config.min_feet_completeness_valid
         and inside_frac >= config.min_inside_fraction_valid
         and geometry_valid
+        and crop_is_usable
+        and body17_support_valid
+        and body_center_offset_valid
     ):
         status = "VALID"
     else:
         status = "DEGRADED"
+
+    status_reasons: List[str] = []
+    if not gate_checks["body_above_reject_floor"]:
+        status_reasons.append("body_below_reject_floor")
+    if not gate_checks["core_above_reject_floor"]:
+        status_reasons.append("core_below_reject_floor")
+    if status == "DEGRADED":
+        if not gate_checks["body_meets_valid_threshold"]:
+            status_reasons.append("body_below_valid_threshold")
+        if not gate_checks["core_meets_valid_threshold"]:
+            status_reasons.append("core_below_valid_threshold")
+        if not gate_checks["feet_meets_valid_threshold"]:
+            status_reasons.append("feet_below_valid_threshold")
+        if not gate_checks["inside_meets_valid_threshold"]:
+            status_reasons.append("inside_fraction_below_valid_threshold")
+        if not gate_checks["geometry_valid"]:
+            status_reasons.append("geometry_sanity_failed")
+        if not crop_is_usable:
+            status_reasons.append(f"crop_status_{crop_status.lower()}")
+        if not gate_checks["body17_support_meets_valid_threshold"]:
+            status_reasons.append("body17_support_below_valid_threshold")
+        if not gate_checks["body_center_offset_meets_valid_threshold"]:
+            status_reasons.append("body_center_offset_above_valid_threshold")
+    if status == "REJECTED":
+        if not gate_checks["body17_support_above_reject_floor"]:
+            status_reasons.append("body17_support_below_reject_floor")
+        if not gate_checks["body_center_offset_not_extreme"]:
+            status_reasons.append("body_center_offset_extreme")
+    if status == "REJECTED" and crop_status == "LIKELY_CROSS_PERSON":
+        status_reasons.append("likely_cross_person")
+    if status == "VALID" and not status_reasons:
+        status_reasons.append("all_valid_gates_passed")
 
     records: List[Dict[str, Any]] = []
     outlier_indices = {i for a, b, _ in bone_outliers for i in (a, b)}
@@ -121,6 +206,8 @@ def evaluate_pose(
 
     qa = {
         "pose_status": status,
+        "status_reasons": status_reasons,
+        "gate_checks": gate_checks,
         "body_completeness": body_comp,
         "feet_completeness": feet_comp,
         "core_completeness": core_comp,
@@ -134,6 +221,13 @@ def evaluate_pose(
             for a, b, length in bone_outliers
         ],
         "geometry_valid": geometry_valid,
+        "ownership": {
+            "body17_fraction_inside_source_bbox": None if body17_support is None else float(body17_support),
+            "body17_center_to_source_center_normalized": None if body_center_offset is None else float(body_center_offset),
+            "ownership_status": crop_diagnostics.get("ownership_status", "UNKNOWN"),
+        },
+        "crop_status": crop_status,
+        "crop_diagnostics": crop_diagnostics,
         "note": "raw_model_score is RTMW SimCC evidence, not a calibrated probability",
     }
     return qa, records

@@ -1,0 +1,5238 @@
+{
+  "schema_version": "tracked-pose-2d-state-1.0",
+  "stage3_version": "stage3-pose2d-0.1.0",
+  "source_stage2": {
+    "schema_version": "entity-track-state-1.0",
+    "stage2_version": "stage2-sst-rtmw-1.3.0",
+    "entity_state_path": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\s2\\stage2_entity_tracks.json",
+    "rtmw_cache_path": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\s2\\stage2_rtmw_track_cache.json",
+    "stage3_handoff_path": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\s2\\stage3_handoff.json",
+    "entity_state_sha256": "6db2911220a1e59991552a08cd30b42be4731ccf14e34d66b0db7b64f410eb47",
+    "rtmw_cache_sha256": "863ede9696ec267138596aaba49c220bedc90863dd15cef6bba39323d5002285"
+  },
+  "replay_context": {
+    "selected_frame": 10,
+    "window_start": 9,
+    "window_end": 11,
+    "image_width": 1920,
+    "image_height": 1080,
+    "fps": 25.0,
+    "coordinate_space": "RAW_DISTORTED_PIXEL",
+    "video_path": ""
+  },
+  "coordinate_space": "RAW_DISTORTED_PIXEL",
+  "keypoint_schema": {
+    "name": "COCO_WHOLEBODY_133",
+    "count": 133,
+    "names": [
+      "nose",
+      "left_eye",
+      "right_eye",
+      "left_ear",
+      "right_ear",
+      "left_shoulder",
+      "right_shoulder",
+      "left_elbow",
+      "right_elbow",
+      "left_wrist",
+      "right_wrist",
+      "left_hip",
+      "right_hip",
+      "left_knee",
+      "right_knee",
+      "left_ankle",
+      "right_ankle",
+      "left_big_toe",
+      "left_small_toe",
+      "left_heel",
+      "right_big_toe",
+      "right_small_toe",
+      "right_heel",
+      "face_00",
+      "face_01",
+      "face_02",
+      "face_03",
+      "face_04",
+      "face_05",
+      "face_06",
+      "face_07",
+      "face_08",
+      "face_09",
+      "face_10",
+      "face_11",
+      "face_12",
+      "face_13",
+      "face_14",
+      "face_15",
+      "face_16",
+      "face_17",
+      "face_18",
+      "face_19",
+      "face_20",
+      "face_21",
+      "face_22",
+      "face_23",
+      "face_24",
+      "face_25",
+      "face_26",
+      "face_27",
+      "face_28",
+      "face_29",
+      "face_30",
+      "face_31",
+      "face_32",
+      "face_33",
+      "face_34",
+      "face_35",
+      "face_36",
+      "face_37",
+      "face_38",
+      "face_39",
+      "face_40",
+      "face_41",
+      "face_42",
+      "face_43",
+      "face_44",
+      "face_45",
+      "face_46",
+      "face_47",
+      "face_48",
+      "face_49",
+      "face_50",
+      "face_51",
+      "face_52",
+      "face_53",
+      "face_54",
+      "face_55",
+      "face_56",
+      "face_57",
+      "face_58",
+      "face_59",
+      "face_60",
+      "face_61",
+      "face_62",
+      "face_63",
+      "face_64",
+      "face_65",
+      "face_66",
+      "face_67",
+      "left_hand_00",
+      "left_hand_01",
+      "left_hand_02",
+      "left_hand_03",
+      "left_hand_04",
+      "left_hand_05",
+      "left_hand_06",
+      "left_hand_07",
+      "left_hand_08",
+      "left_hand_09",
+      "left_hand_10",
+      "left_hand_11",
+      "left_hand_12",
+      "left_hand_13",
+      "left_hand_14",
+      "left_hand_15",
+      "left_hand_16",
+      "left_hand_17",
+      "left_hand_18",
+      "left_hand_19",
+      "left_hand_20",
+      "right_hand_00",
+      "right_hand_01",
+      "right_hand_02",
+      "right_hand_03",
+      "right_hand_04",
+      "right_hand_05",
+      "right_hand_06",
+      "right_hand_07",
+      "right_hand_08",
+      "right_hand_09",
+      "right_hand_10",
+      "right_hand_11",
+      "right_hand_12",
+      "right_hand_13",
+      "right_hand_14",
+      "right_hand_15",
+      "right_hand_16",
+      "right_hand_17",
+      "right_hand_18",
+      "right_hand_19",
+      "right_hand_20"
+    ]
+  },
+  "score_semantics": {
+    "raw_model_score": "RTMW_SIMCC_MAX",
+    "is_probability": false,
+    "quality_policy": "relative score evidence + geometry + temporal diagnostics; no probability claim"
+  },
+  "configuration": {
+    "bbox_margin_for_qa": 0.25,
+    "low_score_ratio_to_median": 0.35,
+    "min_body_completeness_valid": 0.8,
+    "min_body_completeness_reject": 0.45,
+    "min_core_completeness_valid": 0.8,
+    "min_core_completeness_reject": 0.4,
+    "min_feet_completeness_valid": 0.5,
+    "min_inside_fraction_valid": 0.75,
+    "temporal_accel_threshold": 0.35,
+    "temporal_swap_ratio": 0.65,
+    "temporal_swap_min_normal_cost": 0.12,
+    "emit_temporal_estimates": false,
+    "enable_fallback_reinference": false,
+    "fallback_crop_scales": [
+      1.0,
+      1.1,
+      1.2
+    ],
+    "rtmw_model": null,
+    "rtmw_device": "cpu",
+    "rtmw_input_width": 288,
+    "rtmw_input_height": 384
+  },
+  "preflight": {
+    "ready": true,
+    "errors": [],
+    "warnings": [
+      "Candidate tracks missing RTMW pose at t0: ['track_001']"
+    ],
+    "candidate_tracks": 1,
+    "missing_pose_at_selected_frame": [
+      "track_001"
+    ],
+    "ambiguous_track_frame_pose_mapping": [],
+    "invalid_wholebody_records": [],
+    "score_semantics": "RTMW_RAW_SIMCC_MAX_NOT_CALIBRATED_PROBABILITY",
+    "coordinate_space": "RAW_DISTORTED_PIXEL"
+  },
+  "tracks": [
+    {
+      "track_id": "track_001",
+      "upstream_role": "player",
+      "upstream_role_score": 0.95,
+      "upstream_identity_confidence": 0.9,
+      "candidate_for_stage3": true,
+      "selected_frame_pose_status": "MISSING",
+      "temporal_qa": {
+        "normalized_temporal_jitter": null,
+        "normalized_temporal_jitter_p90": null,
+        "temporal_outlier_fraction": 0.0,
+        "left_right_swap_suspected_frames": [],
+        "temporal_estimates": {
+          "enabled": false,
+          "created": 0,
+          "insufficient_context": 0,
+          "insufficient_context_reasons": {},
+          "disabled_reason": "disabled_by_config"
+        },
+        "raw_coordinates_modified": false,
+        "silent_imputation": false
+      },
+      "observations": [
+        {
+          "frame_index": 9,
+          "pose_cache_key": "track_001:frame_9",
+          "physical_human_id": "human_9",
+          "source_bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "source_expanded_pose_bbox_xyxy": [
+            95,
+            90,
+            205,
+            310
+          ],
+          "source_backend": "rtmw_onnx",
+          "source_score_semantics": "RTMW_RAW_SIMCC_MAX_NOT_CALIBRATED_PROBABILITY",
+          "keypoints_133": [
+            {
+              "index": 0,
+              "name": "nose",
+              "x": 148.0,
+              "y": 124.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 1,
+              "name": "left_eye",
+              "x": 145.0,
+              "y": 122.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 2,
+              "name": "right_eye",
+              "x": 151.0,
+              "y": 122.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 3,
+              "name": "left_ear",
+              "x": 142.0,
+              "y": 126.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 4,
+              "name": "right_ear",
+              "x": 154.0,
+              "y": 126.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 5,
+              "name": "left_shoulder",
+              "x": 136.0,
+              "y": 154.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 6,
+              "name": "right_shoulder",
+              "x": 160.0,
+              "y": 154.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 7,
+              "name": "left_elbow",
+              "x": 130.0,
+              "y": 184.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 8,
+              "name": "right_elbow",
+              "x": 166.0,
+              "y": 184.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 9,
+              "name": "left_wrist",
+              "x": 126.0,
+              "y": 212.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 10,
+              "name": "right_wrist",
+              "x": 170.0,
+              "y": 212.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 11,
+              "name": "left_hip",
+              "x": 141.0,
+              "y": 204.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 12,
+              "name": "right_hip",
+              "x": 155.0,
+              "y": 204.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 13,
+              "name": "left_knee",
+              "x": 140.0,
+              "y": 240.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 14,
+              "name": "right_knee",
+              "x": 156.0,
+              "y": 240.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 15,
+              "name": "left_ankle",
+              "x": 139.0,
+              "y": 276.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 16,
+              "name": "right_ankle",
+              "x": 157.0,
+              "y": 276.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 17,
+              "name": "left_big_toe",
+              "x": 136.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 18,
+              "name": "left_small_toe",
+              "x": 140.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 19,
+              "name": "left_heel",
+              "x": 138.0,
+              "y": 282.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 20,
+              "name": "right_big_toe",
+              "x": 156.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 21,
+              "name": "right_small_toe",
+              "x": 160.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 22,
+              "name": "right_heel",
+              "x": 158.0,
+              "y": 282.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 23,
+              "name": "face_00",
+              "x": 142.0,
+              "y": 116.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 24,
+              "name": "face_01",
+              "x": 142.17910766601562,
+              "y": 116.74995422363281,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 25,
+              "name": "face_02",
+              "x": 142.35821533203125,
+              "y": 117.49826049804688,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 26,
+              "name": "face_03",
+              "x": 142.5373077392578,
+              "y": 118.24327850341797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 27,
+              "name": "face_04",
+              "x": 142.71641540527344,
+              "y": 118.98336029052734,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 28,
+              "name": "face_05",
+              "x": 142.89552307128906,
+              "y": 119.71688842773438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 29,
+              "name": "face_06",
+              "x": 143.0746307373047,
+              "y": 120.4422378540039,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 30,
+              "name": "face_07",
+              "x": 143.2537384033203,
+              "y": 121.15782928466797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 31,
+              "name": "face_08",
+              "x": 143.43283081054688,
+              "y": 121.8620834350586,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 32,
+              "name": "face_09",
+              "x": 143.6119384765625,
+              "y": 122.5534439086914,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 33,
+              "name": "face_10",
+              "x": 143.79104614257812,
+              "y": 123.23040771484375,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 34,
+              "name": "face_11",
+              "x": 143.97015380859375,
+              "y": 123.89147186279297,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 35,
+              "name": "face_12",
+              "x": 144.1492462158203,
+              "y": 124.53518676757812,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 36,
+              "name": "face_13",
+              "x": 144.32835388183594,
+              "y": 125.16014099121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 37,
+              "name": "face_14",
+              "x": 144.50746154785156,
+              "y": 125.76496124267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 38,
+              "name": "face_15",
+              "x": 144.6865692138672,
+              "y": 126.34832000732422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 39,
+              "name": "face_16",
+              "x": 144.8656768798828,
+              "y": 126.90892791748047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 40,
+              "name": "face_17",
+              "x": 145.04476928710938,
+              "y": 127.44554901123047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 41,
+              "name": "face_18",
+              "x": 145.223876953125,
+              "y": 127.95701599121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 42,
+              "name": "face_19",
+              "x": 145.40298461914062,
+              "y": 128.44219970703125,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 43,
+              "name": "face_20",
+              "x": 145.58209228515625,
+              "y": 128.90003967285156,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 44,
+              "name": "face_21",
+              "x": 145.76119995117188,
+              "y": 129.3295135498047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 45,
+              "name": "face_22",
+              "x": 145.94029235839844,
+              "y": 129.72967529296875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 46,
+              "name": "face_23",
+              "x": 146.11940002441406,
+              "y": 130.09967041015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 47,
+              "name": "face_24",
+              "x": 146.2985076904297,
+              "y": 130.4386749267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 48,
+              "name": "face_25",
+              "x": 146.4776153564453,
+              "y": 130.7459259033203,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 49,
+              "name": "face_26",
+              "x": 146.65672302246094,
+              "y": 131.02078247070312,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 50,
+              "name": "face_27",
+              "x": 146.8358154296875,
+              "y": 131.26260375976562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 51,
+              "name": "face_28",
+              "x": 147.01492309570312,
+              "y": 131.4708709716797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 52,
+              "name": "face_29",
+              "x": 147.19403076171875,
+              "y": 131.6451416015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 53,
+              "name": "face_30",
+              "x": 147.37313842773438,
+              "y": 131.78501892089844,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 54,
+              "name": "face_31",
+              "x": 147.55224609375,
+              "y": 131.89019775390625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 55,
+              "name": "face_32",
+              "x": 147.73133850097656,
+              "y": 131.96043395996094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 56,
+              "name": "face_33",
+              "x": 147.9104461669922,
+              "y": 131.99560546875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 57,
+              "name": "face_34",
+              "x": 148.0895538330078,
+              "y": 131.99560546875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 58,
+              "name": "face_35",
+              "x": 148.26866149902344,
+              "y": 131.96043395996094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 59,
+              "name": "face_36",
+              "x": 148.44775390625,
+              "y": 131.89019775390625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 60,
+              "name": "face_37",
+              "x": 148.62686157226562,
+              "y": 131.78501892089844,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 61,
+              "name": "face_38",
+              "x": 148.80596923828125,
+              "y": 131.6451416015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 62,
+              "name": "face_39",
+              "x": 148.98507690429688,
+              "y": 131.4708709716797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 63,
+              "name": "face_40",
+              "x": 149.1641845703125,
+              "y": 131.26260375976562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 64,
+              "name": "face_41",
+              "x": 149.34327697753906,
+              "y": 131.02078247070312,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 65,
+              "name": "face_42",
+              "x": 149.5223846435547,
+              "y": 130.7459259033203,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 66,
+              "name": "face_43",
+              "x": 149.7014923095703,
+              "y": 130.4386749267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 67,
+              "name": "face_44",
+              "x": 149.88059997558594,
+              "y": 130.09967041015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 68,
+              "name": "face_45",
+              "x": 150.05970764160156,
+              "y": 129.72967529296875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 69,
+              "name": "face_46",
+              "x": 150.23880004882812,
+              "y": 129.3295135498047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 70,
+              "name": "face_47",
+              "x": 150.41790771484375,
+              "y": 128.90003967285156,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 71,
+              "name": "face_48",
+              "x": 150.59701538085938,
+              "y": 128.44219970703125,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 72,
+              "name": "face_49",
+              "x": 150.776123046875,
+              "y": 127.95701599121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 73,
+              "name": "face_50",
+              "x": 150.95523071289062,
+              "y": 127.44554901123047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 74,
+              "name": "face_51",
+              "x": 151.1343231201172,
+              "y": 126.90892791748047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 75,
+              "name": "face_52",
+              "x": 151.3134307861328,
+              "y": 126.34832000732422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 76,
+              "name": "face_53",
+              "x": 151.49253845214844,
+              "y": 125.76496124267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 77,
+              "name": "face_54",
+              "x": 151.67164611816406,
+              "y": 125.16014099121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 78,
+              "name": "face_55",
+              "x": 151.8507537841797,
+              "y": 124.53518676757812,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 79,
+              "name": "face_56",
+              "x": 152.02984619140625,
+              "y": 123.89147186279297,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 80,
+              "name": "face_57",
+              "x": 152.20895385742188,
+              "y": 123.23040771484375,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 81,
+              "name": "face_58",
+              "x": 152.3880615234375,
+              "y": 122.5534439086914,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 82,
+              "name": "face_59",
+              "x": 152.56716918945312,
+              "y": 121.8620834350586,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 83,
+              "name": "face_60",
+              "x": 152.7462615966797,
+              "y": 121.15782928466797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 84,
+              "name": "face_61",
+              "x": 152.9253692626953,
+              "y": 120.4422378540039,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 85,
+              "name": "face_62",
+              "x": 153.10447692871094,
+              "y": 119.71688842773438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 86,
+              "name": "face_63",
+              "x": 153.28358459472656,
+              "y": 118.98336029052734,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 87,
+              "name": "face_64",
+              "x": 153.4626922607422,
+              "y": 118.24327850341797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 88,
+              "name": "face_65",
+              "x": 153.64178466796875,
+              "y": 117.49826049804688,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 89,
+              "name": "face_66",
+              "x": 153.82089233398438,
+              "y": 116.74995422363281,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 90,
+              "name": "face_67",
+              "x": 154.0,
+              "y": 116.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 91,
+              "name": "left_hand_00",
+              "x": 124.0,
+              "y": 210.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 92,
+              "name": "left_hand_01",
+              "x": 123.80000305175781,
+              "y": 210.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 93,
+              "name": "left_hand_02",
+              "x": 123.5999984741211,
+              "y": 211.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 94,
+              "name": "left_hand_03",
+              "x": 123.4000015258789,
+              "y": 212.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 95,
+              "name": "left_hand_04",
+              "x": 123.19999694824219,
+              "y": 213.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 96,
+              "name": "left_hand_05",
+              "x": 123.0,
+              "y": 214.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 97,
+              "name": "left_hand_06",
+              "x": 122.80000305175781,
+              "y": 214.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 98,
+              "name": "left_hand_07",
+              "x": 122.5999984741211,
+              "y": 215.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 99,
+              "name": "left_hand_08",
+              "x": 122.4000015258789,
+              "y": 216.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 100,
+              "name": "left_hand_09",
+              "x": 122.19999694824219,
+              "y": 217.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 101,
+              "name": "left_hand_10",
+              "x": 122.0,
+              "y": 218.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 102,
+              "name": "left_hand_11",
+              "x": 121.80000305175781,
+              "y": 218.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 103,
+              "name": "left_hand_12",
+              "x": 121.5999984741211,
+              "y": 219.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 104,
+              "name": "left_hand_13",
+              "x": 121.4000015258789,
+              "y": 220.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 105,
+              "name": "left_hand_14",
+              "x": 121.19999694824219,
+              "y": 221.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 106,
+              "name": "left_hand_15",
+              "x": 121.0,
+              "y": 222.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 107,
+              "name": "left_hand_16",
+              "x": 120.80000305175781,
+              "y": 222.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 108,
+              "name": "left_hand_17",
+              "x": 120.5999984741211,
+              "y": 223.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 109,
+              "name": "left_hand_18",
+              "x": 120.4000015258789,
+              "y": 224.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 110,
+              "name": "left_hand_19",
+              "x": 120.19999694824219,
+              "y": 225.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 111,
+              "name": "left_hand_20",
+              "x": 120.0,
+              "y": 226.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 112,
+              "name": "right_hand_00",
+              "x": 172.0,
+              "y": 210.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 113,
+              "name": "right_hand_01",
+              "x": 172.1999969482422,
+              "y": 210.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 114,
+              "name": "right_hand_02",
+              "x": 172.39999389648438,
+              "y": 211.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 115,
+              "name": "right_hand_03",
+              "x": 172.60000610351562,
+              "y": 212.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 116,
+              "name": "right_hand_04",
+              "x": 172.8000030517578,
+              "y": 213.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 117,
+              "name": "right_hand_05",
+              "x": 173.0,
+              "y": 214.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 118,
+              "name": "right_hand_06",
+              "x": 173.1999969482422,
+              "y": 214.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 119,
+              "name": "right_hand_07",
+              "x": 173.39999389648438,
+              "y": 215.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 120,
+              "name": "right_hand_08",
+              "x": 173.60000610351562,
+              "y": 216.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 121,
+              "name": "right_hand_09",
+              "x": 173.8000030517578,
+              "y": 217.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 122,
+              "name": "right_hand_10",
+              "x": 174.0,
+              "y": 218.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 123,
+              "name": "right_hand_11",
+              "x": 174.1999969482422,
+              "y": 218.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 124,
+              "name": "right_hand_12",
+              "x": 174.39999389648438,
+              "y": 219.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 125,
+              "name": "right_hand_13",
+              "x": 174.60000610351562,
+              "y": 220.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 126,
+              "name": "right_hand_14",
+              "x": 174.8000030517578,
+              "y": 221.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 127,
+              "name": "right_hand_15",
+              "x": 175.0,
+              "y": 222.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 128,
+              "name": "right_hand_16",
+              "x": 175.1999969482422,
+              "y": 222.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 129,
+              "name": "right_hand_17",
+              "x": 175.39999389648438,
+              "y": 223.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 130,
+              "name": "right_hand_18",
+              "x": 175.60000610351562,
+              "y": 224.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 131,
+              "name": "right_hand_19",
+              "x": 175.8000030517578,
+              "y": 225.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 132,
+              "name": "right_hand_20",
+              "x": 176.0,
+              "y": 226.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            }
+          ],
+          "qa": {
+            "pose_status": "VALID",
+            "status_reasons": [
+              "all_valid_gates_passed"
+            ],
+            "gate_checks": {
+              "body_above_reject_floor": true,
+              "core_above_reject_floor": true,
+              "body_meets_valid_threshold": true,
+              "core_meets_valid_threshold": true,
+              "feet_meets_valid_threshold": true,
+              "inside_meets_valid_threshold": true,
+              "geometry_valid": true
+            },
+            "body_completeness": 1.0,
+            "feet_completeness": 1.0,
+            "core_completeness": 1.0,
+            "inside_fraction": 1.0,
+            "median_positive_raw_score": 3.0,
+            "relative_low_evidence_floor": 1.0499999999999998,
+            "low_model_evidence_fraction": 0.0,
+            "bone_outlier_fraction": 0.0,
+            "bone_outliers": [],
+            "geometry_valid": true,
+            "note": "raw_model_score is RTMW SimCC evidence, not a calibrated probability"
+          },
+          "pose_status": "VALID",
+          "provenance": {
+            "source": "STAGE2_RTMW_CACHE",
+            "re_inferred": false
+          }
+        },
+        {
+          "frame_index": 10,
+          "pose_cache_key": "track_001:frame_10",
+          "physical_human_id": "human_10",
+          "source_bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "source_expanded_pose_bbox_xyxy": null,
+          "source_backend": null,
+          "source_score_semantics": null,
+          "keypoints_133": [
+            {
+              "index": 0,
+              "name": "nose",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 1,
+              "name": "left_eye",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 2,
+              "name": "right_eye",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 3,
+              "name": "left_ear",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 4,
+              "name": "right_ear",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 5,
+              "name": "left_shoulder",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 6,
+              "name": "right_shoulder",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 7,
+              "name": "left_elbow",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 8,
+              "name": "right_elbow",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 9,
+              "name": "left_wrist",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 10,
+              "name": "right_wrist",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 11,
+              "name": "left_hip",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 12,
+              "name": "right_hip",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 13,
+              "name": "left_knee",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 14,
+              "name": "right_knee",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 15,
+              "name": "left_ankle",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 16,
+              "name": "right_ankle",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 17,
+              "name": "left_big_toe",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 18,
+              "name": "left_small_toe",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 19,
+              "name": "left_heel",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 20,
+              "name": "right_big_toe",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 21,
+              "name": "right_small_toe",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 22,
+              "name": "right_heel",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 23,
+              "name": "face_00",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 24,
+              "name": "face_01",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 25,
+              "name": "face_02",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 26,
+              "name": "face_03",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 27,
+              "name": "face_04",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 28,
+              "name": "face_05",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 29,
+              "name": "face_06",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 30,
+              "name": "face_07",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 31,
+              "name": "face_08",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 32,
+              "name": "face_09",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 33,
+              "name": "face_10",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 34,
+              "name": "face_11",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 35,
+              "name": "face_12",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 36,
+              "name": "face_13",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 37,
+              "name": "face_14",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 38,
+              "name": "face_15",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 39,
+              "name": "face_16",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 40,
+              "name": "face_17",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 41,
+              "name": "face_18",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 42,
+              "name": "face_19",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 43,
+              "name": "face_20",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 44,
+              "name": "face_21",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 45,
+              "name": "face_22",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 46,
+              "name": "face_23",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 47,
+              "name": "face_24",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 48,
+              "name": "face_25",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 49,
+              "name": "face_26",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 50,
+              "name": "face_27",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 51,
+              "name": "face_28",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 52,
+              "name": "face_29",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 53,
+              "name": "face_30",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 54,
+              "name": "face_31",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 55,
+              "name": "face_32",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 56,
+              "name": "face_33",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 57,
+              "name": "face_34",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 58,
+              "name": "face_35",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 59,
+              "name": "face_36",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 60,
+              "name": "face_37",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 61,
+              "name": "face_38",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 62,
+              "name": "face_39",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 63,
+              "name": "face_40",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 64,
+              "name": "face_41",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 65,
+              "name": "face_42",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 66,
+              "name": "face_43",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 67,
+              "name": "face_44",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 68,
+              "name": "face_45",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 69,
+              "name": "face_46",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 70,
+              "name": "face_47",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 71,
+              "name": "face_48",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 72,
+              "name": "face_49",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 73,
+              "name": "face_50",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 74,
+              "name": "face_51",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 75,
+              "name": "face_52",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 76,
+              "name": "face_53",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 77,
+              "name": "face_54",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 78,
+              "name": "face_55",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 79,
+              "name": "face_56",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 80,
+              "name": "face_57",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 81,
+              "name": "face_58",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 82,
+              "name": "face_59",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 83,
+              "name": "face_60",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 84,
+              "name": "face_61",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 85,
+              "name": "face_62",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 86,
+              "name": "face_63",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 87,
+              "name": "face_64",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 88,
+              "name": "face_65",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 89,
+              "name": "face_66",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 90,
+              "name": "face_67",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 91,
+              "name": "left_hand_00",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 92,
+              "name": "left_hand_01",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 93,
+              "name": "left_hand_02",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 94,
+              "name": "left_hand_03",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 95,
+              "name": "left_hand_04",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 96,
+              "name": "left_hand_05",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 97,
+              "name": "left_hand_06",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 98,
+              "name": "left_hand_07",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 99,
+              "name": "left_hand_08",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 100,
+              "name": "left_hand_09",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 101,
+              "name": "left_hand_10",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 102,
+              "name": "left_hand_11",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 103,
+              "name": "left_hand_12",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 104,
+              "name": "left_hand_13",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 105,
+              "name": "left_hand_14",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 106,
+              "name": "left_hand_15",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 107,
+              "name": "left_hand_16",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 108,
+              "name": "left_hand_17",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 109,
+              "name": "left_hand_18",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 110,
+              "name": "left_hand_19",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 111,
+              "name": "left_hand_20",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 112,
+              "name": "right_hand_00",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 113,
+              "name": "right_hand_01",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 114,
+              "name": "right_hand_02",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 115,
+              "name": "right_hand_03",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 116,
+              "name": "right_hand_04",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 117,
+              "name": "right_hand_05",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 118,
+              "name": "right_hand_06",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 119,
+              "name": "right_hand_07",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 120,
+              "name": "right_hand_08",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 121,
+              "name": "right_hand_09",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 122,
+              "name": "right_hand_10",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 123,
+              "name": "right_hand_11",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 124,
+              "name": "right_hand_12",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 125,
+              "name": "right_hand_13",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 126,
+              "name": "right_hand_14",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 127,
+              "name": "right_hand_15",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 128,
+              "name": "right_hand_16",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 129,
+              "name": "right_hand_17",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 130,
+              "name": "right_hand_18",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 131,
+              "name": "right_hand_19",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            },
+            {
+              "index": 132,
+              "name": "right_hand_20",
+              "x": null,
+              "y": null,
+              "raw_model_score": null,
+              "state": "MISSING",
+              "source": "NO_RTMW_CACHE"
+            }
+          ],
+          "qa": {
+            "pose_status": "MISSING",
+            "reason": "no_rtmw_cache_observation"
+          },
+          "pose_status": "MISSING",
+          "provenance": {
+            "source": "NO_RTMW_CACHE",
+            "re_inferred": false
+          },
+          "temporal_qa": {
+            "normal_pair_cost": null,
+            "swapped_pair_cost": null,
+            "left_right_swap_suspected": false
+          }
+        },
+        {
+          "frame_index": 11,
+          "pose_cache_key": "track_001:frame_11",
+          "physical_human_id": "human_11",
+          "source_bbox_xyxy": [
+            100.0,
+            100.0,
+            200.0,
+            300.0
+          ],
+          "source_expanded_pose_bbox_xyxy": [
+            95,
+            90,
+            205,
+            310
+          ],
+          "source_backend": "rtmw_onnx",
+          "source_score_semantics": "RTMW_RAW_SIMCC_MAX_NOT_CALIBRATED_PROBABILITY",
+          "keypoints_133": [
+            {
+              "index": 0,
+              "name": "nose",
+              "x": 152.0,
+              "y": 124.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 1,
+              "name": "left_eye",
+              "x": 149.0,
+              "y": 122.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 2,
+              "name": "right_eye",
+              "x": 155.0,
+              "y": 122.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 3,
+              "name": "left_ear",
+              "x": 146.0,
+              "y": 126.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 4,
+              "name": "right_ear",
+              "x": 158.0,
+              "y": 126.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 5,
+              "name": "left_shoulder",
+              "x": 140.0,
+              "y": 154.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 6,
+              "name": "right_shoulder",
+              "x": 164.0,
+              "y": 154.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 7,
+              "name": "left_elbow",
+              "x": 134.0,
+              "y": 184.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 8,
+              "name": "right_elbow",
+              "x": 170.0,
+              "y": 184.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 9,
+              "name": "left_wrist",
+              "x": 130.0,
+              "y": 212.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 10,
+              "name": "right_wrist",
+              "x": 174.0,
+              "y": 212.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 11,
+              "name": "left_hip",
+              "x": 145.0,
+              "y": 204.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 12,
+              "name": "right_hip",
+              "x": 159.0,
+              "y": 204.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 13,
+              "name": "left_knee",
+              "x": 144.0,
+              "y": 240.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 14,
+              "name": "right_knee",
+              "x": 160.0,
+              "y": 240.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 15,
+              "name": "left_ankle",
+              "x": 143.0,
+              "y": 276.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 16,
+              "name": "right_ankle",
+              "x": 161.0,
+              "y": 276.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 17,
+              "name": "left_big_toe",
+              "x": 140.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 18,
+              "name": "left_small_toe",
+              "x": 144.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 19,
+              "name": "left_heel",
+              "x": 142.0,
+              "y": 282.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 20,
+              "name": "right_big_toe",
+              "x": 160.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 21,
+              "name": "right_small_toe",
+              "x": 164.0,
+              "y": 292.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 22,
+              "name": "right_heel",
+              "x": 162.0,
+              "y": 282.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 23,
+              "name": "face_00",
+              "x": 146.0,
+              "y": 116.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 24,
+              "name": "face_01",
+              "x": 146.17910766601562,
+              "y": 116.74995422363281,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 25,
+              "name": "face_02",
+              "x": 146.35821533203125,
+              "y": 117.49826049804688,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 26,
+              "name": "face_03",
+              "x": 146.5373077392578,
+              "y": 118.24327850341797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 27,
+              "name": "face_04",
+              "x": 146.71641540527344,
+              "y": 118.98336029052734,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 28,
+              "name": "face_05",
+              "x": 146.89552307128906,
+              "y": 119.71688842773438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 29,
+              "name": "face_06",
+              "x": 147.0746307373047,
+              "y": 120.4422378540039,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 30,
+              "name": "face_07",
+              "x": 147.2537384033203,
+              "y": 121.15782928466797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 31,
+              "name": "face_08",
+              "x": 147.43283081054688,
+              "y": 121.8620834350586,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 32,
+              "name": "face_09",
+              "x": 147.6119384765625,
+              "y": 122.5534439086914,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 33,
+              "name": "face_10",
+              "x": 147.79104614257812,
+              "y": 123.23040771484375,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 34,
+              "name": "face_11",
+              "x": 147.97015380859375,
+              "y": 123.89147186279297,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 35,
+              "name": "face_12",
+              "x": 148.1492462158203,
+              "y": 124.53518676757812,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 36,
+              "name": "face_13",
+              "x": 148.32835388183594,
+              "y": 125.16014099121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 37,
+              "name": "face_14",
+              "x": 148.50746154785156,
+              "y": 125.76496124267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 38,
+              "name": "face_15",
+              "x": 148.6865692138672,
+              "y": 126.34832000732422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 39,
+              "name": "face_16",
+              "x": 148.8656768798828,
+              "y": 126.90892791748047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 40,
+              "name": "face_17",
+              "x": 149.04476928710938,
+              "y": 127.44554901123047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 41,
+              "name": "face_18",
+              "x": 149.223876953125,
+              "y": 127.95701599121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 42,
+              "name": "face_19",
+              "x": 149.40298461914062,
+              "y": 128.44219970703125,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 43,
+              "name": "face_20",
+              "x": 149.58209228515625,
+              "y": 128.90003967285156,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 44,
+              "name": "face_21",
+              "x": 149.76119995117188,
+              "y": 129.3295135498047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 45,
+              "name": "face_22",
+              "x": 149.94029235839844,
+              "y": 129.72967529296875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 46,
+              "name": "face_23",
+              "x": 150.11940002441406,
+              "y": 130.09967041015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 47,
+              "name": "face_24",
+              "x": 150.2985076904297,
+              "y": 130.4386749267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 48,
+              "name": "face_25",
+              "x": 150.4776153564453,
+              "y": 130.7459259033203,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 49,
+              "name": "face_26",
+              "x": 150.65672302246094,
+              "y": 131.02078247070312,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 50,
+              "name": "face_27",
+              "x": 150.8358154296875,
+              "y": 131.26260375976562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 51,
+              "name": "face_28",
+              "x": 151.01492309570312,
+              "y": 131.4708709716797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 52,
+              "name": "face_29",
+              "x": 151.19403076171875,
+              "y": 131.6451416015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 53,
+              "name": "face_30",
+              "x": 151.37313842773438,
+              "y": 131.78501892089844,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 54,
+              "name": "face_31",
+              "x": 151.55224609375,
+              "y": 131.89019775390625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 55,
+              "name": "face_32",
+              "x": 151.73133850097656,
+              "y": 131.96043395996094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 56,
+              "name": "face_33",
+              "x": 151.9104461669922,
+              "y": 131.99560546875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 57,
+              "name": "face_34",
+              "x": 152.0895538330078,
+              "y": 131.99560546875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 58,
+              "name": "face_35",
+              "x": 152.26866149902344,
+              "y": 131.96043395996094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 59,
+              "name": "face_36",
+              "x": 152.44775390625,
+              "y": 131.89019775390625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 60,
+              "name": "face_37",
+              "x": 152.62686157226562,
+              "y": 131.78501892089844,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 61,
+              "name": "face_38",
+              "x": 152.80596923828125,
+              "y": 131.6451416015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 62,
+              "name": "face_39",
+              "x": 152.98507690429688,
+              "y": 131.4708709716797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 63,
+              "name": "face_40",
+              "x": 153.1641845703125,
+              "y": 131.26260375976562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 64,
+              "name": "face_41",
+              "x": 153.34327697753906,
+              "y": 131.02078247070312,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 65,
+              "name": "face_42",
+              "x": 153.5223846435547,
+              "y": 130.7459259033203,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 66,
+              "name": "face_43",
+              "x": 153.7014923095703,
+              "y": 130.4386749267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 67,
+              "name": "face_44",
+              "x": 153.88059997558594,
+              "y": 130.09967041015625,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 68,
+              "name": "face_45",
+              "x": 154.05970764160156,
+              "y": 129.72967529296875,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 69,
+              "name": "face_46",
+              "x": 154.23880004882812,
+              "y": 129.3295135498047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 70,
+              "name": "face_47",
+              "x": 154.41790771484375,
+              "y": 128.90003967285156,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 71,
+              "name": "face_48",
+              "x": 154.59701538085938,
+              "y": 128.44219970703125,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 72,
+              "name": "face_49",
+              "x": 154.776123046875,
+              "y": 127.95701599121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 73,
+              "name": "face_50",
+              "x": 154.95523071289062,
+              "y": 127.44554901123047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 74,
+              "name": "face_51",
+              "x": 155.1343231201172,
+              "y": 126.90892791748047,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 75,
+              "name": "face_52",
+              "x": 155.3134307861328,
+              "y": 126.34832000732422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 76,
+              "name": "face_53",
+              "x": 155.49253845214844,
+              "y": 125.76496124267578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 77,
+              "name": "face_54",
+              "x": 155.67164611816406,
+              "y": 125.16014099121094,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 78,
+              "name": "face_55",
+              "x": 155.8507537841797,
+              "y": 124.53518676757812,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 79,
+              "name": "face_56",
+              "x": 156.02984619140625,
+              "y": 123.89147186279297,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 80,
+              "name": "face_57",
+              "x": 156.20895385742188,
+              "y": 123.23040771484375,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 81,
+              "name": "face_58",
+              "x": 156.3880615234375,
+              "y": 122.5534439086914,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 82,
+              "name": "face_59",
+              "x": 156.56716918945312,
+              "y": 121.8620834350586,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 83,
+              "name": "face_60",
+              "x": 156.7462615966797,
+              "y": 121.15782928466797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 84,
+              "name": "face_61",
+              "x": 156.9253692626953,
+              "y": 120.4422378540039,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 85,
+              "name": "face_62",
+              "x": 157.10447692871094,
+              "y": 119.71688842773438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 86,
+              "name": "face_63",
+              "x": 157.28358459472656,
+              "y": 118.98336029052734,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 87,
+              "name": "face_64",
+              "x": 157.4626922607422,
+              "y": 118.24327850341797,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 88,
+              "name": "face_65",
+              "x": 157.64178466796875,
+              "y": 117.49826049804688,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 89,
+              "name": "face_66",
+              "x": 157.82089233398438,
+              "y": 116.74995422363281,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 90,
+              "name": "face_67",
+              "x": 158.0,
+              "y": 116.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 91,
+              "name": "left_hand_00",
+              "x": 128.0,
+              "y": 210.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 92,
+              "name": "left_hand_01",
+              "x": 127.80000305175781,
+              "y": 210.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 93,
+              "name": "left_hand_02",
+              "x": 127.5999984741211,
+              "y": 211.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 94,
+              "name": "left_hand_03",
+              "x": 127.4000015258789,
+              "y": 212.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 95,
+              "name": "left_hand_04",
+              "x": 127.19999694824219,
+              "y": 213.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 96,
+              "name": "left_hand_05",
+              "x": 127.0,
+              "y": 214.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 97,
+              "name": "left_hand_06",
+              "x": 126.80000305175781,
+              "y": 214.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 98,
+              "name": "left_hand_07",
+              "x": 126.5999984741211,
+              "y": 215.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 99,
+              "name": "left_hand_08",
+              "x": 126.4000015258789,
+              "y": 216.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 100,
+              "name": "left_hand_09",
+              "x": 126.19999694824219,
+              "y": 217.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 101,
+              "name": "left_hand_10",
+              "x": 126.0,
+              "y": 218.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 102,
+              "name": "left_hand_11",
+              "x": 125.80000305175781,
+              "y": 218.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 103,
+              "name": "left_hand_12",
+              "x": 125.5999984741211,
+              "y": 219.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 104,
+              "name": "left_hand_13",
+              "x": 125.4000015258789,
+              "y": 220.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 105,
+              "name": "left_hand_14",
+              "x": 125.19999694824219,
+              "y": 221.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 106,
+              "name": "left_hand_15",
+              "x": 125.0,
+              "y": 222.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 107,
+              "name": "left_hand_16",
+              "x": 124.80000305175781,
+              "y": 222.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 108,
+              "name": "left_hand_17",
+              "x": 124.5999984741211,
+              "y": 223.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 109,
+              "name": "left_hand_18",
+              "x": 124.4000015258789,
+              "y": 224.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 110,
+              "name": "left_hand_19",
+              "x": 124.19999694824219,
+              "y": 225.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 111,
+              "name": "left_hand_20",
+              "x": 124.0,
+              "y": 226.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 112,
+              "name": "right_hand_00",
+              "x": 176.0,
+              "y": 210.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 113,
+              "name": "right_hand_01",
+              "x": 176.1999969482422,
+              "y": 210.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 114,
+              "name": "right_hand_02",
+              "x": 176.39999389648438,
+              "y": 211.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 115,
+              "name": "right_hand_03",
+              "x": 176.60000610351562,
+              "y": 212.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 116,
+              "name": "right_hand_04",
+              "x": 176.8000030517578,
+              "y": 213.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 117,
+              "name": "right_hand_05",
+              "x": 177.0,
+              "y": 214.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 118,
+              "name": "right_hand_06",
+              "x": 177.1999969482422,
+              "y": 214.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 119,
+              "name": "right_hand_07",
+              "x": 177.39999389648438,
+              "y": 215.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 120,
+              "name": "right_hand_08",
+              "x": 177.60000610351562,
+              "y": 216.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 121,
+              "name": "right_hand_09",
+              "x": 177.8000030517578,
+              "y": 217.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 122,
+              "name": "right_hand_10",
+              "x": 178.0,
+              "y": 218.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 123,
+              "name": "right_hand_11",
+              "x": 178.1999969482422,
+              "y": 218.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 124,
+              "name": "right_hand_12",
+              "x": 178.39999389648438,
+              "y": 219.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 125,
+              "name": "right_hand_13",
+              "x": 178.60000610351562,
+              "y": 220.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 126,
+              "name": "right_hand_14",
+              "x": 178.8000030517578,
+              "y": 221.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 127,
+              "name": "right_hand_15",
+              "x": 179.0,
+              "y": 222.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 128,
+              "name": "right_hand_16",
+              "x": 179.1999969482422,
+              "y": 222.8000030517578,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 129,
+              "name": "right_hand_17",
+              "x": 179.39999389648438,
+              "y": 223.60000610351562,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 130,
+              "name": "right_hand_18",
+              "x": 179.60000610351562,
+              "y": 224.39999389648438,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 131,
+              "name": "right_hand_19",
+              "x": 179.8000030517578,
+              "y": 225.1999969482422,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            },
+            {
+              "index": 132,
+              "name": "right_hand_20",
+              "x": 180.0,
+              "y": 226.0,
+              "raw_model_score": 3.0,
+              "state": "VALID",
+              "source": "RTMW_CACHE"
+            }
+          ],
+          "qa": {
+            "pose_status": "VALID",
+            "status_reasons": [
+              "all_valid_gates_passed"
+            ],
+            "gate_checks": {
+              "body_above_reject_floor": true,
+              "core_above_reject_floor": true,
+              "body_meets_valid_threshold": true,
+              "core_meets_valid_threshold": true,
+              "feet_meets_valid_threshold": true,
+              "inside_meets_valid_threshold": true,
+              "geometry_valid": true
+            },
+            "body_completeness": 1.0,
+            "feet_completeness": 1.0,
+            "core_completeness": 1.0,
+            "inside_fraction": 1.0,
+            "median_positive_raw_score": 3.0,
+            "relative_low_evidence_floor": 1.0499999999999998,
+            "low_model_evidence_fraction": 0.0,
+            "bone_outlier_fraction": 0.0,
+            "bone_outliers": [],
+            "geometry_valid": true,
+            "note": "raw_model_score is RTMW SimCC evidence, not a calibrated probability"
+          },
+          "pose_status": "VALID",
+          "provenance": {
+            "source": "STAGE2_RTMW_CACHE",
+            "re_inferred": false
+          },
+          "temporal_qa": {
+            "normal_pair_cost": null,
+            "swapped_pair_cost": null,
+            "left_right_swap_suspected": false
+          }
+        }
+      ]
+    }
+  ],
+  "selected_frame_poses": [
+    {
+      "track_id": "track_001",
+      "upstream_role": "player",
+      "observation": {
+        "frame_index": 10,
+        "pose_cache_key": "track_001:frame_10",
+        "physical_human_id": "human_10",
+        "source_bbox_xyxy": [
+          100.0,
+          100.0,
+          200.0,
+          300.0
+        ],
+        "source_expanded_pose_bbox_xyxy": null,
+        "source_backend": null,
+        "source_score_semantics": null,
+        "keypoints_133": [
+          {
+            "index": 0,
+            "name": "nose",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 1,
+            "name": "left_eye",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 2,
+            "name": "right_eye",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 3,
+            "name": "left_ear",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 4,
+            "name": "right_ear",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 5,
+            "name": "left_shoulder",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 6,
+            "name": "right_shoulder",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 7,
+            "name": "left_elbow",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 8,
+            "name": "right_elbow",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 9,
+            "name": "left_wrist",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 10,
+            "name": "right_wrist",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 11,
+            "name": "left_hip",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 12,
+            "name": "right_hip",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 13,
+            "name": "left_knee",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 14,
+            "name": "right_knee",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 15,
+            "name": "left_ankle",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 16,
+            "name": "right_ankle",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 17,
+            "name": "left_big_toe",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 18,
+            "name": "left_small_toe",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 19,
+            "name": "left_heel",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 20,
+            "name": "right_big_toe",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 21,
+            "name": "right_small_toe",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 22,
+            "name": "right_heel",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 23,
+            "name": "face_00",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 24,
+            "name": "face_01",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 25,
+            "name": "face_02",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 26,
+            "name": "face_03",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 27,
+            "name": "face_04",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 28,
+            "name": "face_05",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 29,
+            "name": "face_06",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 30,
+            "name": "face_07",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 31,
+            "name": "face_08",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 32,
+            "name": "face_09",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 33,
+            "name": "face_10",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 34,
+            "name": "face_11",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 35,
+            "name": "face_12",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 36,
+            "name": "face_13",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 37,
+            "name": "face_14",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 38,
+            "name": "face_15",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 39,
+            "name": "face_16",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 40,
+            "name": "face_17",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 41,
+            "name": "face_18",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 42,
+            "name": "face_19",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 43,
+            "name": "face_20",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 44,
+            "name": "face_21",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 45,
+            "name": "face_22",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 46,
+            "name": "face_23",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 47,
+            "name": "face_24",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 48,
+            "name": "face_25",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 49,
+            "name": "face_26",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 50,
+            "name": "face_27",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 51,
+            "name": "face_28",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 52,
+            "name": "face_29",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 53,
+            "name": "face_30",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 54,
+            "name": "face_31",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 55,
+            "name": "face_32",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 56,
+            "name": "face_33",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 57,
+            "name": "face_34",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 58,
+            "name": "face_35",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 59,
+            "name": "face_36",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 60,
+            "name": "face_37",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 61,
+            "name": "face_38",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 62,
+            "name": "face_39",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 63,
+            "name": "face_40",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 64,
+            "name": "face_41",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 65,
+            "name": "face_42",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 66,
+            "name": "face_43",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 67,
+            "name": "face_44",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 68,
+            "name": "face_45",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 69,
+            "name": "face_46",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 70,
+            "name": "face_47",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 71,
+            "name": "face_48",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 72,
+            "name": "face_49",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 73,
+            "name": "face_50",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 74,
+            "name": "face_51",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 75,
+            "name": "face_52",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 76,
+            "name": "face_53",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 77,
+            "name": "face_54",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 78,
+            "name": "face_55",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 79,
+            "name": "face_56",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 80,
+            "name": "face_57",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 81,
+            "name": "face_58",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 82,
+            "name": "face_59",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 83,
+            "name": "face_60",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 84,
+            "name": "face_61",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 85,
+            "name": "face_62",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 86,
+            "name": "face_63",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 87,
+            "name": "face_64",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 88,
+            "name": "face_65",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 89,
+            "name": "face_66",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 90,
+            "name": "face_67",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 91,
+            "name": "left_hand_00",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 92,
+            "name": "left_hand_01",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 93,
+            "name": "left_hand_02",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 94,
+            "name": "left_hand_03",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 95,
+            "name": "left_hand_04",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 96,
+            "name": "left_hand_05",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 97,
+            "name": "left_hand_06",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 98,
+            "name": "left_hand_07",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 99,
+            "name": "left_hand_08",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 100,
+            "name": "left_hand_09",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 101,
+            "name": "left_hand_10",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 102,
+            "name": "left_hand_11",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 103,
+            "name": "left_hand_12",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 104,
+            "name": "left_hand_13",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 105,
+            "name": "left_hand_14",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 106,
+            "name": "left_hand_15",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 107,
+            "name": "left_hand_16",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 108,
+            "name": "left_hand_17",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 109,
+            "name": "left_hand_18",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 110,
+            "name": "left_hand_19",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 111,
+            "name": "left_hand_20",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 112,
+            "name": "right_hand_00",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 113,
+            "name": "right_hand_01",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 114,
+            "name": "right_hand_02",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 115,
+            "name": "right_hand_03",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 116,
+            "name": "right_hand_04",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 117,
+            "name": "right_hand_05",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 118,
+            "name": "right_hand_06",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 119,
+            "name": "right_hand_07",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 120,
+            "name": "right_hand_08",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 121,
+            "name": "right_hand_09",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 122,
+            "name": "right_hand_10",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 123,
+            "name": "right_hand_11",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 124,
+            "name": "right_hand_12",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 125,
+            "name": "right_hand_13",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 126,
+            "name": "right_hand_14",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 127,
+            "name": "right_hand_15",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 128,
+            "name": "right_hand_16",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 129,
+            "name": "right_hand_17",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 130,
+            "name": "right_hand_18",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 131,
+            "name": "right_hand_19",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          },
+          {
+            "index": 132,
+            "name": "right_hand_20",
+            "x": null,
+            "y": null,
+            "raw_model_score": null,
+            "state": "MISSING",
+            "source": "NO_RTMW_CACHE"
+          }
+        ],
+        "qa": {
+          "pose_status": "MISSING",
+          "reason": "no_rtmw_cache_observation"
+        },
+        "pose_status": "MISSING",
+        "provenance": {
+          "source": "NO_RTMW_CACHE",
+          "re_inferred": false
+        },
+        "temporal_qa": {
+          "normal_pair_cost": null,
+          "swapped_pair_cost": null,
+          "left_right_swap_suspected": false
+        }
+      }
+    }
+  ],
+  "metrics": {
+    "candidate_tracks": 1,
+    "PoseCoverageAtT0_given_stage2_candidate": 0.0,
+    "AcceptedPoseCoverageAtT0_given_stage2_candidate": 0.0,
+    "ValidPoseCoverageAtT0_given_stage2_candidate": 0.0,
+    "FootPoseCoverageAtT0_given_stage2_candidate": 0.0,
+    "selected_frame_status_counts": {
+      "VALID": 0,
+      "DEGRADED": 0,
+      "REJECTED": 0,
+      "MISSING": 1
+    },
+    "upstream_stage2_candidate_recall_not_recomputed": true
+  },
+  "acceptance_gate": {
+    "structural": {
+      "stage2_preflight_ready": true,
+      "coordinate_space_raw_distorted_pixel": true,
+      "wholebody_schema_count_133": true,
+      "ambiguous_track_frame_pose_mapping": false,
+      "silent_coordinate_transform": false,
+      "silent_temporal_imputation": false
+    },
+    "engineering": {
+      "PoseCoverageAtT0_given_stage2_candidate>=0.98": false
+    },
+    "structural_passed": true,
+    "research_accuracy_frozen": false,
+    "note": "Structural readiness is frozen in v0.1; football-specific accuracy thresholds remain provisional until real 3DSP/COCO/Pose23 baselines are collected."
+  },
+  "diagnostics": {
+    "silent_coordinate_transform": false,
+    "silent_temporal_imputation": false,
+    "legal_body_semantics_applied": false,
+    "team_semantics_applied": false,
+    "world_geometry_applied": false
+  },
+  "artifacts": {
+    "tracked_pose_2d_state": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\out\\tracked_pose_2d_state.json",
+    "downstream_handoff": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\out\\stage3_downstream_handoff.json"
+  }
+}

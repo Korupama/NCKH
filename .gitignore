@@ -23,6 +23,7 @@ htmlcov/
 *.log
 *.tmp
 *.bak
+.pytest_tmp
 
 # Downloaded datasets, weights and external runtime checkouts
 # D:/GSR, D:/SoccerNet and other external roots are outside this repository.
@@ -94,4 +95,6 @@ Desktop.ini
 .DS_Store
 .idea/
 .vscode/
+datasets
+AI_Plan
 .agents/

@@ -7,7 +7,21 @@ supersedes ground-anchor validity, initialization, refinement bounds and ground 
 
 Estimate a coherent world-grounded player skeleton in the canonical metric pitch frame for each usable tracked player around the manually selected replay frame `t0`.
 
-## Inputs
+## Execution lanes
+
+Stage 4 is independently improvable from Stage 1 and Stage 3. It has two
+separate lanes:
+
+1. **Model-only lane:** a Stage-4 pretrained backend receives benchmark RGB
+   images/person crops, person boxes and the camera/GT metadata supplied by the
+   benchmark. This lane is used to compare pretrained models, preprocessing,
+   root refinement and temporal settings. Stage 1/3 files are not required.
+2. **Integration lane:** the project handoff consumes Stage-1 camera states and
+   Stage-3 2D tracks as immutable inputs. This lane verifies deployment
+   compatibility and pitch-world placement, but its missing artifacts do not
+   block model-only development.
+
+## Integration inputs
 
 1. Stage-1 `CameraState` timeline: `K`, `R_world_to_camera`, camera centre `C`, distortion, pitch plane `Z=0`.
 2. Stage-3 `tracked-pose-2d-state-1.0`: track IDs, player/goalkeeper roles, bboxes, RTMW WholeBody133 keypoints and QA states.

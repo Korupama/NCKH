@@ -11,8 +11,8 @@
     },
     {
       "path": "IMPLEMENTATION_STATUS.md",
-      "bytes": 1894,
-      "sha256": "8c22a180e2d79a93b529b3a7f1b2563af764063c78e585480a8e58eb9aed649c"
+      "bytes": 2395,
+      "sha256": "30a80891c24d28e9a450f5acca1a53cfe58324a8b05e26d825fa8f36fc878ce4"
     },
     {
       "path": "QUICKSTART.md",
@@ -41,8 +41,8 @@
     },
     {
       "path": "benchmark/dsp3_adapter.py",
-      "bytes": 7194,
-      "sha256": "86780ba99e34f5f7b40e053187382725f0d1dd5d3c73d35164e90102a641582c"
+      "bytes": 11867,
+      "sha256": "0e5b58cca1bdb39db9a069615f7031159a2d38a17e91c0e6f930037bd9f97b9e"
     },
     {
       "path": "benchmark/metrics.py",
@@ -56,8 +56,8 @@
     },
     {
       "path": "benchmark_stage3.py",
-      "bytes": 3627,
-      "sha256": "db82d3709279c6a943d9c014728e5ff15da7bff8f5da9309bf5a04e5747cf169"
+      "bytes": 4770,
+      "sha256": "c908496e4b8fd87029acf4e651fbdafecd1e4bd1e31622a06409dc218ff893b8"
     },
     {
       "path": "docs/BENCHMARK.md",
@@ -68,6 +68,21 @@
       "path": "docs/MODEL_PROVENANCE.md",
       "bytes": 2161,
       "sha256": "538f90f80722cb2b7e66831541c16886142399b1d2b6e4b6fe7a25504c86e28d"
+    },
+    {
+      "path": "docs/MODEL_BACKEND_ABLATION.md",
+      "bytes": 3538,
+      "sha256": "bc614eb3bf0d76f462ab0976222a9f5df5c41f85c80efb5575d6f502cbfc96af"
+    },
+    {
+      "path": "docs/MODEL_FINE_TUNING.md",
+      "bytes": 3697,
+      "sha256": "106c8d482ce97893440761ac9b6859640bb8b8b8078d2f408def8ac4d47c5261"
+    },
+    {
+      "path": "docs/FINAL_INTEGRATION_REPORT.md",
+      "bytes": 2153,
+      "sha256": "0a71f8b37e0d3b14c65ef251090196b126e97d67012dc765e406354741f4b754"
     },
     {
       "path": "docs/STAGE3_SPEC.md",
@@ -86,13 +101,23 @@
     },
     {
       "path": "requirements-benchmark.txt",
-      "bytes": 110,
-      "sha256": "51bd816b38ba8830d1c5188753dad1fd5feff630742973893ac4c76366630549"
+      "bytes": 111,
+      "sha256": "08cd1e805e933275167cab36c18754fe7c462a64938aec966c8fe77ac21ceda7"
     },
     {
       "path": "requirements.txt",
       "bytes": 31,
       "sha256": "66df686c40b883ccd0357d1fb09cb13e92f76dcda7d2f109185b9e957729bdf7"
+    },
+    {
+      "path": "splits/phase8_gsr_valid_seed20260926.json",
+      "bytes": 1063,
+      "sha256": "db3ac2631678b41c25111f2eb4ed3569d2e2383c9ef9b71863b3e15519d66a15"
+    },
+    {
+      "path": "splits/3dsp_internal_holdout_seed20260926.json",
+      "bytes": 3734,
+      "sha256": "00cfa9c446b599db66e24f016e1ff25cb395dd67e10fdd5b66b4aef0029eec54"
     },
     {
       "path": "run_stage3.py",
@@ -156,8 +181,43 @@
     },
     {
       "path": "tests/test_3dsp_adapter.py",
-      "bytes": 857,
-      "sha256": "3443ba8f56edcc727bcb3d3e417084ff75a36429902c6231acf315b99500f770"
+      "bytes": 3471,
+      "sha256": "92f389bfbc531432146e301611c5cb5b37e75ea43bdc1462b3ef6122bd919e11"
+    },
+    {
+      "path": "tests/test_phase8_pseudo_labels.py",
+      "bytes": 5101,
+      "sha256": "3a959f1961480aa218b3e6e79d2dca29e65442775b61efe31ed801b640e01238"
+    },
+    {
+      "path": "tools/phase8_prepare_annotation_tasks.py",
+      "bytes": 6843,
+      "sha256": "1fc08c01bc7c42596a607b1735129010545ae5e26d16be6ff53e4a11949b0457"
+    },
+    {
+      "path": "tools/phase8_preannotate_tasks.py",
+      "bytes": 2858,
+      "sha256": "d7e8a1666d9933c70e4dcb3710d79ea84ac4f073835ec0acee831a684e6557c1"
+    },
+    {
+      "path": "tools/phase8_validate_annotations.py",
+      "bytes": 3351,
+      "sha256": "43a4d4b15f3a535d29111f6ee6c07a95ea86bd167921c5f86cf20e88de1b955e"
+    },
+    {
+      "path": "tools/phase8_build_pseudo_labels.py",
+      "bytes": 4651,
+      "sha256": "ddfd13b23defdb07e7814ebf83b384e557babedc573dbaf2eedb2c83060d0ee9"
+    },
+    {
+      "path": "tools/phase8_export_pseudo_coco.py",
+      "bytes": 4088,
+      "sha256": "6d5ffef5a72b4b871cc2fb0e93ab2405cb71376195c68698d45635470bb2946b"
+    },
+    {
+      "path": "tools/phase9_make_shot_manifest.py",
+      "bytes": 1949,
+      "sha256": "8c49f0006ff7516ebe6ba1aaf5bce88f1dff8ee91689feed8946ba379e33f307"
     },
     {
       "path": "tests/test_coco_export.py",
@@ -211,7 +271,9 @@
     }
   ],
   "validation": {
-    "pytest": "21 passed",
+    "pytest": "35 passed",
+    "phase9_final_integration": "PASS with limits; internal shot holdout and immutable Stage-2 contract smoke passed",
+    "phase7_model_backend_ablation": "completed comparative RTMW-X evaluation; RTMW-L retained as production default",
     "real_legacy_stage2_contract_smoke": "passed; 10/10 t0 cache poses structurally accepted; not GT accuracy"
   },
   "third_party_bundled": false,

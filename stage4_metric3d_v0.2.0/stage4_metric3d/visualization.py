@@ -8,6 +8,8 @@ from .pitch_draw import draw_metric_pitch
 
 
 def save_topdown_selected_frame(state: Mapping[str, object], output_path: str | Path) -> Path:
+    import matplotlib
+    matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
 
     path = Path(output_path).expanduser().resolve()

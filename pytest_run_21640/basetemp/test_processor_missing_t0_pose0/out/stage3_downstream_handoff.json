@@ -1,0 +1,13 @@
+{
+  "schema_version": "stage3-downstream-handoff-1.0",
+  "tracked_pose_2d_state": "D:\\GitHub\\NCKH\\pytest_run_21640\\basetemp\\test_processor_missing_t0_pose0\\out\\tracked_pose_2d_state.json",
+  "selected_frame": 10,
+  "coordinate_space": "RAW_DISTORTED_PIXEL",
+  "keypoint_schema": "COCO_WHOLEBODY_133",
+  "valid_track_ids": [],
+  "degraded_track_ids": [],
+  "rejected_track_ids": [
+    "track_001"
+  ],
+  "note": "Downstream stages must preserve raw image coordinates and must not interpret Stage-3 anatomy as IFAB legal-body semantics."
+}

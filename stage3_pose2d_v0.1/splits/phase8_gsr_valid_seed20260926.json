@@ -1,0 +1,14 @@
+{
+  "schema_version": "stage3-phase8-sequence-split-1.0",
+  "source_dataset": "SoccerNet-GSR",
+  "source_split": "valid",
+  "seed": 20260926,
+  "unit": "sequence_id",
+  "ratios": {"train": 0.70, "validation": 0.15, "test": 0.15},
+  "sequence_splits": {
+    "train": ["SNGS-028", "SNGS-047", "SNGS-059", "SNGS-049", "SNGS-091", "SNGS-029", "SNGS-034", "SNGS-090", "SNGS-089", "SNGS-081", "SNGS-027", "SNGS-045", "SNGS-087", "SNGS-054", "SNGS-094", "SNGS-051", "SNGS-078", "SNGS-095", "SNGS-025", "SNGS-035", "SNGS-056", "SNGS-080", "SNGS-096", "SNGS-084", "SNGS-039", "SNGS-043", "SNGS-052", "SNGS-040", "SNGS-053", "SNGS-042", "SNGS-031", "SNGS-024", "SNGS-026", "SNGS-088", "SNGS-085", "SNGS-036", "SNGS-033", "SNGS-093", "SNGS-086", "SNGS-032", "SNGS-044"],
+    "validation": ["SNGS-050", "SNGS-021", "SNGS-082", "SNGS-058", "SNGS-046", "SNGS-041", "SNGS-083", "SNGS-030", "SNGS-022"],
+    "test": ["SNGS-055", "SNGS-092", "SNGS-023", "SNGS-038", "SNGS-048", "SNGS-037", "SNGS-057", "SNGS-079"]
+  },
+  "annotation_status": "PENDING_HUMAN_WHOLEBODY133_REVIEW"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "stage4-phase0-input-manifest-1.0",
+  "paths": {
+    "stage3_state": "../../stage3_pose2d_v0.1/runs/stage3_real_1920/tracked_pose_2d_state.json",
+    "stage1_camera_dir": "../../stage_1_camera_v12/outputs/temporal_v13/batch_video/shot_ptz/optimized_camera_states",
+    "source_video": "../../stage_1_camera_v12/download.mp4",
+    "frames_dir": null,
+    "sam3d_cache": "../runs/stage4_v051_frame104/sam3d_native_frame104.npz",
+    "refined_output": "../runs/stage4_v051_frame104/sam3d-pitch-refined/world_grounded_pose_state.json",
+    "direct_output": "../runs/stage4_v051_frame104/sam3d-direct/world_grounded_pose_state.json",
+    "sam3d_checkpoint": "../../pretrained_models/sam3d_body/model.ckpt",
+    "mhr_model": "../../pretrained_models/sam3d_body/assets/mhr_model.pt",
+    "sam3d_repository": "../../third_party/sam-3d-body"
+  }
+}
