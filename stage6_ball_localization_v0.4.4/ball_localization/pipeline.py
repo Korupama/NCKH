@@ -27,6 +27,17 @@ def _infer_yolo_candidates(
     progress_every: int = 10,
 ) -> Dict[int, list]:
     start, end = int(replay["window_start"]), int(replay["window_end"])
+    if Path(replay["video_path"]).suffix.lower() in {'.png', '.jpg', '.jpeg', '.bmp', '.webp'}:
+        if start != end or start != int(replay['selected_frame']):
+            raise ValueError('A still image must describe exactly one selected frame')
+        image = cv2.imread(str(replay['video_path']))
+        if image is None:
+            raise RuntimeError(f"Cannot decode image: {replay['video_path']}")
+        if image.shape[:2] != (int(replay['image_height']), int(replay['image_width'])):
+            raise ValueError('Image dimensions do not match replay context')
+        return {start: apply_pitch_prior(provider.detect(image, start),
+                    camera_state_for_frame(stage1_root, start),
+                    margin_m=pitch_margin_m, far_prior=pitch_far_prior)}
     cap = cv2.VideoCapture(str(replay["video_path"]))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {replay['video_path']}")
@@ -326,10 +337,17 @@ def run_stage6(
                 apply_pitch_prior(rows, camera_state_for_frame(stage1_root, fi), margin_m=pitch_margin_m, far_prior=pitch_far_prior)
             except FileNotFoundError:
                 pass
-    elif provider_kind in {"yolo", "fusion"}:
+    elif provider_kind in {"yolo", "fusion", "yolo-first"}:
         if weights is None:
             raise ValueError("weights required for YOLO provider")
-        replay = load_replay_context_from_stage1(stage1_root, video_path)
+        if provider_kind == 'yolo-first':
+            if stage2_entity_tracks is None:
+                raise ValueError('yolo-first requires stage2_entity_tracks')
+            replay, auxiliary = load_stage2_candidates(stage2_entity_tracks)
+            if video_path is not None and Path(video_path).resolve() != Path(replay['video_path']).resolve():
+                raise ValueError('Replay mismatch: video_path')
+        else:
+            replay = load_replay_context_from_stage1(stage1_root, video_path)
         provider = SoccerNetV3DYOLOProvider(weights, conf_floor=conf_floor, top_k=top_k, imgsz=imgsz, device=device)
         candidates = _infer_yolo_candidates(
             replay,
@@ -340,6 +358,14 @@ def run_stage6(
             progress_every=progress_every,
         )
         detector_info = provider.info()
+        if provider_kind == 'yolo-first':
+            from .providers.fusion import prefer_primary_candidates
+            for fi, rows in auxiliary.items():
+                apply_pitch_prior(rows, camera_state_for_frame(stage1_root, fi),
+                                  margin_m=pitch_margin_m, far_prior=pitch_far_prior)
+            candidates, selection = prefer_primary_candidates(candidates, auxiliary)
+            detector_info = {'name': 'yolo-first', 'primary': detector_info,
+                             'auxiliary_source': str(stage2_entity_tracks), **selection}
         if provider_kind == "fusion":
             from .contact import validate_replay
             from .providers.fusion import fuse_candidates
@@ -353,7 +379,7 @@ def run_stage6(
             candidates, fusion_counts = fuse_candidates(candidates, auxiliary)
             detector_info = {'name':'fusion','primary':detector_info,'auxiliary_source':str(stage2_entity_tracks),'counts':fusion_counts}
     else:
-        raise ValueError("provider_kind must be yolo or stage2-sst")
+        raise ValueError("provider_kind must be yolo, stage2-sst, fusion or yolo-first")
 
     if str(replay.get("coordinate_space")) != "RAW_DISTORTED_PIXEL":
         raise ValueError("RAW_DISTORTED_PIXEL required")

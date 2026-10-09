@@ -204,6 +204,7 @@ def run_stage3(
     handoff: str | Path | None = None,
     output_dir: str | Path,
     config: Optional[Stage3Config] = None,
+    render_overlay: bool = True,
 ) -> Dict[str, Any]:
     config = config or Stage3Config()
     bundle = load_stage2_bundle(stage2_dir=stage2_dir, entity_state=entity_state, rtmw_cache=rtmw_cache, handoff=handoff, strict=True)
@@ -401,7 +402,7 @@ def run_stage3(
     state["artifacts"]["downstream_handoff"] = str(handoff_path)
 
     # Optional visualization if replay video is available.
-    if video_path and Path(video_path).is_file() and selected_poses:
+    if render_overlay and video_path and Path(video_path).is_file() and selected_poses:
         try:
             from .visualization import save_selected_frame_overlay
             overlay = save_selected_frame_overlay(video_path, selected_frame, selected_poses, out / "selected_frame_pose_qa.png")

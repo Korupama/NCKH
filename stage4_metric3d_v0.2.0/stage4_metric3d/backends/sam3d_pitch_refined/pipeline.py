@@ -278,6 +278,9 @@ def run_v05(*, stage3_state: str | Path, camera_dir: str | Path, sam3d_cache: st
             correction=float(np.linalg.norm(root-ev.sam_prior_cam_m)); obs_valid=all(np.isfinite(root))
             q={
                 "root_refinement":"VALID" if obs_valid and (not refine or (rr.success and not rr.fallback_to_initial)) else "DEGRADED",
+                "source_pose2d_status":ev.observation.pose_status,
+                "optimizer_fallback_to_initial":bool(rr.fallback_to_initial) if rr is not None else False,
+                "optimizer_bounds_active_count":rr.bounds_active_count if rr is not None else 0,
                 "ground_anchor": None if ev.ground_anchor is None else {"name":ev.ground_anchor.canonical_name,"usable":ev.ground_anchor.usable,"fallback":ev.ground_anchor.fallback,"distance_to_sam_prior_m":ev.ground_anchor.distance_to_sam_prior_m},
                 "ground_contact_residual_cm":ground_res,
                 "reprojection_p95_px":None if not reproj_errors else float(np.percentile(reproj_errors,95)),

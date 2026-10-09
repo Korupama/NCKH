@@ -20,6 +20,9 @@ class Stage5Config:
     min_pixel_saturation: int = 18
     min_pixel_value: int = 24
     max_pixel_value: int = 245
+    include_neutral_kit_pixels: bool = False
+    dark_kit_max_value: int = 80
+    allow_region_consensus_recovery: bool = False
     outlier_mad_factor: float = 4.5
     min_cluster_margin: float = 0.08
     goalkeeper_min_margin: float = 0.10
@@ -44,6 +47,8 @@ class Stage5Config:
             raise ValueError("min_valid_torso_frames must be >= 1")
         if self.min_valid_lower_body_frames < 1:
             raise ValueError("min_valid_lower_body_frames must be >= 1")
+        if not 0 <= self.dark_kit_max_value <= 255:
+            raise ValueError("dark_kit_max_value must be in [0,255]")
         if not (0 <= self.green_hue_min < self.green_hue_max <= 179):
             raise ValueError("green hue range must be in OpenCV HSV hue space [0,179]")
         if self.torso_feature_weight < 0 or self.lower_feature_weight < 0:

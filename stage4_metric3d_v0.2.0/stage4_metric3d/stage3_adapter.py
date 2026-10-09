@@ -116,6 +116,10 @@ def load_stage3_state(path: str | Path) -> Stage3State:
             uv, states, scores = _parse_keypoints(obs.get("keypoints_133") or [])
             weights = np.asarray([STATE_WEIGHTS.get(s, 0.2) for s in states], dtype=np.float64)
             weights[~np.isfinite(uv).all(axis=1)] = 0.0
+            # Preserve the raw pose for auditing, but never fit 3D or choose a
+            # ground contact using a pose rejected by Stage-3 ownership QA.
+            if str(obs.get("pose_status", "MISSING")) in {"REJECTED", "MISSING"}:
+                weights[:] = 0.0
             bbox = np.asarray(obs.get("source_bbox_xyxy") or [np.nan] * 4, dtype=np.float64)
             obs_out.append(PoseObservation2D(
                 track_id=tid,

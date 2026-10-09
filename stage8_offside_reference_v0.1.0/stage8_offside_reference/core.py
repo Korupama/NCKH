@@ -113,6 +113,8 @@ def build_offside_reference(
                     reasons.append("GOALKEEPER_TEAM_ASSUMPTION_DEFENDER_REFERENCE_ONLY")
                 if pre.get("stage7", {}).get("tentative_spatial_contact_only"):
                     reasons.append("STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY")
+                if pre.get("stage7", {}).get("attack_direction_from_out_of_bounds_centre_ray"):
+                    reasons.append("STAGE7_ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY")
                 if allow_partial_opponents and (len(usable) < len(s7["opponents"])):
                     reasons.append("OPPONENT_GEOMETRY_PARTIAL_DEGRADED")
                 if allow_ball_fallback and ball is None and not defender_only:

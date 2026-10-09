@@ -5,6 +5,56 @@ from typing import Any, Dict, Iterable, Optional, Sequence
 import numpy as np
 
 
+def build_camera_with_candidate_recovery(calib, factory, selected_result, *,
+                                        frame_index, image_width, image_height):
+    """Keep the upstream choice unless physically invalid; retry its own grid.
+
+    Only same-image PnLCalib correspondences are used. No parameter clamping,
+    previous-frame camera, or relaxed quality threshold is involved.
+    """
+    from .pipeline import build_camera_state_from_pnlcalib
+
+    def build(result):
+        return build_camera_state_from_pnlcalib(
+            result, frame_index=frame_index,
+            image_width=image_width, image_height=image_height)
+
+    original = build(selected_result)
+    if original.status != 'INVALID':
+        return original
+    attempts, usable = [], []
+    for mode in ('full', 'ground_plane', 'main'):
+        for ransac in (0, 5, 10, 15, 25, 50):
+            row = {'mode': mode, 'use_ransac': ransac}
+            try:
+                candidate = clone_calibration_for_candidate_diagnostics(calib, factory)
+                params, error = candidate.get_cam_params(
+                    mode=mode, use_ransac=ransac, refine=False, refine_w_lines=False)
+                error = _finite_float(error)
+                if params is None or error is None:
+                    row['status'] = 'UNSOLVED'
+                else:
+                    state = build({'mode': mode, 'use_ransac': ransac,
+                                   'cam_params': deepcopy(params), 'rep_err': error,
+                                   'calib_plane': candidate.ord_pts[0]})
+                    row.update(status=state.status.value, rep_err_px=error,
+                               invalid_reasons=state.diagnostics['quality_gate']['invalid_reasons'])
+                    if state.status != 'INVALID':
+                        usable.append((error, mode, ransac, state))
+            except Exception as exc:
+                row.update(status='ERROR', error=f'{type(exc).__name__}: {exc}')
+            attempts.append(row)
+    chosen = min(usable, key=lambda x: x[:3])[3] if usable else original
+    chosen.diagnostics['candidate_recovery'] = {
+        'policy': 'SAME_FRAME_PHYSICALLY_VALID_PNLCALIB_CANDIDATE',
+        'used': bool(usable),
+        'original_evidence': original.evidence,
+        'original_invalid_reasons': original.diagnostics.get('quality_gate', {}).get('invalid_reasons', []),
+        'attempts': attempts,
+    }
+    return chosen
+
+
 def collect_pnlcalib_candidates(
     calib,
     *,

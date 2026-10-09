@@ -19,12 +19,18 @@ def main():
     ap.add_argument("--max-samples", type=int, default=30)
     ap.add_argument("--min-torso-frames", type=int, default=3)
     ap.add_argument("--min-lower-frames", type=int, default=2)
+    ap.add_argument("--include-neutral-kit-pixels", action="store_true",
+                    help="Retain dark/achromatic kit pixels inside body regions")
+    ap.add_argument("--allow-region-consensus-recovery", action="store_true",
+                    help="Recover colour outliers using lower-body support and torso agreement")
     args = ap.parse_args()
     cfg = Stage5Config(
         sample_every_n_frames=args.sample_every,
         max_samples_per_track=args.max_samples,
         min_valid_torso_frames=args.min_torso_frames,
         min_valid_lower_body_frames=args.min_lower_frames,
+        include_neutral_kit_pixels=args.include_neutral_kit_pixels,
+        allow_region_consensus_recovery=args.allow_region_consensus_recovery,
     )
     if args.method != "legacy-v0":
         from stage5_team_affiliation.residual_replay import run_residual_replay

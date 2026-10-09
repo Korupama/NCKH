@@ -1,0 +1,19 @@
+{
+  "settings_version": "0.0.8",
+  "datasets_dir": "D:\\datasets",
+  "weights_dir": "D:\\NCKH\\weights",
+  "runs_dir": "D:\\NCKH\\runs",
+  "uuid": "a811ecaa67566167165bb4ab86f7da43a2cdf081d52d756debf5f0225c16efb9",
+  "sync": true,
+  "api_key": "",
+  "openai_api_key": "",
+  "clearml": true,
+  "comet": true,
+  "dvc": true,
+  "mlflow": true,
+  "raytune": true,
+  "tensorboard": false,
+  "wandb": false,
+  "vscode_msg": true,
+  "openvino_msg": true
+}

@@ -17,6 +17,37 @@ const presets = [[1],[2],[3],[4],[2,5],[6],[2,5,6,7]];
 function showError(message) { $('error').hidden = false; $('error').textContent = message; }
 function color(row) { return row.toucher ? '#f8eb50' : row.team_id === 0 ? '#47ade1' : row.team_id === 1 ? '#faa079' : '#a9b2bc'; }
 function group(row) { return row.toucher ? 'Chạm bóng' : ({attackers:'Tấn công',opponents:'Đối phương',referees_excluded:'Trọng tài',unknown_team_excluded:'Chưa rõ đội',inactive_excluded:'Không hoạt động'})[row.group] || (row.active ? 'Chưa xác định' : 'Không có ở frame này'); }
+function poseQualityLabel(status, available) {
+  return ({VALID:'Đạt', DEGRADED:'Cần xem lại', REJECTED:'Bị loại', MISSING:'Thiếu'})[status] || (available ? 'Có · chưa đánh giá' : 'Thiếu');
+}
+function poseQualityClass(status, available) {
+  return status === 'REJECTED' ? 'pose-rejected' : status === 'DEGRADED' ? 'pose-review' : status === 'VALID' ? 'ok' : 'missing';
+}
+function poseQualityDetail(row) {
+  const reasons = {
+    likely_cross_person:'Skeleton có thể thuộc người bên cạnh',
+    body17_overlaps_neighbor_more_than_owner:'Skeleton khớp người bên cạnh hơn người đang chọn',
+    person_bbox_too_small:'Người quá nhỏ trong ảnh',
+    crop_border_truncation_high:'Vùng cắt vượt mép ảnh',
+    crop_overlaps_neighbor:'Vùng cắt chồng lấn người khác',
+    body17_support_below_reject_floor:'Ít khớp nằm trong vùng của người này',
+    body17_support_below_valid_threshold:'Các khớp chưa khớp chắc chắn với vùng của người này',
+    body_center_offset_extreme:'Tâm skeleton lệch xa người được chọn',
+    body_center_offset_above_valid_threshold:'Tâm skeleton lệch khỏi vùng người',
+    body_below_reject_floor:'Thiếu nhiều điểm cơ thể', core_below_reject_floor:'Thiếu nhiều điểm thân/chân',
+    body_below_valid_threshold:'Thiếu điểm cơ thể', core_below_valid_threshold:'Thiếu điểm thân/chân',
+    feet_below_valid_threshold:'Thiếu điểm bàn chân', inside_fraction_below_valid_threshold:'Nhiều khớp nằm ngoài vùng người',
+    geometry_sanity_failed:'Hình dạng skeleton bất thường',
+  };
+  const codes = [...(row.crop2d?.status_reasons || []), ...(row.quality2d?.status_reasons || [])];
+  const notes = [...new Set(codes.map(code=>reasons[code]).filter(Boolean))];
+  const q = row.quality3d || {};
+  if (q.optimizer_fallback_to_initial) notes.push('Hiệu chỉnh 3D thất bại; đang dùng vị trí khởi tạo');
+  else if (q.root_refinement === 'DEGRADED') notes.push('Hiệu chỉnh vị trí 3D chưa đạt');
+  if (q.source_pose2d_status === 'REJECTED') notes.push('Pose 2D bị loại không được dùng để hiệu chỉnh 3D');
+  if (q.reprojection_invalid_joint_count > 0) notes.push(q.reprojection_invalid_joint_count + ' khớp không chiếu lại được');
+  return notes.length ? ' · ' + notes.join(' · ') : '';
+}
 function refreshFrame() {
   const params = new URLSearchParams({overlay:raw?'0':'1',labels:$('labels').checked?'1':'0',revision:frameRevision});
   for (const id of selectedTracks) params.append('track', id);
@@ -60,10 +91,10 @@ function updateTrackSelection() {
   const row=state.tracks.find(r=>r.track_id===focus);
   if(!row) $('track-detail').textContent='Bấm từng ID để chọn hoặc bỏ chọn nhiều cầu thủ.';
   else {
-    const q=row.quality3d;
+    const q=row.quality3d || {};
     const extra = q.reprojection_p95_px!=null ? ` · Sai lệch chiếu lại P95: ${q.reprojection_p95_px.toFixed(1)} px` : '';
     const ground = q.ground_contact_residual_cm!=null ? ` · Lệch tiếp xúc sân: ${q.ground_contact_residual_cm.toFixed(1)} cm` : '';
-    $('track-detail').textContent=`${row.track_id} · ${group(row)} · 2D: ${row.pose2d_status} · 3D: ${row.pose3d_status}${extra}${ground}`;
+    $('track-detail').textContent=`${row.track_id} · ${group(row)} · 2D: ${poseQualityLabel(row.pose2d_status, row.pose2d.length)} · 3D: ${poseQualityLabel(q.root_refinement || row.pose3d_status, row.root_world_m)}${extra}${ground}${poseQualityDetail(row)}`;
     if (state.reference?.reference_only && row.offside_delta_q_m != null) {
       const delta = row.offside_delta_q_m;
       $('track-detail').textContent += ` · ${delta > 1e-9 ? 'Vượt' : 'Sau/ngang'} vạch hậu vệ ${Math.abs(delta).toFixed(2)} m · ${row.offside_label || 'Chưa rõ'} · Chưa xét bóng`;
@@ -136,7 +167,7 @@ async function init() {
     const inactive=state.tracks.filter(r=>!r.active).length;
     $('quality-note').textContent=`Camera: ${state.stages[0].status}. ${missing} người đang quan sát thiếu pose 3D; ${inactive} track khác không có quan sát tại frame này. Vị trí bóng: ${state.ball.status}. Chưa đối chiếu độ chính xác với ground truth. Không tính đường hay kết luận việt vị.`;
     $('track-count').textContent=state.tracks.length+' track trong dữ liệu';
-    $('tracks').innerHTML=state.tracks.map(row=>`<tr data-row="${escapeHtml(row.track_id)}"><td><button data-track="${escapeHtml(row.track_id)}">${escapeHtml(row.track_id.replace('track_','#'))}</button></td><td><span class="dot" style="background:${color(row)}"></span>${row.team_id==null?'—':'Đội '+escapeHtml(row.team_id)}${row.role==='goalkeeper'?' · GK':''}</td><td class="${row.pose2d.length?'ok':'missing'}">${row.pose2d.length?'Có':'Thiếu'}</td><td class="${row.root_world_m?'ok':'missing'}">${row.root_world_m?'Có':'Thiếu'}</td><td><span class="badge">${escapeHtml(group(row))}</span></td></tr>`).join('');
+    $('tracks').innerHTML=state.tracks.map(row=>`<tr data-row="${escapeHtml(row.track_id)}"><td><button data-track="${escapeHtml(row.track_id)}">${escapeHtml(row.track_id.replace('track_','#'))}</button></td><td><span class="dot" style="background:${color(row)}"></span>${row.team_id==null?'—':'Đội '+escapeHtml(row.team_id)}${row.role==='goalkeeper'?' · GK':''}</td><td class="${poseQualityClass(row.pose2d_status, row.pose2d.length)}">${escapeHtml(poseQualityLabel(row.pose2d_status, row.pose2d.length))}</td><td class="${poseQualityClass(row.quality3d?.root_refinement || row.pose3d_status, row.root_world_m)}">${escapeHtml(poseQualityLabel(row.quality3d?.root_refinement || row.pose3d_status, row.root_world_m))}</td><td><span class="badge">${escapeHtml(group(row))}</span></td></tr>`).join('');
     document.querySelectorAll('[data-stage]').forEach(el=>el.addEventListener('click',()=>selectStage(Number(el.dataset.stage))));
     document.querySelectorAll('[data-layer]').forEach(el=>el.addEventListener('click',()=>{const id=Number(el.dataset.layer);layers.has(id)?layers.delete(id):layers.add(id);raw=false;refreshFrame();}));
     document.querySelectorAll('[data-track]').forEach(el=>el.addEventListener('click',()=>selectTrack(el.dataset.track)));

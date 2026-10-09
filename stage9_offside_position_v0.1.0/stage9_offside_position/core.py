@@ -54,6 +54,12 @@ def build_offside_position_state(
 
     ref_input = stage8_raw if best_effort else {"reference": stage8_raw.get("reference")}
     ref = reference_from_stage8_best_effort(ref_input, s)
+    context_reasons = set(stage7_raw.get('reasons') or [])
+    tentative_reasons_allowed = bool(
+        'CONTACT_TENTATIVE_SPATIAL_ONLY' in context_reasons
+        and context_reasons <= {'CONTACT_TENTATIVE_SPATIAL_ONLY', 'ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY'}
+    )
+    reference_reasons = set(stage8_raw.get('reasons') or [])
     # Explicit demo policy: missing ball/contact does not block a measured
     # second-last-defender reference. Other unresolved geometry still blocks it.
     defender_only = bool(
@@ -70,7 +76,7 @@ def build_offside_position_state(
             s7['status'] == 'DEGRADED'
             and ('ATTACKING_TEAM_INFERRED_FROM_GOALKEEPER' in (stage7_raw.get('reasons') or [])
                  or (allow_tentative_context
-                     and set(stage7_raw.get('reasons') or []) == {'CONTACT_TENTATIVE_SPATIAL_ONLY'}
+                     and tentative_reasons_allowed
                      and (stage7_raw.get('toucher') or {}).get('evidence_level') == 'TENTATIVE_SPATIAL_ONLY'))
         ))
         and s7['s'] == s8['s'] and s in (-1, 1)
@@ -82,8 +88,9 @@ def build_offside_position_state(
     tentative_context = bool(
         allow_tentative_context
         and s7['status'] == s8['status'] == 'DEGRADED'
-        and set(stage7_raw.get('reasons') or []) == {'CONTACT_TENTATIVE_SPATIAL_ONLY'}
-        and set(stage8_raw.get('reasons') or []) == {'STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY'}
+        and tentative_reasons_allowed
+        and 'STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY' in reference_reasons
+        and reference_reasons <= {'STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY', 'STAGE7_ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY'}
         and (stage7_raw.get('toucher') or {}).get('evidence_level') == 'TENTATIVE_SPATIAL_ONLY'
         and s7['toucher_track_id'] in s7['attackers']
         and s8['reference_q_m'] is not None
@@ -216,6 +223,7 @@ def build_offside_position_state(
         "classification_basis": basis,
         "allow_defender_only": bool(allow_defender_only),
         "allow_tentative_context": bool(allow_tentative_context),
+        "attack_direction_from_out_of_bounds_centre_ray": 'ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY' in context_reasons,
         "ball_used_for_reference": not defender_only,
         "upstream_status": {"stage7": s7["status"], "stage8": s8["status"]},
         "frame_alignment": {"stage4": s4["frame_index"], "stage7": s7["frame_index"], "stage8": s8["frame_index"]},

@@ -7,7 +7,7 @@ import json
 import numpy as np
 
 from .adapters import load_stage2_state, load_stage3_state, observation_by_frame, validate_stage2_stage3_alignment
-from .clustering import fit_two_teams
+from .clustering import fit_two_teams, recover_region_consensus
 from .config import Stage5Config
 from .features import aggregate_features, extract_color_feature, fuse_region_features
 from .goalkeeper import assign_goalkeeper, lower_body_centroids_by_team
@@ -246,8 +246,15 @@ def run_stage5(
         and rec["appearance"]["valid_torso_frames"] >= config.min_valid_torso_frames
     }
     cluster_error = None
+    region_recovery = {}
     try:
         cluster = fit_two_teams(outfield, config)
+        if config.allow_region_consensus_recovery:
+            eligible_lower = {tid: vec for tid, vec in lower_features.items()
+                              if per_track[tid]['appearance']['valid_lower_body_frames'] >= config.min_valid_lower_body_frames}
+            region_recovery = recover_region_consensus(cluster, torso_features, eligible_lower, config)
+            for tid in region_recovery:
+                cluster.status[tid] = 'VALID'
         team_lower_centroids = lower_body_centroids_by_team(cluster.labels, cluster.status, lower_features)
     except ValueError as exc:
         cluster = None
@@ -294,6 +301,9 @@ def run_stage5(
                     "cluster_distances": cluster.distances[tid],
                     "cluster_margin": cluster.margins[tid],
                 })
+                if tid in region_recovery:
+                    rec['assignment_method'] = 'OUTFIELD_LOWER_BODY_SUPPORTED_TORSO_AGREEMENT'
+                    rec['region_recovery'] = region_recovery[tid]
         elif role == "goalkeeper":
             result = assign_goalkeeper(
                 lower_features.get(tid),
@@ -378,6 +388,7 @@ def run_stage5(
             "stage2_stage3_alignment": alignment,
             "stage4_dependency": stage4_path is not None,
             "attacking_team_applied": False,
+            "region_consensus_recovery": region_recovery,
             "attack_direction_applied": False,
             "offside_semantics_applied": False,
         },

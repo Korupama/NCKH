@@ -46,9 +46,12 @@ def build_preflight(
     elif len(set(known_frames)) != 1:
         blockers.append("FRAME_INDEX_MISMATCH")
 
+    stage7_reasons = set(stage7.get("reasons") or [])
+    direction_outside_pitch = "ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY" in stage7_reasons
     stage7_tentative_only = bool(
         s7["status"] == "DEGRADED"
-        and set(stage7.get("reasons") or []) == {"CONTACT_TENTATIVE_SPATIAL_ONLY"}
+        and "CONTACT_TENTATIVE_SPATIAL_ONLY" in stage7_reasons
+        and stage7_reasons <= {"CONTACT_TENTATIVE_SPATIAL_ONLY", "ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY"}
         and ((stage7.get("toucher") or {}).get("evidence_level") == "TENTATIVE_SPATIAL_ONLY")
     )
     goalkeeper_reference_only = bool(
@@ -62,6 +65,8 @@ def build_preflight(
         warnings.append("STAGE7_CONTACT_TENTATIVE_SPATIAL_ONLY")
     elif s7["status"] != "VALID":
         blockers.append("STAGE7_CONTEXT_UNRESOLVED")
+    if direction_outside_pitch:
+        warnings.append("STAGE7_ATTACK_DIRECTION_FROM_OUT_OF_BOUNDS_CENTRE_RAY")
     if s7["s"] not in (-1, 1):
         blockers.append("ATTACK_DIRECTION_INVALID")
     if not _coord_ok(s4["coordinate_frame"]):
@@ -147,6 +152,7 @@ def build_preflight(
             "opponents": opponents,
             "tentative_spatial_contact_only": stage7_tentative_only,
             "goalkeeper_reference_only": goalkeeper_reference_only,
+            "attack_direction_from_out_of_bounds_centre_ray": direction_outside_pitch,
         },
         "stage4": {
             "schema_version": s4["schema_version"],

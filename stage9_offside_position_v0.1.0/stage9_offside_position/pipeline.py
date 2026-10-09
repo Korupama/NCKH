@@ -101,12 +101,16 @@ def _observation(track, frame):
 
 
 def _points2d(obs):
+    if obs.get('pose_status') in ('REJECTED', 'MISSING'):
+        return []
     result = []
     for p in obs.get('keypoints_133', [])[:23]:
-        valid = p.get('state') not in ('INVALID', 'MISSING', 'OUT_OF_FRAME', 'LOW_CONFIDENCE')
+        valid = p.get('state') not in ('INVALID', 'MISSING', 'OUT_OF_FRAME', 'LOW_CONFIDENCE',
+                                      'GEOMETRIC_OUTLIER', 'TEMPORAL_OUTLIER', 'LEFT_RIGHT_SUSPECT',
+                                      'TEMPORAL_IMPUTED', 'LOW_MODEL_EVIDENCE')
         xy = [p.get('x'), p.get('y')]
         result.append(xy if valid and all(isinstance(v, (int, float)) and np.isfinite(v) for v in xy) else None)
-    return result
+    return result if any(p is not None for p in result) else []
 
 
 def _project(camera, xyz):
@@ -171,6 +175,8 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
                      'active': bool(o2 or o3 or o4), 'bbox': o2.get('bbox_xyxy'),
                      'pose_bbox': o3.get('source_bbox_xyxy', o3.get('bbox_xyxy')),
                      'pose2d': _points2d(o3), 'pose2d_status': o3.get('pose_status', 'MISSING'),
+                     'quality2d': o3.get('qa', {}), 'crop2d': o3.get('crop_diagnostics', {}),
+                     'model2d': o3.get('model_diagnostics', {}),
                      'root_world_m': finite_xyz(o4.get('root_world_m')), 'joints_world': world,
                      'projected3d': projected, 'pose3d_status': t4.get('selected_frame_status', 'MISSING'),
                      'quality3d': o4.get('quality', {}), 'team_id': teams.get(tid, {}).get('team_id'),
@@ -195,6 +201,11 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
         projected_reference = _project(s1, [[float(reference_x), -half_width, 0.0], [float(reference_x), half_width, 0.0]])
     n2 = sum(bool(r['bbox']) for r in rows)
     n3 = sum(bool(r['pose2d']) for r in rows)
+    qa3_counts = {label: sum(r['pose2d_status'] == label for r in rows)
+                  for label in ('VALID', 'DEGRADED', 'REJECTED')}
+    qa3_status = ('DEGRADED' if qa3_counts['DEGRADED'] or qa3_counts['REJECTED'] else 'VALID') if any(qa3_counts.values()) else ('AVAILABLE' if n3 else 'MISSING')
+    if qa3_counts['REJECTED'] and not n3:
+        qa3_status = 'REJECTED'
     n4 = sum(r['root_world_m'] is not None for r in rows)
     n5 = sum(r['active'] and r['team_id'] is not None for r in rows)
     n9_off = sum(r.get('offside_label') == 'OFFSIDE_POSITION' for r in rows)
@@ -204,19 +215,21 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
               'Nhận diện đội', 'Bóng & tiếp xúc', 'Ngữ cảnh trận đấu', 'Mốc tham chiếu việt vị',
               'Phân loại vị trí việt vị']
     summaries = [f"Mặt sân: {caps.get('ground_geometry', {}).get('status', 'UNKNOWN')}",
-                 f'{n2} người tại frame {frame_index}', f'{n3} bộ keypoint tại frame này',
+                 f'{n2} người tại frame {frame_index}',
+                 (f"{qa3_counts['VALID']} đạt · {qa3_counts['DEGRADED']} cần xem lại · {qa3_counts['REJECTED']} bị loại" if any(qa3_counts.values()) else f'{n3} bộ keypoint tại frame này'),
                  f'{n4}/{len(s4.get("tracks", []))} track có pose 3D', f'{n5} người được gán đội',
                  f"Chạm bóng: {(ball.get('contact') or {}).get('track_id', 'chưa rõ')}",
                  f"{len(sets.get('attackers', []))} tấn công · {len(sets.get('opponents', []))} đối phương",
                  (("Vạch hậu vệ tham khảo · " if (display_reference or {}).get('reference_only') else "") + f"X = {reference_x:.3f} m" if reference_x is not None else 'Chưa xác định được mốc tham chiếu'),
                  f'{n9_off} vị trí việt vị · {n9_on} onside']
     statuses = [s1.get('status', 'UNKNOWN'), s2.get('status', 'UNKNOWN'),
-                'AVAILABLE' if n3 else 'MISSING', 'PARTIAL' if n4 < len(s4.get('tracks', [])) else 'AVAILABLE',
+                qa3_status, 'PARTIAL' if n4 < len(s4.get('tracks', [])) else 'AVAILABLE',
                 'AVAILABLE' if n5 else 'MISSING', ball.get('status', 'UNKNOWN'), s7.get('status', 'UNKNOWN'), s8.get('status', 'UNKNOWN'),
                 s9.get('status', 'UNKNOWN')]
     details = [dict(capabilities=caps, camera=s1.get('extrinsics'), view=s1.get('view')),
                dict(status=s2.get('status'), metrics=s2.get('metrics'), scope='Metrics may cover the full tracking window'),
-               dict(acceptance_gate=s3.get('acceptance_gate'), note='Raw SimCC scores are not calibrated probabilities'),
+               dict(acceptance_gate=s3.get('acceptance_gate'), metrics=s3.get('metrics'),
+                    execution=s3.get('live_execution'), note='Raw SimCC scores are not calibrated probabilities'),
                dict(producer=s4.get('producer'), coverage=f'{n4}/{len(s4.get("tracks", []))}', note='World joints are estimates; per-track residuals are shown below'),
                dict(research_accuracy_frozen=s5.get('research_accuracy_frozen'), cluster_ids_are_arbitrary=s5.get('cluster_ids_are_arbitrary')),
                dict(status=ball.get('status'), method=ball.get('method'), contact=ball.get('contact'), localization=ball.get('localization')),

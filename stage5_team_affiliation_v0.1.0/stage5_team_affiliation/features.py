@@ -33,6 +33,18 @@ def extract_color_feature(frame_bgr: np.ndarray, polygon: np.ndarray, config: St
         & (v <= config.max_pixel_value)
         & (~green)
     )
+    if config.include_neutral_kit_pixels:
+        # Dark fabric has unstable hue (often green from pitch colour spill).
+        # Hue/saturation alone must not remove black or white kits. Restrict
+        # this recovery to the existing eroded body-region mask below.
+        neutral = ((s < config.min_pixel_saturation)
+                   | ((v <= config.dark_kit_max_value) & green)
+                   | (v < config.min_pixel_value))
+        quality |= neutral
+        hsv = hsv.copy()
+        hsv[neutral, 0] = 0
+        hsv[neutral, 1] = 0
+        h, s, v = cv2.split(hsv)
     use = ((mask > 0) & quality).astype(np.uint8) * 255
     count = int(np.count_nonzero(use))
     region_count = int(np.count_nonzero(mask))
@@ -61,6 +73,7 @@ def extract_color_feature(frame_bgr: np.ndarray, polygon: np.ndarray, config: St
         "region_pixels": region_count,
         "usable_fraction": float(count / max(1, region_count)),
         "status": "VALID",
+        "neutral_kit_pixels_enabled": config.include_neutral_kit_pixels,
         "median_hsv": [float(x) for x in np.median(pix_hsv, axis=0)],
         "median_lab": [float(x) for x in np.median(pix_lab, axis=0)],
     }

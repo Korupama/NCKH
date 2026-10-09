@@ -164,6 +164,52 @@ def fit_two_teams(track_features: Mapping[str, np.ndarray], config: Stage5Config
     )
 
 
+def recover_region_consensus(cluster, torso_features, lower_features, config):
+    """Recover fused-feature outliers only with independent region agreement.
+
+    Require three already-accepted players per team. Lower-body appearance must
+    lie inside that team's normal distance envelope; torso and fused features
+    must independently prefer the same team with sufficient margin. No spatial
+    position, contact hypothesis or attacking/defending label participates.
+    """
+    prototypes = {}
+    for region, features in [('torso', torso_features), ('lower', lower_features)]:
+        centers, limits = [], []
+        for team in (0, 1):
+            members = [features[tid] for tid, label in cluster.labels.items()
+                       if label == team and cluster.status[tid] == 'VALID' and tid in features]
+            if len(members) < 3:
+                return {}
+            x = np.asarray(members, dtype=float)
+            center = x.mean(axis=0)
+            distances = np.linalg.norm(x - center, axis=1)
+            centers.append(center)
+            limits.append(float(np.median(distances) + config.outlier_mad_factor * max(_mad(distances), .05)))
+        prototypes[region] = (np.stack(centers), limits)
+    recovered = {}
+    for tid, team in cluster.labels.items():
+        if cluster.status[tid] != 'UNKNOWN' or cluster.margins[tid] < config.min_cluster_margin:
+            continue
+        evidence = {}
+        for region, features in [('torso', torso_features), ('lower', lower_features)]:
+            if tid not in features:
+                break
+            centers, limits = prototypes[region]
+            distances = np.linalg.norm(centers - features[tid], axis=1)
+            best = int(np.argmin(distances))
+            margin = float((distances[1-best] - distances[best]) / max(distances[1-best], 1e-9))
+            if best != team or margin < config.min_cluster_margin:
+                break
+            if region == 'lower' and distances[best] > limits[best]:
+                break
+            evidence[region] = {'distances': distances.tolist(), 'margin': margin,
+                                'distance_limit': limits[best]}
+        if len(evidence) == 2:
+            recovered[tid] = {'method': 'LOWER_BODY_SUPPORTED_TORSO_AGREEMENT',
+                              'team_id': int(team), 'regions': evidence}
+    return recovered
+
+
 def assign_to_centroids(feature: np.ndarray, centroids: np.ndarray, min_margin: float = 0.1, max_distance_ratio: float = 1.35) -> Dict[str, Any]:
     feature = np.asarray(feature, dtype=np.float64)
     centroids = np.asarray(centroids, dtype=np.float64)

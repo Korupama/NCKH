@@ -17,6 +17,7 @@ pnl_inference_module.device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 from utils.utils_calib import FramebyFrameCalib
 from stage_1_camera.pipeline import build_camera_state_from_pnlcalib
+from stage_1_camera.candidates import build_camera_with_candidate_recovery
 
 # Add Stage 2 paths
 sys.path.append(r'd:\NCKH\stage2_sst_rtmw_v1.3')
@@ -56,11 +57,8 @@ def process_stage1(image_path, out_dir, device='cuda:0', frame_index=104):
             kp_threshold=0.3434, line_threshold=0.7867, pnl_refine=False
         )
         
-        if final_params_dict is None:
-            raise ValueError("PnLCalib failed to find pitch geometry in the image.")
-            
-        camera_state = build_camera_state_from_pnlcalib(
-            final_params_dict,
+        camera_state = build_camera_with_candidate_recovery(
+            cam, FramebyFrameCalib, final_params_dict,
             frame_index=frame_index,
             image_width=frame_width,
             image_height=frame_height
@@ -75,6 +73,10 @@ def process_stage1(image_path, out_dir, device='cuda:0', frame_index=104):
     with open(out_path, 'w') as f:
         json.dump(stage1_json, f, indent=2)
     print(f'[Real Inference] Saved {out_path}')
+    if camera_state.status == 'INVALID':
+        reasons = camera_state.diagnostics.get('quality_gate', {}).get('invalid_reasons', [])
+        raise RuntimeError('Stage 1 has no usable camera after same-frame candidate recovery: '
+                           + '; '.join(reasons))
 
 def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
     print('[Real Inference] Processing Stage 2 SST...')
@@ -149,117 +151,15 @@ def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
     print(f'[Real Inference] Saved {out_path}')
 
 def process_stage3(image_path, out_dir, device='cuda', frame_index=104):
-    print('[Real Inference] Processing Stage 3 RTMW...')
-    COCO_BODY_NAMES = (
-        "nose", "left_eye", "right_eye", "left_ear", "right_ear",
-        "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
-        "left_wrist", "right_wrist", "left_hip", "right_hip",
-        "left_knee", "right_knee", "left_ankle", "right_ankle",
-    )
-    COCO_FOOT_NAMES = (
-        "left_big_toe", "left_small_toe", "left_heel",
-        "right_big_toe", "right_small_toe", "right_heel",
-    )
-    WHOLEBODY_NAMES = list(
-        COCO_BODY_NAMES
-        + COCO_FOOT_NAMES
-        + tuple(f"face_{i:02d}" for i in range(68))
-        + tuple(f"left_hand_{i:02d}" for i in range(21))
-        + tuple(f"right_hand_{i:02d}" for i in range(21))
-    )
-    
-    import sys
-    stage3_path = r'd:\NCKH\stage3_pose2d_v0.1'
-    if stage3_path not in sys.path:
-        sys.path.append(stage3_path)
-    from stage3_pose2d.rtmw_onnx import RTMWOpenCVDNN
-    
-    # RTMW config
-    model_path = Path(r'd:\NCKH\weights\rtmw_l_384x288.onnx')
-    if not model_path.exists():
-        print(f"[Real Inference] Warning: RTMW model not found at {model_path}. Skipping Stage 3.")
-        return
-        
-    rtmw = RTMWOpenCVDNN(model_path=model_path, device=device)
-    
-    stage2_out = Path(out_dir) / 'stage2.json'
-    with open(stage2_out, 'r') as f:
-        stage2_data = json.load(f)
-        
-    image = cv2.imread(str(image_path))
-    tracks = []
-    
-    for track in stage2_data.get('tracks', []):
-        track_id = track.get('track_id')
-        role = track.get('role')
-        observations = track.get('observations', [])
-        if not observations:
-            continue
-            
-        obs = observations[0]
-        bbox = obs.get('bbox_xyxy')
-        
-        if role in ['player', 'goalkeeper', 'referee']:
-            pose = rtmw.infer_one(image, bbox)
-            
-            keypoints_133 = []
-            for i in range(133):
-                x, y = pose.keypoints_xy[i]
-                score = pose.scores[i]
-                state = 'VALID' if score > 0.3 else 'LOW_CONFIDENCE'
-                if score <= 0: state = 'INVALID'
-                
-                keypoints_133.append({
-                    'index': i,
-                    'name': WHOLEBODY_NAMES[i],
-                    'x': float(x),
-                    'y': float(y),
-                    'raw_model_score': float(score),
-                    'state': state
-                })
-                
-            tracks.append({
-                'track_id': track_id,
-                'upstream_role': role,
-                'upstream_identity_confidence': track.get('identity_confidence'),
-                'observations': [
-                    {
-                        'frame_index': frame_index,
-                        'source_bbox_xyxy': bbox,
-                        'keypoints_133': keypoints_133,
-                        'pose_status': 'AVAILABLE'
-                    }
-                ]
-            })
-            
-    frame_height, frame_width = image.shape[:2]
-    stage3_json = {
-        'schema_version': 'tracked-pose-2d-state-1.0',
-        'replay_context': {
-            'video_path': str(Path(image_path).resolve()),
-            'video_id': 'stage9_live_upload',
-            'fps': 30.0,
-            'frame_count': frame_index + 1,
-            'selected_frame': frame_index,
-            'window_start': frame_index,
-            'window_end': frame_index,
-            'image_width': frame_width,
-            'image_height': frame_height,
-            'coordinate_space': 'RAW_DISTORTED_PIXEL',
-        },
-        'coordinate_space': 'RAW_DISTORTED_PIXEL',
-        'keypoint_schema': {'count': 133, 'names': WHOLEBODY_NAMES},
-        'tracks': tracks
-    }
-    
-    out_path = Path(out_dir) / 'stage3.json'
-    with open(out_path, 'w') as f:
-        json.dump(stage3_json, f, indent=2)
-    print(f'[Real Inference] Saved {out_path}')
+    print('[Real Inference] Processing Stage 3 RTMW with existing crop/ownership QA...')
+    from stage9_offside_position.live_stage3 import run_live_stage3
+    state = run_live_stage3(image_path, out_dir, device, frame_index)
+    print(f"[Real Inference] Stage 3 quality: {state['metrics']['selected_frame_status_counts']}")
+    print(f"[Real Inference] Saved {Path(out_dir) / 'stage3.json'}")
 
 
 def process_stage4(image_path, out_dir, device='cuda', frame_index=104):
-    print('[Real Inference] Running the existing Stage 4 SAM3D + v0.5.1 pipeline...')
+    print('[Real Inference] Running the existing Stage 4 SAM3D + pitch-refinement pipeline...')
     from datetime import datetime, timezone
     import os
     import subprocess
@@ -400,6 +300,8 @@ def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
         '--max-samples', '1',
         '--min-torso-frames', '1',
         '--min-lower-frames', '1',
+        '--include-neutral-kit-pixels',
+        '--allow-region-consensus-recovery',
     ]
     subprocess.run(command, cwd=str(stage5_root), check=True)
 
@@ -425,6 +327,8 @@ def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
         'method': 'legacy-v0',
         'input_mode': 'SINGLE_SELECTED_FRAME',
         'temporal_aggregation': False,
+        'include_neutral_kit_pixels': True,
+        'allow_region_consensus_recovery': True,
         'source_image': str(source_image),
         'stage2_state': str(stage2_state),
         'stage3_state': str(stage3_state),
@@ -484,7 +388,8 @@ def process_stage6(image_path, out_dir, device='cuda', frame_index=104):
         str(stage6_entry),
         '--stage1-root', str(runtime / 'stage1_bundle'),
         '--output-dir', str(result_dir),
-        '--provider', 'stage2-sst',
+        '--provider', 'yolo-first',
+        '--weights', str(stage6_root / 'weights' / 'yolo-sn-ball-opt.pt'),
         '--stage2-entity-tracks', str(inputs['stage2']),
         '--video', str(source_image),
         '--stage3-state', str(inputs['stage3']),
@@ -517,7 +422,8 @@ def process_stage6(image_path, out_dir, device='cuda', frame_index=104):
         'frame_index': int(frame_index),
         'pipeline_owner': str(stage6_root),
         'stage6_entry_point': str(stage6_entry),
-        'provider': 'stage2-sst',
+        'provider': 'yolo-first',
+        'weights': str(stage6_root / 'weights' / 'yolo-sn-ball-opt.pt'),
         'tracker': 'viterbi',
         'localization_mode': 'contact-aware',
         'input_mode': 'SINGLE_SELECTED_FRAME',

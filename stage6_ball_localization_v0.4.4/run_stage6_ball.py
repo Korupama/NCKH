@@ -25,7 +25,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Stage 6 ball detection/tracking/contact localization v0.5.1")
     p.add_argument("--stage1-root", required=True)
     p.add_argument("--output-dir", required=True)
-    p.add_argument("--provider", choices=["yolo", "stage2-sst", "fusion"], default="yolo")
+    p.add_argument("--provider", choices=["yolo", "stage2-sst", "fusion", "yolo-first"], default="yolo")
     p.add_argument("--stage3-state")
     p.add_argument("--stage4-handoff")
     p.add_argument("--weights")

@@ -316,6 +316,8 @@ def make_handler(ctx: DemoContext):
                     self._send(200, json.dumps({
                         "status": "ok", "run_id": run_id, "outdir": str(outdir),
                         "frame_selection": selection_info,
+                        "stage3_execution": "EXISTING_STAGE3_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
+                        "stage3_invocation": str(outdir / "stage3_invocation.json"),
                         "stage4_execution": "EXISTING_STAGE4_PIPELINE_FRESH_INFERENCE",
                         "stage4_invocation": str(outdir / "stage4_invocation.json"),
                         "stage5_execution": "EXISTING_STAGE5_PIPELINE_FRESH_SINGLE_FRAME_INFERENCE",
