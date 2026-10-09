@@ -51,6 +51,8 @@ runs/
 outputs/
 benchmark_results/
 validation_reports/
+!stage6_ball_localization_v0.4.4/validation_reports/
+!stage6_ball_localization_v0.4.4/validation_reports/**
 backups/
 
 # Model binaries and downloadable archives

@@ -42,6 +42,7 @@ def _infer_yolo_candidates(
             camera_state_for_frame(stage1_root, fi),
             margin_m=pitch_margin_m,
             far_prior=pitch_far_prior,
+            image_bgr=image,
         )
         if progress_every > 0 and (n == 1 or n % progress_every == 0 or n == total):
             print(f"[STAGE6 DETECT {n}/{total}] frame={fi} candidates={len(out[fi])}", flush=True)
