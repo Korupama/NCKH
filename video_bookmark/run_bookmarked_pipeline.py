@@ -196,7 +196,8 @@ def main(argv=None):
     parser.add_argument('--video', type=Path, default=ROOT / 'video_bookmark/mixed.mp4')
     parser.add_argument('--frames', type=Path, default=ROOT / 'video_bookmark/mixed.txt')
     parser.add_argument('--output-root', type=Path, default=STAGE9 / 'outputs/bookmark_runs')
-    parser.add_argument('--python', type=Path, default=ROOT / '.venv/Scripts/python.exe',
+    default_python = (ROOT / '.venv/Scripts/python.exe') if (ROOT / '.venv/Scripts/python.exe').exists() else Path(sys.executable)
+    parser.add_argument('--python', type=Path, default=default_python,
                         help='Python interpreter for the existing pipeline')
     parser.add_argument('--dry-run', action='store_true', help='Validate inputs and list frames; no inference/output files')
     parser.add_argument('--stop-on-error', action='store_true', help='Stop after the first failed frame')

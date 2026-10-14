@@ -135,11 +135,20 @@ def _pitch_lines(pitch):
 
 
 def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
-    data = {name: load_json(path) for name, path in paths.items() if name in {f'stage{i}' for i in range(1, 10)}}
-    missing = [f'stage{i}' for i in range(1, 10) if not data.get(f'stage{i}')]
+    has_stage8_and_9 = ('stage8' in paths and 'stage9' in paths and 
+                        Path(str(paths['stage8'])).is_file() and Path(str(paths['stage9'])).is_file())
+    required_stages = [f'stage{i}' for i in range(1, 10)] if has_stage8_and_9 else [f'stage{i}' for i in range(1, 8)]
+    data = {}
+    for name in required_stages:
+        p = paths.get(name)
+        if p and Path(str(p)).is_file():
+            data[name] = load_json(p)
+    missing = [name for name in required_stages if not data.get(name)]
     if missing:
         raise ValueError('Missing artifacts: ' + ', '.join(missing))
-    s1, s2, s3, s4, s5, s6, s7, s8, s9 = [data[f'stage{i}'] for i in range(1, 10)]
+    s1, s2, s3, s4, s5, s6, s7 = [data[f'stage{i}'] for i in range(1, 8)]
+    s8 = data.get('stage8', {})
+    s9 = data.get('stage9', {})
     frame_index = int(_frame(s4))
     for name, d in data.items():
         if _frame(d) != frame_index:
@@ -239,22 +248,26 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
                s7,
                dict(reference=s8.get('reference'), second_last_opponent=s8.get('second_last_opponent'), opponent_ranking=s8.get('opponent_ranking'), reasons=s8.get('reasons'), quality=s8.get('quality')),
                dict(mode=s9.get('mode'), reference=s9.get('reference'), attackers=s9.get('attackers'), diagnostics=s9.get('diagnostics'), note='Chỉ phân loại vị trí; không kết luận hành vi phạm luật việt vị.')]
-    raw_data = [s1, s2, s3, s4, s5, s6, s7, s8, s9]
+    num_stages = 9 if has_stage8_and_9 else 7
+    raw_data = [s1, s2, s3, s4, s5, s6, s7, s8, s9][:num_stages]
     stages = [dict(id=i+1, title=titles[i], summary=summaries[i], status=statuses[i],
                    is_mocked=raw_data[i].get('is_mocked', False),
-                   source=str(Path(paths[f'stage{i+1}']).resolve()), detail=details[i]) for i in range(9)]
-    state = dict(mode='UPSTREAM_1_7', frame_index=frame_index, image_size=[w, h],
+                   source=str(Path(paths[f'stage{i+1}']).resolve()), detail=details[i]) for i in range(num_stages)]
+    state = dict(mode='UPSTREAM_1_9' if has_stage8_and_9 else 'UPSTREAM_1_7', frame_index=frame_index, image_size=[w, h],
                  timestamp_sec=s1.get('timestamp_sec'), frame_source=source,
                  stages=stages, tracks=rows, game_state=s7,
                  ball=dict(center_uv=(ball.get('candidate') or ball.get('observation') or {}).get('center_uv'),
                            center_xyz_world_m=finite_xyz(ball.get('center_xyz_world_m')), contact=ball.get('contact', {}), status=ball.get('status')),
-                 reference=display_reference, second_last_opponent=s8.get('second_last_opponent'),
-                 offside_position=s9,
-                 projected_reference=projected_reference,
                  pitch=dict(length_m=pitch.get('length_m', 105), width_m=pitch.get('width_m', 68)),
                  pitch_lines=lines, projected_pitch=[_project(s1, line) for line in lines], skeleton_edges=EDGES,
-                 counts=dict(detected=n2, pose2d=n3, pose3d=n4, teams=n5, offside_position=n9_off, onside=n9_on),
-                 scope=f'Quan sát Stage 1–9 tại frame {frame_index}; Stage 9 chỉ phân loại vị trí, không kết luận lỗi việt vị.')
+                 counts=dict(detected=n2, pose2d=n3, pose3d=n4, teams=n5))
+    if has_stage8_and_9:
+        state.update(reference=display_reference, second_last_opponent=s8.get('second_last_opponent'),
+                     offside_position=s9, projected_reference=projected_reference)
+        state['counts'].update(offside_position=n9_off, onside=n9_on)
+        state['scope'] = f'Quan sát Stage 1–9 tại frame {frame_index}; Stage 9 chỉ phân loại vị trí, không kết luận lỗi việt vị.'
+    else:
+        state['scope'] = f'Chỉ quan sát Stage 1–7 tại frame {frame_index}; không tính đường hay kết luận việt vị.'
     return PipelineContext(state, frame, source)
 
 

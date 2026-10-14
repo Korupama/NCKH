@@ -1,0 +1,61 @@
+FROM nvcr.io/nvidia/pytorch:24.04-py3
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV NCKH_ROOT=/workspace/NCKH_SoICT
+ENV TORCH_CUDA_ARCH_LIST="9.0;9.0a"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgl1 \
+    libglx-mesa0 \
+    libglib2.0-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    git \
+    wget \
+    curl \
+    nano \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+    "numpy>=1.24.0,<2.0.0" \
+    "scipy>=1.11.0" \
+    "scikit-learn>=1.3.0" \
+    "filterpy>=1.4.5" \
+    "Pillow>=9.5.0" \
+    "opencv-python-headless>=4.8.0,<5.0.0" \
+    "pyyaml>=6.0" \
+    "tqdm>=4.65.0" \
+    "pytest>=8.0.0" \
+    "pandas>=2.0.0" \
+    "seaborn>=0.12.0" \
+    "matplotlib>=3.7.0" \
+    "einops>=0.7.0" \
+    "timm>=0.9.0" \
+    "onnx>=1.14.0" \
+    "onnxruntime-gpu>=1.17.0" \
+    "ultralytics>=8.0.0"
+
+RUN mkdir -p /workspace/NCKH_SoICT/third_party && \
+    git clone https://github.com/facebookresearch/sam-3d-body.git /workspace/NCKH_SoICT/third_party/sam-3d-body && \
+    cd /workspace/NCKH_SoICT/third_party/sam-3d-body && \
+    git checkout b5c765a0d89d789985e186d396315e7590887b94 && \
+    (pip install --no-cache-dir -e . || true)
+
+COPY . /workspace/NCKH_SoICT
+WORKDIR /workspace/NCKH_SoICT
+
+ENV PYTHONPATH="/workspace/NCKH_SoICT:/workspace/NCKH_SoICT/third_party/sam-3d-body:/workspace/NCKH_SoICT/stage_1_camera_v12:/workspace/NCKH_SoICT/stage_1_camera_v12/third_party/PnLCalib:/workspace/NCKH_SoICT/stage2_sst_rtmw_v1.3:/workspace/NCKH_SoICT/stage3_pose2d_v0.1:/workspace/NCKH_SoICT/stage4_metric3d_v0.2.0:/workspace/NCKH_SoICT/stage5_team_affiliation_v0.1.0:/workspace/NCKH_SoICT/stage6_ball_localization_v0.4.4:/workspace/NCKH_SoICT/stage7_game_state_v0.1.0:/workspace/NCKH_SoICT/stage8_offside_reference_v0.1.0:/workspace/NCKH_SoICT/stage9_offside_position_v0.1.0:${PYTHONPATH}"
+ENV SAM3D_ROOT=/workspace/NCKH_SoICT/third_party/sam-3d-body
+ENV SAM3D_DINOV3_ROOT=/workspace/NCKH_SoICT/third_party/dinov3
+
+RUN python3 -c "import torch, cv2, sklearn, scipy, filterpy, PIL; assert torch.__version__; print('Container verified')"
+
+CMD ["bash"]

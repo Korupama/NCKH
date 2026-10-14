@@ -26,8 +26,8 @@ def digest(path):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--root',default=r'D:\NCKH')
+    default_root = os.environ.get('NCKH_ROOT', str(Path(__file__).resolve().parents[1]))
+    parser.add_argument('--root', default=default_root)
     parser.add_argument('--frame-index',type=int,required=True,help='Zero-based frame index')
     parser.add_argument('--output-dir',required=True,help='New directory, must not exist')
     args=parser.parse_args(); root=Path(args.root).resolve(); out=Path(args.output_dir).resolve(); t0=args.frame_index

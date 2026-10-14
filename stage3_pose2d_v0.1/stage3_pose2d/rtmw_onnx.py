@@ -82,15 +82,19 @@ class RTMWOpenCVDNN:
         self.mean = np.asarray(mean, dtype=np.float32).reshape(1, 1, 3)
         self.std = np.asarray(std, dtype=np.float32).reshape(1, 1, 3)
         self.net = cv2.dnn.readNetFromONNX(str(self.model_path))
-        if device == "cpu":
+        norm_device = "cuda" if str(device).lower().startswith("cuda") else "cpu"
+        if norm_device == "cuda":
+            try:
+                self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+            except Exception:
+                norm_device = "cpu"
+                self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+        else:
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-        elif device == "cuda":
-            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-        else:
-            raise ValueError("device must be cpu or cuda")
-        self.device = device
+        self.device = norm_device
         self.output_names = list(self.net.getUnconnectedOutLayersNames())
 
     @staticmethod

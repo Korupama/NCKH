@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  nckh-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nckh-pipeline:h200
+    container_name: nckh-eval-h200
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/workspace/NCKH_SoICT
+      - /dev/shm:/dev/shm
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+

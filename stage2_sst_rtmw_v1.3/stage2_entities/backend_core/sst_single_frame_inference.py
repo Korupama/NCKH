@@ -222,6 +222,9 @@ def _migrate_state_dict(
     return migrated
 
 
+_SST_CACHED_MODELS: Dict[Tuple[str, str], Tuple[torch.nn.Module, Dict[str, Any]]] = {}
+
+
 def build_sst_model(
     checkpoint_path: str | Path,
     device: str | torch.device = "cpu",
@@ -233,6 +236,11 @@ def build_sst_model(
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
     resolved_device = torch.device(device)
+    cache_key = (str(checkpoint_path), str(resolved_device))
+    if cache_key in _SST_CACHED_MODELS:
+        cached_model, cached_meta = _SST_CACHED_MODELS[cache_key]
+        return cached_model, dict(cached_meta)
+
     checkpoint = _torch_load_trusted_checkpoint(checkpoint_path, resolved_device)
     legacy_state = _extract_state_dict(checkpoint)
     num_classes = _infer_num_classes(legacy_state)
@@ -290,6 +298,7 @@ def build_sst_model(
         if "epoch" in checkpoint:
             metadata["epoch"] = checkpoint["epoch"]
 
+    _SST_CACHED_MODELS[cache_key] = (model, metadata)
     return model, metadata
 
 

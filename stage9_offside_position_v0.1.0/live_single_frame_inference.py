@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 from pathlib import Path
@@ -5,9 +6,16 @@ import cv2
 import torch
 import yaml
 
+# Resolve project root dynamically (compatible with both Linux and Windows)
+PROJECT_ROOT = Path(os.environ.get('NCKH_ROOT', Path(__file__).resolve().parents[1]))
+STAGE1_ROOT = PROJECT_ROOT / 'stage_1_camera_v12'
+PNLCALIB_ROOT = STAGE1_ROOT / 'third_party' / 'PnLCalib'
+STAGE2_ROOT = PROJECT_ROOT / 'stage2_sst_rtmw_v1.3'
+
 # Add Stage 1 paths
-sys.path.append(r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib')
-sys.path.append(r'd:\NCKH\stage_1_camera_v12')
+for _p in [str(PNLCALIB_ROOT), str(STAGE1_ROOT), r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib', r'd:\NCKH\stage_1_camera_v12']:
+    if _p not in sys.path and Path(_p).exists():
+        sys.path.append(_p)
 
 import torchvision.transforms as T
 from inference import get_cls_net, get_cls_net_l, inference as pnl_inference
@@ -20,25 +28,57 @@ from stage_1_camera.pipeline import build_camera_state_from_pnlcalib
 from stage_1_camera.candidates import build_camera_with_candidate_recovery
 
 # Add Stage 2 paths
-sys.path.append(r'd:\NCKH\stage2_sst_rtmw_v1.3')
+for _p in [str(STAGE2_ROOT), r'd:\NCKH\stage2_sst_rtmw_v1.3']:
+    if _p not in sys.path and Path(_p).exists():
+        sys.path.append(_p)
 from stage2_entities.backend_core.sst_single_frame_inference import process_frame
 
+def _find_path(*candidates: Path | str | None) -> Path:
+    for c in candidates:
+        if c is not None and Path(c).exists():
+            return Path(c)
+    return Path(candidates[0])
+
+_STAGE1_CACHE = {}
+
 def load_stage1_models(device='cuda:0'):
-    cfg = yaml.safe_load(open(r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib\config\hrnetv2_w48.yaml', 'r'))
-    cfg_l = yaml.safe_load(open(r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib\config\hrnetv2_w48_l.yaml', 'r'))
+    dev_key = str(device)
+    if dev_key in _STAGE1_CACHE:
+        return _STAGE1_CACHE[dev_key]
+    cfg_file = _find_path(
+        PNLCALIB_ROOT / 'config' / 'hrnetv2_w48.yaml',
+        r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib\config\hrnetv2_w48.yaml'
+    )
+    cfg_l_file = _find_path(
+        PNLCALIB_ROOT / 'config' / 'hrnetv2_w48_l.yaml',
+        r'd:\NCKH\stage_1_camera_v12\third_party\PnLCalib\config\hrnetv2_w48_l.yaml'
+    )
+    cfg = yaml.safe_load(open(cfg_file, 'r'))
+    cfg_l = yaml.safe_load(open(cfg_l_file, 'r'))
     
-    loaded_state = torch.load(r'd:\NCKH\stage_1_camera_v12\weights\SV_kp', map_location=device, weights_only=False)
+    kp_weights = _find_path(
+        STAGE1_ROOT / 'weights' / 'SV_kp',
+        PROJECT_ROOT / 'notebook_demo' / 'pretrained_models' / 'stage1_pnlcalib' / 'SV_kp',
+        r'd:\NCKH\stage_1_camera_v12\weights\SV_kp'
+    )
+    loaded_state = torch.load(kp_weights, map_location=device, weights_only=False)
     model_kp = get_cls_net(cfg)
     model_kp.load_state_dict(loaded_state)
     model_kp.to(device)
     model_kp.eval()
 
-    loaded_state_l = torch.load(r'd:\NCKH\stage_1_camera_v12\weights\SV_lines', map_location=device, weights_only=False)
+    line_weights = _find_path(
+        STAGE1_ROOT / 'weights' / 'SV_lines',
+        PROJECT_ROOT / 'notebook_demo' / 'pretrained_models' / 'stage1_pnlcalib' / 'SV_lines',
+        r'd:\NCKH\stage_1_camera_v12\weights\SV_lines'
+    )
+    loaded_state_l = torch.load(line_weights, map_location=device, weights_only=False)
     model_line = get_cls_net_l(cfg_l)
     model_line.load_state_dict(loaded_state_l)
     model_line.to(device)
     model_line.eval()
     
+    _STAGE1_CACHE[dev_key] = (model_kp, model_line)
     return model_kp, model_line
 
 def process_stage1(image_path, out_dir, device='cuda:0', frame_index=104):
@@ -80,9 +120,16 @@ def process_stage1(image_path, out_dir, device='cuda:0', frame_index=104):
 
 def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
     print('[Real Inference] Processing Stage 2 SST...')
+    project_root = Path(__file__).resolve().parent.parent
+    checkpoint_candidates = [
+        project_root / 'stage2_sst_rtmw_v1.3' / 'weights' / 'model.pth',
+        project_root / 'notebook_demo' / 'pretrained_models' / 'stage2_sst_rtmw' / 'model.pth',
+        Path(r'd:\NCKH\stage2_sst_rtmw_v1.3\weights\model.pth')
+    ]
+    checkpoint_path = next((p for p in checkpoint_candidates if p.exists()), checkpoint_candidates[-1])
     # Assuming threshold score > 0.5 for person
     _, detections, _ = process_frame(
-        checkpoint_path=r'd:\NCKH\stage2_sst_rtmw_v1.3\weights\model.pth',
+        checkpoint_path=str(checkpoint_path),
         input_image_path=Path(image_path),
         output_image_path=Path(out_dir) / 'stage2_debug.jpg',
         device=device,
@@ -221,17 +268,43 @@ def process_stage4(image_path, out_dir, device='cuda', frame_index=104):
     shutil.copy2(camera_state, camera_copy)
     shutil.copy2(image_path, frame_copy)
 
-    worker_python = project_root / '.venv-sam3d-cpu' / 'Scripts' / 'python.exe'
-    stage_python = Path(r'D:\anaconda3\envs\stage4-rtmw3d\python.exe')
-    checkpoint = project_root / 'third_party' / 'model.ckpt'
-    mhr_model = project_root / 'third_party' / 'mhr_model.pt'
-    sam3d_root = project_root / 'third_party' / 'sam-3d-body'
-    required = [worker_python, stage_python, checkpoint, mhr_model, sam3d_root / 'sam_3d_body']
+    worker_python = _find_path(
+        os.environ.get('SAM3D_PYTHON'),
+        project_root / '.venv-sam3d-cpu' / 'Scripts' / 'python.exe',
+        project_root / '.venv-sam3d-cpu' / 'bin' / 'python',
+        sys.executable
+    )
+    stage_python = _find_path(
+        os.environ.get('STAGE4_PYTHON'),
+        r'D:\anaconda3\envs\stage4-rtmw3d\python.exe',
+        sys.executable
+    )
+    checkpoint = _find_path(
+        os.environ.get('SAM3D_CHECKPOINT'),
+        project_root / 'third_party' / 'model.ckpt',
+        project_root / 'notebook_demo' / 'pretrained_models' / 'stage4_sam3d' / 'model.ckpt',
+    )
+    mhr_model = _find_path(
+        os.environ.get('SAM3D_MHR_PATH'),
+        project_root / 'third_party' / 'mhr_model.pt',
+        project_root / 'notebook_demo' / 'pretrained_models' / 'stage4_sam3d' / 'mhr_model.pt',
+        project_root / 'notebook_demo' / 'pretrained_models' / 'stage4_sam3d' / 'assets' / 'mhr_model.pt',
+    )
+    sam3d_root = _find_path(
+        os.environ.get('SAM3D_ROOT'),
+        project_root / 'third_party' / 'sam-3d-body',
+        project_root / 'notebook_demo' / 'third_party' / 'sam-3d-body',
+    )
+    required = [worker_python, stage_python, checkpoint, mhr_model]
+    if sam3d_root.exists() and (sam3d_root / 'sam_3d_body').exists():
+        required.append(sam3d_root / 'sam_3d_body')
     absent = [str(path) for path in required if not path.exists()]
     if absent:
         raise FileNotFoundError('Stage 4 runtime dependency is missing: ' + ', '.join(absent))
 
     native_artifact = runtime / 'sam3d_native_this_run.npz'
+    is_cuda = str(device).startswith('cuda')
+    batch_size = os.environ.get('SAM3D_PERSON_BATCH_SIZE', '16' if is_cuda else '1')
     worker_command = [
         str(worker_python), '-u', str(stage4_root / 'run_sam3d_body_worker.py'),
         '--stage3-state', str(stage3_state),
@@ -240,9 +313,9 @@ def process_stage4(image_path, out_dir, device='cuda', frame_index=104):
         '--checkpoint', str(checkpoint),
         '--mhr-path', str(mhr_model),
         '--sam3d-root', str(sam3d_root),
-        '--device', 'cuda' if str(device).startswith('cuda') else 'cpu',
+        '--device', 'cuda' if is_cuda else 'cpu',
         '--cpu-threads', '4',
-        '--person-batch-size', '1',
+        '--person-batch-size', str(batch_size),
         '--inference-type', 'body',
         '--frame-index', str(frame_index),
         '--output-cache', str(native_artifact),
@@ -331,7 +404,28 @@ def process_stage5(image_path, out_dir, device='cuda', frame_index=104):
         '--include-neutral-kit-pixels',
         '--allow-region-consensus-recovery',
     ]
-    subprocess.run(command, cwd=str(stage5_root), check=True)
+    try:
+        if str(stage5_root) not in sys.path:
+            sys.path.insert(0, str(stage5_root))
+        from stage5_team_affiliation import Stage5Config, run_stage5
+        cfg = Stage5Config(
+            sample_every_n_frames=1,
+            max_samples_per_track=1,
+            min_valid_torso_frames=1,
+            min_valid_lower_body_frames=1,
+            include_neutral_kit_pixels=True,
+            allow_region_consensus_recovery=True,
+        )
+        run_stage5(
+            stage3_state=str(stage3_state),
+            video_path=str(source_image),
+            stage2_state=str(stage2_state),
+            stage4_handoff=str(stage4_handoff),
+            output_dir=str(result_dir),
+            config=cfg,
+        )
+    except Exception:
+        subprocess.run(command, cwd=str(stage5_root), check=True)
 
     handoff = result_dir / 'stage5_downstream_handoff.json'
     state = result_dir / 'team_affiliation_state.json'
@@ -519,21 +613,36 @@ def process_stage7(out_dir, frame_index=104):
         *common_inputs,
         '--output', str(preflight_report),
     ]
-    preflight = subprocess.run(preflight_command, cwd=str(stage7_root))
-    if preflight.returncode not in (0, 2) or not preflight_report.is_file():
-        raise RuntimeError(f'Existing Stage-7 preflight failed with exit code {preflight.returncode}')
-
     stage7_command = [
         sys.executable, str(stage7_entry),
         *common_inputs,
         '--allow-goalkeeper-fallback',
         '--output', str(state),
     ]
-    execution = subprocess.run(stage7_command, cwd=str(stage7_root))
-    if execution.returncode not in (0, 2) or not state.is_file():
-        raise RuntimeError(f'Existing Stage-7 pipeline failed with exit code {execution.returncode}')
+    try:
+        if str(stage7_root) not in sys.path:
+            sys.path.insert(0, str(stage7_root))
+        from stage7_game_state.preflight import build_preflight as build_s7_preflight
+        from stage7_game_state.core import build_game_state_context
+        report = build_s7_preflight(str(inputs['stage1']), str(inputs['stage5']), str(inputs['stage6']))
+        preflight_report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+        preflight_returncode = 0 if report.get("status") in {"READY", "DEGRADED_READY"} else 2
 
-    stage7_state = json.loads(state.read_text(encoding='utf-8'))
+        ctx = build_game_state_context(str(inputs['stage1']), str(inputs['stage5']), str(inputs['stage6']), allow_goalkeeper_fallback=True)
+        stage7_state = ctx.to_dict()
+        state.write_text(json.dumps(stage7_state, indent=2, ensure_ascii=False), encoding='utf-8')
+        execution_returncode = 0 if ctx.status == "VALID" else 2
+    except Exception:
+        preflight = subprocess.run(preflight_command, cwd=str(stage7_root))
+        if preflight.returncode not in (0, 2) or not preflight_report.is_file():
+            raise RuntimeError(f'Existing Stage-7 preflight failed with exit code {preflight.returncode}')
+        execution = subprocess.run(stage7_command, cwd=str(stage7_root))
+        if execution.returncode not in (0, 2) or not state.is_file():
+            raise RuntimeError(f'Existing Stage-7 pipeline failed with exit code {execution.returncode}')
+        stage7_state = json.loads(state.read_text(encoding='utf-8'))
+        preflight_returncode = int(preflight.returncode)
+        execution_returncode = int(execution.returncode)
+
     public_state = out_root / 'stage7.json'
     shutil.copy2(state, public_state)
     shutil.copy2(preflight_report, out_root / 'stage7_preflight.json')
@@ -544,8 +653,8 @@ def process_stage7(out_dir, frame_index=104):
         'pipeline_owner': str(stage7_root),
         'preflight_entry_point': str(preflight_entry),
         'stage7_entry_point': str(stage7_entry),
-        'preflight_exit_code': int(preflight.returncode),
-        'pipeline_exit_code': int(execution.returncode),
+        'preflight_exit_code': preflight_returncode,
+        'pipeline_exit_code': execution_returncode,
         'semantic_status': stage7_state.get('status'),
         'reasons': stage7_state.get('reasons', []),
         'stage1_state': str(inputs['stage1']),
@@ -601,21 +710,47 @@ def process_stage8(out_dir, frame_index=104):
         '--stage7', str(inputs['stage7']),
         '--allow-ball-fallback',
     ]
-    preflight = subprocess.run(
-        [sys.executable, str(preflight_entry), *common_inputs, '--output', str(preflight_report)],
-        cwd=str(stage8_root),
-    )
-    if preflight.returncode not in (0, 2) or not preflight_report.is_file():
-        raise RuntimeError(f'Existing Stage-8 preflight failed with exit code {preflight.returncode}')
+    try:
+        if str(stage8_root) not in sys.path:
+            sys.path.insert(0, str(stage8_root))
+        from stage8_offside_reference.preflight import build_preflight as build_s8_preflight
+        from stage8_offside_reference.core import build_offside_reference
+        from stage8_offside_reference.visualization import render_longitudinal_qa
+        report = build_s8_preflight(
+            str(inputs['stage4']), str(inputs['stage6']), str(inputs['stage7']),
+            allow_ball_fallback=True,
+        )
+        preflight_report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+        preflight_returncode = 0 if report.get("status") in {"READY", "DEGRADED_READY"} else 2
 
-    execution = subprocess.run(
-        [sys.executable, str(stage8_entry), *common_inputs, '--output', str(state)],
-        cwd=str(stage8_root),
-    )
-    if execution.returncode not in (0, 2) or not state.is_file():
-        raise RuntimeError(f'Existing Stage-8 pipeline failed with exit code {execution.returncode}')
+        ref_state = build_offside_reference(
+            str(inputs['stage4']), str(inputs['stage6']), str(inputs['stage7']),
+            allow_ball_fallback=True,
+        )
+        stage8_state = ref_state.to_dict()
+        state.write_text(json.dumps(stage8_state, indent=2, ensure_ascii=False), encoding='utf-8')
+        try:
+            render_longitudinal_qa(stage8_state, str(plot))
+        except Exception:
+            pass
+        execution_returncode = 0 if ref_state.status in {"VALID", "DEGRADED"} else 2
+    except Exception:
+        preflight = subprocess.run(
+            [sys.executable, str(preflight_entry), *common_inputs, '--output', str(preflight_report)],
+            cwd=str(stage8_root),
+        )
+        if preflight.returncode not in (0, 2) or not preflight_report.is_file():
+            raise RuntimeError(f'Existing Stage-8 preflight failed with exit code {preflight.returncode}')
+        execution = subprocess.run(
+            [sys.executable, str(stage8_entry), *common_inputs, '--output', str(state)],
+            cwd=str(stage8_root),
+        )
+        if execution.returncode not in (0, 2) or not state.is_file():
+            raise RuntimeError(f'Existing Stage-8 pipeline failed with exit code {execution.returncode}')
+        stage8_state = json.loads(state.read_text(encoding='utf-8'))
+        preflight_returncode = int(preflight.returncode)
+        execution_returncode = int(execution.returncode)
 
-    stage8_state = json.loads(state.read_text(encoding='utf-8'))
     public_state = out_root / 'stage8.json'
     shutil.copy2(state, public_state)
     shutil.copy2(preflight_report, out_root / 'stage8_preflight.json')
@@ -629,8 +764,8 @@ def process_stage8(out_dir, frame_index=104):
         'pipeline_owner': str(stage8_root),
         'preflight_entry_point': str(preflight_entry),
         'stage8_entry_point': str(stage8_entry),
-        'preflight_exit_code': int(preflight.returncode),
-        'pipeline_exit_code': int(execution.returncode),
+        'preflight_exit_code': preflight_returncode,
+        'pipeline_exit_code': execution_returncode,
         'semantic_status': stage8_state.get('status'),
         'reasons': stage8_state.get('reasons', []),
         'stage4_handoff': str(inputs['stage4']),
@@ -695,11 +830,34 @@ def process_stage9(image_path, out_dir, frame_index=104):
         '--allow-defender-only',
         '--allow-tentative-context',
     ]
-    execution = subprocess.run(command, cwd=str(stage9_root))
-    if execution.returncode not in (0, 2) or not state.is_file():
-        raise RuntimeError(f'Existing Stage-9 pipeline failed with exit code {execution.returncode}')
+    try:
+        if str(stage9_root) not in sys.path:
+            sys.path.insert(0, str(stage9_root))
+        from stage9_offside_position.adapters import load_json as load_s9_json
+        from stage9_offside_position.core import build_offside_position_state
+        from stage9_offside_position.visualization import load_frame, render_overlay, save_overlay
+        pos_state = build_offside_position_state(
+            str(inputs['stage4']), str(inputs['stage7']), str(inputs['stage8']),
+            stage6_input=str(inputs['stage6']), epsilon_m=1e-9, best_effort=False,
+            allow_defender_only=True, allow_tentative_context=True
+        )
+        stage9_state = pos_state.to_dict()
+        state.write_text(json.dumps(stage9_state, indent=2, ensure_ascii=False), encoding='utf-8')
 
-    stage9_state = json.loads(state.read_text(encoding='utf-8'))
+        stage1 = load_s9_json(inputs['stage1'])
+        stage3 = load_s9_json(inputs['stage3'])
+        stage4 = load_s9_json(inputs['stage4'])
+        frame = load_frame(image_path=str(inputs['image']), frame_index=int(stage9_state.get("frame_index") or 0))
+        overlay_img = render_overlay(frame, stage9_state, stage4=stage4, stage3=stage3, stage1=stage1)
+        save_overlay(str(overlay), overlay_img)
+        execution_returncode = 0 if stage9_state.get('status') in {"VALID", "DEGRADED", "DEMO_BEST_EFFORT", "DEMO_PARTIAL"} else 2
+    except Exception:
+        execution = subprocess.run(command, cwd=str(stage9_root))
+        if execution.returncode not in (0, 2) or not state.is_file():
+            raise RuntimeError(f'Existing Stage-9 pipeline failed with exit code {execution.returncode}')
+        stage9_state = json.loads(state.read_text(encoding='utf-8'))
+        execution_returncode = int(execution.returncode)
+
     public_state = out_root / 'stage9.json'
     shutil.copy2(state, public_state)
     if overlay.is_file():
@@ -713,7 +871,7 @@ def process_stage9(image_path, out_dir, frame_index=104):
         'mode': stage9_state.get('mode'),
         'allow_defender_only': True,
         'allow_tentative_context': True,
-        'pipeline_exit_code': int(execution.returncode),
+        'pipeline_exit_code': execution_returncode,
         'semantic_status': stage9_state.get('status'),
         'stage4_handoff': str(inputs['stage4']),
         'stage6_state': str(inputs['stage6']),
@@ -754,39 +912,37 @@ if __name__ == '__main__':
     frame_index = int(sys.argv[3]) if len(sys.argv) > 3 else 104
     
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    process_stage1(image_path, out_dir, device, frame_index)
-    
-    # We must clear cache since Stage 1 model is heavy
     if torch.cuda.is_available():
+        torch.backends.cudnn.benchmark = True
+        if hasattr(torch, 'set_float32_matmul_precision'):
+            torch.set_float32_matmul_precision('high')
+            
+    flush_cache = os.environ.get('FLUSH_CUDA_CACHE', '0') == '1'
+
+    process_stage1(image_path, out_dir, device, frame_index)
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage2(image_path, out_dir, device, frame_index)
-    
-    if torch.cuda.is_available():
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage3(image_path, out_dir, device, frame_index)
-    
-    if torch.cuda.is_available():
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage4(image_path, out_dir, device, frame_index)
-    
-    if torch.cuda.is_available():
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage5(image_path, out_dir, device, frame_index)
-    
-    if torch.cuda.is_available():
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage6(image_path, out_dir, device, frame_index)
-    
-    if torch.cuda.is_available():
+    if flush_cache and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     process_stage7(out_dir, frame_index)
-
     process_stage8(out_dir, frame_index)
-
     process_stage9(image_path, out_dir, frame_index)

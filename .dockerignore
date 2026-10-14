@@ -1,0 +1,46 @@
+# Version control
+.git
+.github
+.agents
+
+# Virtual environments and caches
+.venv
+.venv*
+venv*
+env*
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage*
+htmlcov/
+*.log
+*.tmp
+
+# Heavy assets, weights and datasets (provided at runtime via /datastore mount)
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.tar
+*.tar.gz
+*.sif
+*.zip
+*.7z
+*.mp4
+*.avi
+*.mkv
+*.webm
+
+# Generated experiment runs and logs
+slurm_logs/
+runs/
+outputs/
+benchmark_results/
+validation_reports/
+backups/
+

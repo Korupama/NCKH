@@ -27,13 +27,27 @@ from stage8_offside_reference.core import build_offside_reference
 from helpers import joint, track, stage4, stage6
 
 
-def run_cascaded_benchmark(limit_windows: Optional[int] = None) -> Dict[str, Any]:
-    dataset_root = Path("/home/tondaiquoc/datasets/SoccerNetGS/valid")
-    benchmark_root = Path("/home/tondaiquoc/benchmarks/stage2_valid_quick")
+def run_cascaded_benchmark(
+    limit_windows: Optional[int] = None,
+    dataset_dir: Optional[str] = None,
+    benchmark_dir: Optional[str] = None,
+    num_chunks: int = 1,
+    chunk_index: int = 0,
+) -> Dict[str, Any]:
+    dataset_root = Path(dataset_dir or os.environ.get("SOCCERNET_DATASET_ROOT", "/home/tondaiquoc/datasets/SoccerNetGS/valid"))
+    benchmark_root = Path(benchmark_dir or os.environ.get("BENCHMARK_ROOT", "/home/tondaiquoc/benchmarks/stage2_valid_quick"))
     protocol_path = benchmark_root / "protocol_windows.json"
     windows = json.loads(protocol_path.read_text())
     if limit_windows:
         windows = windows[:limit_windows]
+
+    if num_chunks > 1:
+        total_w = len(windows)
+        c_size = (total_w + num_chunks - 1) // num_chunks
+        s_idx = chunk_index * c_size
+        e_idx = min(s_idx + c_size, total_w)
+        windows = windows[s_idx:e_idx]
+        print(f"[Worker {chunk_index + 1}/{num_chunks}] Evaluating window slice [{s_idx}:{e_idx}] ({len(windows)} windows)")
 
     stage5_cfg = Stage5Config()
 
@@ -332,7 +346,8 @@ def run_cascaded_benchmark(limit_windows: Optional[int] = None) -> Dict[str, Any
     # Save summary report
     out_dir = Path("outputs/cascaded_evaluation")
     out_dir.mkdir(parents=True, exist_ok=True)
-    summary_path = out_dir / "cascaded_benchmark_summary.json"
+    suffix = f"_chunk_{chunk_index}_of_{num_chunks}" if num_chunks > 1 else ""
+    summary_path = out_dir / f"cascaded_benchmark_summary{suffix}.json"
     summary_path.write_text(json.dumps(summary, indent=2))
     print(f"\n=======================================================")
     print(f"CASCADED BENCHMARK COMPLETE across {len(window_results)} windows!")
@@ -347,5 +362,23 @@ def run_cascaded_benchmark(limit_windows: Optional[int] = None) -> Dict[str, Any
 
 
 if __name__ == "__main__":
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else None
-    run_cascaded_benchmark(limit)
+    import argparse
+    parser = argparse.ArgumentParser(description="Evaluate cascaded pipeline")
+    parser.add_argument("--limit", type=int, default=None, help="Limit number of windows")
+    parser.add_argument("--num-chunks", type=int, default=int(os.environ.get("EVAL_NUM_CHUNKS", "1")), help="Total parallel chunks")
+    parser.add_argument("--chunk-index", type=int, default=int(os.environ.get("EVAL_CHUNK_INDEX", "0")), help="Chunk index for this worker")
+    parser.add_argument("--dataset-dir", type=str, default=None)
+    parser.add_argument("--benchmark-dir", type=str, default=None)
+    args, unknown = parser.parse_known_args()
+
+    limit = args.limit
+    if limit is None and unknown and unknown[0].isdigit():
+        limit = int(unknown[0])
+
+    run_cascaded_benchmark(
+        limit_windows=limit,
+        dataset_dir=args.dataset_dir,
+        benchmark_dir=args.benchmark_dir,
+        num_chunks=args.num_chunks,
+        chunk_index=args.chunk_index,
+    )
