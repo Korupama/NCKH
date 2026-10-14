@@ -116,9 +116,11 @@ def test_trimmed_cores_and_role_blind_recovery():
     assert r['gk']['stage5_role'] == 'goalkeeper'
     assert r['ref']['stage5_role'] == 'unknown_residual'
     assert r['ref']['team_id'] is None and r['ref']['team_status'] == 'UNKNOWN'
-    assert r['gk']['team_id'] is None and r['gk']['team_status'] == 'UNKNOWN'
-    assert r['gk']['assignment_method'] == 'DEFENSIVE_TAIL_DIAGNOSTIC_ONLY'
-    assert r['gk']['goalkeeper_assignment']['suggested_team_id'] == r['a0']['team_id'] != r['b0']['team_id']
+    assert r['gk']['team_id'] is None and r['gk']['team_status'] == 'PENDING_CONTEXT'
+    assert r['gk']['team_side'] == 'DEFENDING'
+    assert r['gk']['assignment_method'] == 'GOALKEEPER_ALWAYS_DEFENDING'
+    assert 'suggested_team_id' not in r['gk']['goalkeeper_assignment']
+    assert r['a0']['team_id'] != r['b0']['team_id']
     assert 'gk' not in sum(result['clustering']['cores'], [])
 
 
@@ -129,7 +131,8 @@ def test_uncalibrated_role_and_team_heuristics_require_explicit_opt_in():
     r = {x['track_id']: x for x in infer_residual(f, f, p, cfg)['tracks']}
     assert r['ref']['stage5_role'] == 'referee'
     assert r['ref']['team_status'] == 'NOT_APPLICABLE'
-    assert r['gk']['team_id'] == r['a0']['team_id'] != r['b0']['team_id']
+    assert r['gk']['team_id'] is None and r['gk']['team_side'] == 'DEFENDING'
+    assert r['a0']['team_id'] != r['b0']['team_id']
 
 
 def test_train_calibrated_residual_appearance_recovery():
@@ -321,13 +324,15 @@ def test_invalid_pitch_observations_removed():
 def test_tail_requires_two_players_per_team():
     _, p = fixture()
     r = assign_by_defensive_tail('gk', 1, p, {'a1': 0, 'a2': 0, 'b2': 1}, ResidualConfig())
-    assert r['team_status'] == 'UNKNOWN'
+    assert r['team_status'] == 'PENDING_CONTEXT'
+    assert r['team_side'] == 'DEFENDING'
 
 
 def test_tail_ignores_single_extreme_attacker():
     _, p = fixture(); p['b3'] = {f: [50, 0] for f in range(8)}
     teams = {f'a{i}': 0 for i in range(4)} | {f'b{i}': 1 for i in range(4)}
-    assert assign_by_defensive_tail('gk', 1, p, teams, ResidualConfig())['team_id'] == 0
+    result = assign_by_defensive_tail('gk', 1, p, teams, ResidualConfig())
+    assert result['team_id'] is None and result['team_side'] == 'DEFENDING'
 
 
 def test_tail_ambiguous_is_unknown():

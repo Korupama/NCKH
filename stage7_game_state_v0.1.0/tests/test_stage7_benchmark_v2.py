@@ -18,7 +18,7 @@ def _case_files(tmp_path: Path, *, ref_role="REFEREE"):
     s5 = _write(tmp_path / "s5.json", {
         "players": [
             {"track_id": "a", "team_id": 0, "role": "PLAYER"},
-            {"track_id": "b", "team_id": 0, "role": "GOALKEEPER"},
+            {"track_id": "b", "team_id": 0, "role": "PLAYER"},
             {"track_id": "c", "team_id": 1, "role": "PLAYER"},
             {"track_id": "r", "role": ref_role},
         ]

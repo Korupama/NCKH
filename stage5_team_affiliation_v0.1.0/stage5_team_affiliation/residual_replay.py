@@ -99,6 +99,12 @@ def run_residual_replay(*, stage3_state, video_path, output_dir, stage2_state=No
             row['upstream_role_confidence'] = original.get('upstream_role_score')
             row['effective_role'] = row['stage5_role'] if row['stage5_role_status'] == 'VALID' else row['upstream_role']
             row['role'] = row['effective_role']  # backwards-compatible renderer field
+            row['team_side'] = None
+            if str(row['effective_role']).lower() in {'goalkeeper', 'keeper', 'gk'}:
+                from .goalkeeper import forced_defending_assignment
+                fixed = forced_defending_assignment()
+                row.update(team_id=None, team_status='PENDING_CONTEXT', team_side='DEFENDING',
+                           assignment_method=fixed['method'], goalkeeper_assignment=fixed)
             row['appearance'] = diagnostics[row['track_id']]
             selected = next((o for o in observations[row['track_id']] if o['frame_index'] == t0), {})
             row['selected_frame_bbox_xyxy'] = selected.get('source_bbox_xyxy')
@@ -108,7 +114,7 @@ def run_residual_replay(*, stage3_state, video_path, output_dir, stage2_state=No
                       source_stage3=source(stage3_state), source_stage2=source(stage2_state), source_pitch=source(pitch_state),
                       alignment=alignment, gates={'real_accuracy': 'NOT_EVALUATED', 'research_accuracy_frozen': False},
                       warnings=['Provisional role/geometry heuristic. VALID means rule passed, not validated accuracy.',
-                                'Referee recovery and goalkeeper-team assignment abstain by default until TRAIN calibration.',
+                                'Goalkeepers always defend; numeric team ID is resolved from attacking context in Stage 7.',
                                 'Effective-role fallback preserves upstream only; UNKNOWN team stays UNKNOWN.'], artifacts={})
         out.mkdir(parents=True, exist_ok=False)
         image_path = render_selected_frame(overlay, result['tracks'], out / 'selected_frame_team_affiliation.png')
@@ -116,7 +122,7 @@ def run_residual_replay(*, stage3_state, video_path, output_dir, stage2_state=No
         result['artifacts'] = {'team_affiliation_state': str(state_path), 'downstream_handoff': str(handoff_path), 'selected_frame_overlay': str(image_path)}
         handoff = {'schema_version': 'stage5-downstream-handoff-3.0', 'selected_frame': t0, 'track_team': {
             r['track_id']: ({k: r[k] for k in ('upstream_role', 'stage5_role', 'stage5_role_status', 'stage5_role_method',
-                                               'effective_role', 'team_id', 'team_status', 'assignment_method')}
+                                               'effective_role', 'team_id', 'team_status', 'assignment_method', 'team_side')}
                             | {'role_decision_reason': r.get('role_decision_reason')})
             for r in result['tracks'] if r['selected_frame_bbox_xyxy'] is not None},
             'cluster_ids_are_arbitrary': True, 'attacking_team_not_resolved': True, 'research_accuracy_frozen': False}

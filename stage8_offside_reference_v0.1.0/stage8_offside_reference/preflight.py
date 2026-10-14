@@ -38,6 +38,10 @@ def build_preflight(
 
     blockers: List[str] = []
     warnings: List[str] = []
+    goalkeeper_ids = {tid for tid, track in s4['tracks'].items()
+                      if str(track.get('role', '')).lower() in {'goalkeeper', 'keeper', 'gk'}}
+    if goalkeeper_ids.intersection(s7['attackers']):
+        blockers.append('GOALKEEPER_IN_ATTACKERS_RERUN_STAGE7')
 
     frames = {"stage4": s4["selected_frame"], "stage6": s6["frame_index"], "stage7": s7["frame_index"]}
     known_frames = [v for v in frames.values() if v is not None]

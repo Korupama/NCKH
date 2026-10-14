@@ -1,10 +1,13 @@
 from stage7_game_state.benchmark import run_oracle_benchmark
 
 
-def test_oracle_benchmark_is_perfect(tmp_path):
+def test_fixed_policy_reports_conflicts_with_legacy_oracle(tmp_path):
     report = run_oracle_benchmark(str(tmp_path))
-    assert report["status"] == "PASS"
-    assert report["oracle_logic_accuracy"] == 1.0
+    # Preserve the old oracle labels: they place an attacking team's GK in ATT.
+    # The new fixed policy must expose that incompatibility, not rewrite GT.
+    assert report["status"] == "FAIL"
+    assert {r['fixture'] for r in report['rows'] if not r['pass']} == {'right_half_team0', 'left_half_team1'}
+    assert report["oracle_logic_accuracy"] == 0.6
 
 
 def test_manifest_evaluator_on_example(tmp_path):

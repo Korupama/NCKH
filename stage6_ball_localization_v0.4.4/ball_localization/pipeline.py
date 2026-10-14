@@ -3,13 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Mapping
 import json
+import math
 
 import cv2
 
 from .camera import camera_state_for_frame
 from .contracts import BallCandidate2D, BallFrameState, BallTrajectoryState
 from .geometry import HybridGeometryConfig, TemporalRefinementConfig, estimate_frame, hybrid_trajectory_states, refine_temporal_trajectory
-from .pitch_prior import apply_pitch_prior
+from .pitch_prior import apply_pitch_prior, filter_pitch_candidates
 from .providers import SoccerNetV3DYOLOProvider, load_stage2_candidates
 from .stage1_context import load_replay_context_from_stage1
 from .tracking import ViterbiConfig, select_ball_path
@@ -326,7 +327,33 @@ def run_stage6(
     progress_every: int = 10,
     temporal_config: TemporalRefinementConfig | None = None,
     hybrid_config: HybridGeometryConfig | None = None,
+    pitch_candidate_policy: str = "soft",
+    candidate_pitch_margin_m: float = 0.0,
 ) -> BallTrajectoryState:
+    if pitch_candidate_policy not in {'soft', 'strict-ground'}:
+        raise ValueError('pitch_candidate_policy must be soft or strict-ground')
+    if not math.isfinite(candidate_pitch_margin_m) or candidate_pitch_margin_m < 0:
+        raise ValueError('candidate_pitch_margin_m must be finite and nonnegative')
+    pitch_filter_report = {'policy': pitch_candidate_policy,
+                           'margin_m': candidate_pitch_margin_m, 'pools': {}}
+
+    def filter_pool(pool, name):
+        if pitch_candidate_policy == 'soft':
+            return pool
+        result, rejected = {}, []
+        for fi, rows in pool.items():
+            try:
+                camera = camera_state_for_frame(stage1_root, fi)
+            except FileNotFoundError:
+                camera = None
+            result[fi], excluded = filter_pitch_candidates(rows, camera, margin_m=candidate_pitch_margin_m)
+            rejected.extend(excluded)
+        pitch_filter_report['pools'][name] = {
+            'input_count': sum(map(len, pool.values())),
+            'retained_count': sum(map(len, result.values())),
+            'rejected_count': len(rejected), 'rejected': rejected}
+        return result
+
     if provider_kind == "stage2-sst":
         if stage2_entity_tracks is None:
             raise ValueError("stage2_entity_tracks required")
@@ -337,6 +364,7 @@ def run_stage6(
                 apply_pitch_prior(rows, camera_state_for_frame(stage1_root, fi), margin_m=pitch_margin_m, far_prior=pitch_far_prior)
             except FileNotFoundError:
                 pass
+        candidates = filter_pool(candidates, 'stage2-sst')
     elif provider_kind in {"yolo", "fusion", "yolo-first"}:
         if weights is None:
             raise ValueError("weights required for YOLO provider")
@@ -358,11 +386,13 @@ def run_stage6(
             progress_every=progress_every,
         )
         detector_info = provider.info()
+        candidates = filter_pool(candidates, 'yolo')
         if provider_kind == 'yolo-first':
             from .providers.fusion import prefer_primary_candidates
             for fi, rows in auxiliary.items():
                 apply_pitch_prior(rows, camera_state_for_frame(stage1_root, fi),
                                   margin_m=pitch_margin_m, far_prior=pitch_far_prior)
+            auxiliary = filter_pool(auxiliary, 'stage2-sst')
             candidates, selection = prefer_primary_candidates(candidates, auxiliary)
             detector_info = {'name': 'yolo-first', 'primary': detector_info,
                              'auxiliary_source': str(stage2_entity_tracks), **selection}
@@ -376,6 +406,7 @@ def run_stage6(
             for fi, rows in auxiliary.items():
                 if int(replay['window_start']) <= fi <= int(replay['window_end']):
                     apply_pitch_prior(rows, camera_state_for_frame(stage1_root,fi), margin_m=pitch_margin_m, far_prior=pitch_far_prior)
+            auxiliary = filter_pool(auxiliary, 'stage2-sst')
             candidates, fusion_counts = fuse_candidates(candidates, auxiliary)
             detector_info = {'name':'fusion','primary':detector_info,'auxiliary_source':str(stage2_entity_tracks),'counts':fusion_counts}
     else:
@@ -383,6 +414,7 @@ def run_stage6(
 
     if str(replay.get("coordinate_space")) != "RAW_DISTORTED_PIXEL":
         raise ValueError("RAW_DISTORTED_PIXEL required")
+    detector_info['pitch_candidate_filter'] = pitch_filter_report
     indices = list(range(int(replay["window_start"]), int(replay["window_end"]) + 1))
     selected, tracker_info = _selected_path(candidates=candidates, indices=indices, replay=replay, tracker_kind=tracker_kind)
     fps = float(replay["fps"])

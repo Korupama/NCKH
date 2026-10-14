@@ -319,6 +319,7 @@ def run_stage5(
                 "team_status": result.get("status"),
                 "assignment_method": result.get("method"),
                 "goalkeeper_assignment": result,
+                "team_side": "DEFENDING",
             })
         else:
             rec.update({"team_id": None, "team_status": "NOT_APPLICABLE", "assignment_method": "ROLE_NOT_SUPPORTED"})
@@ -349,7 +350,7 @@ def run_stage5(
         "configuration": config.to_dict(),
         "method": {
             "outfield": "POSE_GUIDED_FUSED_TORSO_LOWER_COLOR_KMEANS_K2",
-            "goalkeeper": "SPATIAL_PITCH_OR_IMAGE_THEN_LOWER_BODY_APPEARANCE_FAIL_CLOSED",
+            "goalkeeper": "GOALKEEPER_ALWAYS_DEFENDING",
             "referee": "EXCLUDED",
             "pretrained_model": None,
             "feature_fusion": {
@@ -405,6 +406,7 @@ def run_stage5(
                 "team_id": r.get("team_id"),
                 "team_status": r.get("team_status"),
                 "assignment_method": r.get("assignment_method"),
+                "team_side": r.get("team_side"),
             }
             for r in output_tracks
         },

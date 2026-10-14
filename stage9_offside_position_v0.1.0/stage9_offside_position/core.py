@@ -40,6 +40,13 @@ def build_offside_position_state(
     s6 = extract_stage6(stage6_raw)
     s7 = extract_stage7(stage7_raw)
     s8 = extract_stage8(stage8_raw)
+    goalkeeper_ids = {tid for tid, track in s4['tracks'].items()
+                      if str(track.get('role', '')).lower() in {'goalkeeper', 'keeper', 'gk'}}
+    if goalkeeper_ids.intersection(s7['attackers']):
+        raise ValueError('GOALKEEPER_IN_ATTACKERS: rerun Stage 7 and Stage 8 with GOALKEEPER_ALWAYS_DEFENDING')
+    if any(str(row.get('role', '')).lower() in {'goalkeeper', 'keeper', 'gk'}
+           for row in (stage7_raw.get('toucher') or {},)):
+        best_effort = False  # Fixed defending membership cannot create an attacking passer.
 
     state = OffsidePositionState()
     state.mode = "BEST_EFFORT_DEMO" if best_effort else "STRICT"

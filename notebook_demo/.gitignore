@@ -12,6 +12,11 @@ pretrained_models/stage1_pnlcalib/MV_kp
 pretrained_models/stage1_pnlcalib/MV_lines
 pretrained_models/stage2_sst_rtmw/model.pth
 pretrained_models/stage2_sst_rtmw/rtmw_l_384x288.onnx
+pretrained_models/stage2_sst_rtmw/*.zip
+pretrained_models/stage4_sam3d/model.ckpt
+pretrained_models/stage4_sam3d/mhr_model.pt
+pretrained_models/stage4_sam3d/assets/
+pretrained_models/stage6_ball/yolo-sn-ball-opt.pt
 
 .ipynb_checkpoints/
 __pycache__/

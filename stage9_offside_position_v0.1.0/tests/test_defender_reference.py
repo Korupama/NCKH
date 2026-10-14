@@ -47,11 +47,13 @@ class DefenderReferenceTests(unittest.TestCase):
         self.teams['players'][0]['team_id'] = None
         self.assertEqual(self.context()['status'], 'UNRESOLVED')
 
-    def test_confirmed_contact_is_not_overridden(self):
+    def test_goalkeeper_contact_cannot_make_keeper_an_attacker(self):
         self.ball['stage7'] = {'contact_track_id': 'g'}
         # Use the adapter's direct contact contract.
         self.ball['contact_track_id'] = 'g'
-        self.assertEqual(self.context()['attacking_team_id'], 1)
+        self.assertIsNone(self.context()['attacking_team_id'])
+        self.assertEqual(self.context()['status'], 'UNRESOLVED')
+        self.assertIn('g', self.context()['sets']['opponents'])
 
     def test_reference_uses_defender_not_ball_and_never_classifies(self):
         s7 = self.context()

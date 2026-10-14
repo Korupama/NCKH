@@ -1,0 +1,613 @@
+\documentclass[runningheads]{llncs}
+
+% =========================================================
+% ICCIES 2027 / Springer CCIS paper skeleton
+% Track: Computer Vision and Intelligent Systems (CVIS)
+% Target length: 12--15 pages
+% =========================================================
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{amsmath,amssymb}
+\usepackage{url}
+\usepackage{float}
+
+\begin{document}
+
+% ---------------------------------------------------------
+% Title
+% ---------------------------------------------------------
+\title{A Geometry-Aware Pose-Assisted Framework for Offside Decision Support in Broadcast Football Video}
+
+% Short title used in running head if needed
+\titlerunning{Pose-Assisted Offside Decision Support}
+
+% ---------------------------------------------------------
+% Authors and affiliations
+% Replace all placeholders with the actual information.
+% ---------------------------------------------------------
+\author{Hung Hoang Huynh\inst{1}\orcidID{0009-0003-2929-2625} \and
+Bao Vo Ngoc Nguyen\inst{1}\orcidID{0009-0002-0047-8840} \and
+Quoc Dai Ton\inst{1}\orcidID{0009-0004-8363-5921} \and
+Thang Cap Pham Dinh\inst{1}\orcidID{0000-0002-6480-2366}}
+
+\authorrunning{Hung et al.}
+
+\institute{University of Information Technology, Ho Chi Minh City, Vietnam\\
+\email{\{23520560,23520131,23521312\}@gm.uit.edu.vn, thangcpd@uit.edu.vn}}
+
+\maketitle
+
+% =========================================================
+% Abstract
+% Suggested length: 180--250 words
+% Structure: Problem -> Gap -> Method -> Results -> Implication
+% =========================================================
+\begin{abstract}
+Offside analysis from monocular broadcast video requires more than detecting players: perspective distortion, camera motion, occlusion, team ambiguity, and elevated body landmarks all affect the longitudinal ordering that defines the offside reference. We present a modular geometry-aware framework that combines pitch calibration, football-specific detection and local tracking, whole-body pose, world-grounded player geometry, team affiliation, ball localization, game-state reasoning, and legal-landmark offside-position classification at a manually selected pass frame. The evaluation deliberately separates independently verifiable component results from synthetic logic checks and from the still-unavailable real end-to-end benchmark. On SoccerNet Calibration-2023 test, the frozen camera pipeline obtains a final calibration score of 71.41\% with 78.26\% completeness. On the full SoccerNet-GSR validation protocol, candidate tracking reaches 67.89\% HOTA and 85.61\% IDF1, while RTMW-L reaches 90.82\% PDJ@0.5 on 4,000 available 3DSP training crops. The held-out Stage-5 protocol achieves 99.81\% selective team accuracy at 85.92\% coverage, but abstains on goalkeeper team affiliation. On 810 SoccerNet-v3D test images, ball detection reaches 78.97\% AP$_{50}$; predicted top-1 observations yield 2.33~m Ball-$X$ MAE at 75.43\% coverage. These results establish the measured strengths and bottlenecks of the component interfaces while avoiding an unsupported claim of automatic end-to-end offside accuracy.
+
+\keywords{Computer Vision \and Football Analytics \and Human Pose Estimation
+\and Camera Calibration \and Offside Decision Support}
+\end{abstract}
+
+
+% =========================================================
+% 1. Introduction
+% Suggested budget: 1.5--2 pages
+% =========================================================
+\section{Introduction}
+\label{sec:introduction}
+
+Offside decisions are among the most geometry-sensitive judgements in football. A television replay often provides the only readily accessible evidence outside instrumented stadiums, yet the position of a player in the image is not directly comparable with the position of the ball or a defender on the pitch. A useful decision-support system must recover a common goal-to-goal coordinate and expose enough intermediate evidence for a human operator to inspect the result.
+
+This recovery is difficult in monocular broadcast footage. The camera pans and zooms, projective distortion changes across the image, distant players occupy few pixels, and relevant body parts may be blurred or occluded. The instant of contact is also ambiguous, while the attacking team and the second-last opponent depend on tracking, role, team, and ball-touch context. Small upstream errors can therefore change the ordering of two players near the offside boundary.
+
+Conventional detection boxes are useful for finding people but do not identify the most goalward legally relevant body point. A bottom-centre anchor approximates ground position, whereas a head, shoulder, knee, or foot may determine the offside position. Conversely, applying a pitch homography directly to an elevated landmark incorrectly assumes that it lies on the pitch plane. The problem requires both calibrated pitch geometry and an anatomically coherent body representation.
+
+We address this interface with a staged pipeline. Pitch calibration defines a metric coordinate system; football-specific perception supplies locally persistent entities; whole-body pose and a 3D body prior place legal landmarks coherently in that coordinate system; team and ball modules provide the game context; and the last stages construct the ball-versus-second-last-opponent reference before classifying each attacker. Each stage can abstain when its required evidence is unavailable instead of silently fabricating downstream geometry.
+
+The present system is an offline, human-in-the-loop decision-support prototype. An operator selects the candidate pass frame, and the system analyzes a short temporal window around it. The output is an \emph{offside-position} label and an inspectable overlay; automatic pass-frame detection and the broader legal judgement of active involvement remain outside scope. The evaluation follows the same conservative boundary: completed public-dataset benchmarks are reported as component evidence, synthetic fixtures validate deterministic logic only, and no real end-to-end accuracy is claimed without an independently annotated replay benchmark.
+
+The main contributions of this work are:
+\begin{itemize}
+    \item A geometry-aware framework that combines player/ball detection,
+    pitch calibration, and human pose information for offside decision support.
+
+    \item A pose-assisted body-point localization strategy designed to estimate
+    the position of a player relative to the goal line more meaningfully than a
+    conventional bounding-box anchor.
+
+    \item An artifact-backed component evaluation spanning frozen camera calibration,
+    full-split local tracking, football-domain pose, role-blind team affiliation,
+    and single-frame and temporal ball geometry.
+
+    \item A fail-closed evaluation boundary that distinguishes measured accuracy,
+    internal geometric consistency, synthetic oracle logic, and experiments that
+    still require independent ground truth.
+\end{itemize}
+
+The remainder of the paper reviews the relevant football-perception and geometry literature, formulates offside position in a direction-normalized pitch frame, describes the staged method, defines the evaluation protocols, reports the completed benchmarks, and discusses the resulting error budget and remaining validation gaps.
+
+
+% =========================================================
+% 2. Related Work
+% Suggested budget: 1.5 pages
+% =========================================================
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Football Perception and Game-State Reconstruction}
+Modern football-video pipelines increasingly treat detection, tracking, role recognition, team affiliation, and pitch localization as coupled perception problems rather than isolated tasks. Vandeghen et al. introduced a semi-supervised player-and-ball detector for SoccerNet-v3, showing that large collections of unlabeled broadcast footage can improve football-specific detection \cite{sst}. SoccerNet Game State Reconstruction (GSR) subsequently formalized the broader task of recovering tracked athletes, identities, roles, teams, jersey information, and metric pitch positions from a monocular broadcast stream \cite{gsr}. More recently, Broadcast2Pitch strengthened this formulation through joint point/line-based field registration, appearance-based identity reasoning, and tracklet refinement under unconstrained broadcast motion \cite{broadcast2pitch}.
+
+These systems provide a strong foundation for identifying who is visible and where an athlete is located on the pitch. However, GSR-style player localization is primarily designed for tactical reconstruction and commonly anchors a player to a ground-contact proxy such as the bottom centre of a bounding box. Such a point is appropriate for minimap reconstruction but is not equivalent to the most goalward body part that is legally relevant to an offside position. Our work therefore reuses football perception and tracking as upstream evidence while treating legal-body longitudinal geometry as a separate downstream problem.
+
+\subsection{Camera Calibration and Metric Sports Geometry}
+Accurate field registration is essential for converting image measurements into a common metric pitch coordinate system. Recent soccer-calibration work has moved beyond pure planar homography toward explicit recovery of camera parameters from pitch landmarks. PnLCalib combines detected points and field lines in a nonlinear optimization procedure and evaluates both full camera calibration and homography estimation across SoccerNet-Calibration and World Cup data \cite{pnlcalib}. This formulation is directly relevant to our Stage-1 camera model and provides the metric frame used by all later longitudinal comparisons.
+
+A remaining limitation is that field registration constrains geometry on, or through, the known pitch model. A planar homography can correctly map a foot-ground contact to pitch coordinates, but applying the same planar transform directly to elevated landmarks such as the head or shoulder implicitly sets their height to zero. This can change the apparent goal-line ordering of body parts. Consequently, calibration alone does not solve the offside-specific localization problem; it must be coupled with a coherent body representation whose elevated landmarks remain geometrically consistent with the calibrated camera and the pitch plane.
+
+\subsection{Whole-Body Pose and Metric Player--Ball Localization}
+Whole-body pose estimation supplies the anatomical resolution needed to move beyond bounding-box anchors. COCO-WholeBody established a 133-keypoint representation spanning the body, feet, face, and hands \cite{cocowholebody}, while RTMW provides an efficient 2D/3D whole-body estimator built for practical deployment \cite{rtmw}. In football, AutoSoccerPose introduced the 3D Shot Posture (3DSP) dataset and a broadcast-video pipeline for extracting 2D and 3D shooter posture \cite{autosoccerpose}. WorldPose substantially extends the global-pose setting by providing multi-person 3D player poses together with broadcast-camera parameters over World Cup footage, making it especially relevant for evaluating absolute player placement rather than only root-aligned articulation \cite{worldpose}. Recent methods such as SAM 3D Body provide robust in-the-wild full-body mesh recovery \cite{sam3dbody}. These works motivate our use of a coherent 3D body prior, but they do not by themselves guarantee that the recovered body is metrically anchored to the football pitch.
+
+Ball geometry forms a complementary part of the same longitudinal reasoning problem. SoccerNet-v3D and ISSIA-3D introduce calibrated multi-view annotations and triangulated 3D ball positions, together with a monocular size-prior baseline for 3D ball localization \cite{snv3d}. FOOTPASS adds player-centric event annotations that combine event time, team, jersey/player identity, tracking context, and action labels \cite{footpass}. The two resources are complementary: SoccerNet-v3D supports metric ball localization, whereas FOOTPASS supports evaluation of the actor/toucher identity associated with an event. Our reduced pipeline therefore evaluates ball position and contact association separately instead of treating one dataset as complete ground truth for both tasks.
+
+\subsection{Offside Analysis and Research Gap}
+Earlier single-camera offside systems relied on image-space geometry, team appearance, and vanishing-point reasoning. Panse and Mahabaleshwarkar proposed a dedicated dataset and methodology that modelled the farthest playable body-part projection \cite{offside2020}. A recent YOLOv8 study demonstrated automated classification from professional footage, but reported limitations for diagonal views, compressed defensive lines, and unusual goalkeeper configurations \cite{offside2026}. FIFA's semi-automated offside technology instead combines dedicated multi-camera skeletal tracking, high-frequency ball sensing, and human validation \cite{fifasaot}. Its infrastructure is fundamentally different from monocular broadcast replay and is not reproducible from ordinary television footage.
+
+Taken together, the literature provides mature components for football detection and tracking, camera calibration, whole-body pose, global 3D reconstruction, ball localization, and game-state reconstruction. What remains less developed in an accessible monocular setting is the interface between these components and the specific geometry required by Law-11-style reasoning: the most goalward legal body extent of each player, the ordering of opponents in the attack direction, the ball-versus-second-last-opponent reference, and the final attacker position at a manually selected pass frame. This work addresses that gap with a modular, fail-closed pipeline that converts broadcast-image evidence into a common goalward coordinate and outputs \texttt{OFFSIDE\_POSITION} as decision support, while deliberately excluding automatic frame-of-pass detection and offence semantics from the present scope.
+
+
+% =========================================================
+% 3. Problem Formulation
+% =========================================================
+\section{Problem Formulation}
+\label{sec:problem}
+
+We consider an offline broadcast-replay setting in which an operator manually selects the frame of the pass. Let $V=\{I_t\}_{t=1}^{T}$ denote the replay video and let $t_0$ be the selected decision frame. The system analyzes a short temporal window
+\begin{equation}
+\mathcal W(t_0)=\{I_t\mid t_0-\tau_- \le t \le t_0+\tau_+\},
+\label{eq:replay_window}
+\end{equation}
+where the temporal context is used for local tracking, pose quality control, team appearance aggregation, and ball/contact reasoning. Automatic detection of $t_0$ is outside the scope of this work.
+
+All metric quantities are expressed in a pitch-centred world coordinate system. The origin is the pitch centre, the $X$ axis follows the goal-to-goal direction, the $Y$ axis follows the touchline-to-touchline direction, and $Z$ is vertical, with the pitch plane defined by $Z=0$. For each usable human track $i$, the system estimates a persistent identity, a role, a team label $T(i)$, a 2D whole-body pose, and a set of world-space anatomical landmarks
+\begin{equation}
+\mathcal J_i(t_0)=\{\mathbf X_{i,j}=(X_{i,j},Y_{i,j},Z_{i,j})\}_{j=1}^{K}.
+\label{eq:world_landmarks}
+\end{equation}
+The ball state at $t_0$ is represented by its metric position and longitudinal extent $[X_b^{\min},X_b^{\max}]$. The contact module additionally estimates the toucher track $i_b$.
+
+The toucher determines the attacking team, $T_{\mathrm{att}}=T(i_b)$, from which the active non-referee tracks are partitioned into attackers $\mathcal A$ and opponents $\mathcal O$. Let $s\in\{-1,+1\}$ denote the attack direction along the pitch $X$ axis. We use the direction-normalized longitudinal coordinate
+\begin{equation}
+q=sX,
+\label{eq:problem_q}
+\end{equation}
+so that larger $q$ always means closer to the opponent goal, regardless of whether the team attacks from left to right or right to left in the canonical pitch frame.
+
+Because the current system operates on anatomical landmarks rather than an exact body surface, each player $i$ is associated with a project-scope legal-landmark subset $\mathcal K_i^{\mathrm{legal}}$. Arm landmarks excluded by the adopted offside proxy are not used in the longitudinal extremum. The goalward legal extent of player $i$ is therefore
+\begin{equation}
+q_i=\max_{j\in\mathcal K_i^{\mathrm{legal}}} sX_{i,j}.
+\label{eq:problem_player_extent}
+\end{equation}
+Let $q_{\mathrm{2nd}}$ denote the second-largest $q_i$ among opponents, and let $q_{\mathrm{ball}}$ denote the goalward longitudinal extent of the ball. The offside reference coordinate is
+\begin{equation}
+q_{\mathrm{ref}}=\max(q_{\mathrm{2nd}},q_{\mathrm{ball}}).
+\label{eq:problem_reference}
+\end{equation}
+For each attacker $a\in\mathcal A$ other than the toucher, the target output is the binary offside-position label
+\begin{equation}
+y_a=
+\mathbf{1}\!\left[q_a>q_{\mathrm{ref}}+\epsilon\right]
+\mathbf{1}\!\left[q_a>0\right],
+\label{eq:problem_target}
+\end{equation}
+where $\epsilon$ is a small numerical tolerance and the second term requires the attacker to be in the opponents' half. The task is therefore to estimate the spatial and semantic variables in the preceding formulation while preserving track identity and a common metric pitch frame. The final output concerns \emph{offside position} only. Interference with an opponent, gaining an advantage, and other offence-level semantics are outside the scope of this work.
+
+% =========================================================
+% 4. Proposed Method
+% Suggested budget: 3.5--4 pages
+% =========================================================
+\section{Proposed Method}
+\label{sec:method}
+
+\subsection{System Overview}
+\label{subsec:overview}
+
+Let $t_0=t_p$ denote the frame of the pass manually selected by the operator. The proposed framework analyzes a short replay window centred at $t_0$; automatic pass-frame detection is outside the scope of this work. The pipeline first estimates camera geometry, tracked human entities, roles, and 2D pose. It then places player landmarks and the ball in a common metric pitch frame, resolves team and toucher context, constructs the offside reference, and finally classifies attacking players as being in or out of an offside position.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][3.4cm][c]{0.94\linewidth}{
+        \centering\small
+        Replay + manually selected $t_0$\\[1mm]
+        $\downarrow$ Camera/pitch geometry\\[-0.5mm]
+        $\downarrow$ Human detection, role, local tracking, and 2D pose\\[-0.5mm]
+        $\downarrow$ World-grounded player geometry\\[-0.5mm]
+        Team affiliation $\quad + \quad$ Ball localization/contact\\[-0.5mm]
+        $\downarrow$ Game-state context\\[-0.5mm]
+        $\downarrow$ Offside reference $\rightarrow$ Offside-position output
+    }}
+    \caption{Reduced offline replay pipeline. The operator supplies the pass frame, while the framework estimates the spatial and semantic context required for offside-position analysis.}
+    \label{fig:pipeline}
+\end{figure}
+
+All metric outputs use a canonical pitch frame with origin at the pitch centre, $X$ along the goal-to-goal direction, $Y$ along the touchline-to-touchline direction, and $Z$ upward. The pitch plane is therefore $Z=0$.
+
+\subsection{Camera, Entity Tracking, and 2D Pose}
+\label{subsec:perception}
+
+The camera module estimates the projection between broadcast pixels and the metric pitch using pitch-keypoint and pitch-line evidence. Its output contains the camera intrinsics/extrinsics and pitch plane. Ground-plane usability is distinguished from the stronger geometry required for elevated body landmarks, because a camera estimate can be adequate for a foot--pitch intersection while remaining unreliable for full-body placement.
+
+Within the replay window, SST produces football-specific object hypotheses. Strongly overlapping human hypotheses from different semantic classes are consolidated before pose inference so that one physical person is not represented by multiple player/goalkeeper/referee detections. Tracking is anchored at $t_0$ and propagated in both temporal directions using Hungarian association with bounding-box overlap, short-term motion, pose agreement, and role consistency. Low-confidence detections may recover an existing anchored track but do not create new identities at $t_0$.
+
+RTMW-L is executed once as a shared WholeBody cue. Its observations are normalized into a canonical COCO-WholeBody133 representation while preserving image coordinates and track identity. Structural, anatomical, and temporal quality states are attached without silently moving raw keypoints. Only player and goalkeeper tracks with sufficient downstream pose support are forwarded to metric body localization.
+
+\subsection{World-Grounded Player Geometry}
+\label{subsec:world_body}
+
+Applying a pitch homography directly to elevated landmarks such as the head or shoulder can produce incorrect longitudinal ordering. Instead, the framework places a coherent body skeleton in the metric pitch frame. For player $i$, a body prior provides a relative 3D skeleton $\mathbf{J}^{\mathrm{rel}}_{i,j}$ and an initial camera-space translation $\mathbf r_i^0$. The complete body is moved by a single translation,
+\begin{equation}
+\mathbf{J}^{\mathrm{cam}}_{i,j}
+=
+\mathbf{J}^{\mathrm{rel}}_{i,j}+\mathbf r_i,
+\label{eq:coherent_body}
+\end{equation}
+so that different anatomical landmarks cannot drift independently to unrelated pitch positions.
+
+Ground evidence is obtained from reliable heel/toe observations. Each distal-foot pixel defines a calibrated camera ray whose intersection with $Z=0$ yields a metric ground point. Aligning the corresponding relative 3D foot landmark with this intersection produces a translation candidate. Consistent foot candidates are combined into a local consensus that initializes the ground-first refinement; when such evidence is unavailable, the body-model translation is retained as a fallback prior.
+
+The translation is refined using 2D reprojection, ground-contact consistency, a weak body prior, and optional world-space temporal smoothness:
+\begin{equation}
+\mathbf r_i^*=
+\arg\min_{\mathbf r}
+\left[
+\lambda_{2D}\mathcal L_{\mathrm{repr}}
++\lambda_g\mathcal L_{\mathrm{ground}}
++\lambda_b\lVert\mathbf r-\mathbf r_i^0\rVert_2^2
++\lambda_t\mathcal L_{\mathrm{temp}}
+\right].
+\label{eq:root_refinement}
+\end{equation}
+The result is a world-grounded set of body/foot landmarks expressed in the same pitch coordinates as the ball. Team identity and offside semantics are deliberately deferred to later stages.
+
+\subsection{Team Affiliation and Ball--Touch Context}
+\label{subsec:team_ball}
+
+Team affiliation is estimated at track level. Pose-guided torso and lower-body regions are used to suppress grass/background contamination before extracting colour descriptors. The two regions are fused as
+\begin{equation}
+\mathbf f_i^{(t)}=
+\operatorname{norm}\!\left(
+0.75\,\mathbf f_{i,\mathrm{torso}}^{(t)}
++0.25\,\mathbf f_{i,\mathrm{lower}}^{(t)}
+\right),
+\label{eq:team_feature}
+\end{equation}
+with adaptive re-normalization when one region is missing. Track descriptors are formed by robust temporal aggregation and the outfield tracks are separated into two anonymous team clusters; referees are excluded. Goalkeepers are handled conservatively because their kit colours need not resemble their teammates. A spatial-hybrid variant additionally uses available defensive spatial context before colour fallback, and is treated as a controlled component ablation when oracle spatial coordinates are used.
+
+Ball candidates are detected by a football-specific YOLO model and linked across the replay window by an offline Viterbi path. A selected observation defines a calibrated camera ray. For general observations, apparent ball size provides a range initializer that can be refined temporally. For the initial ground-contact scope, a \texttt{FOOT} contact instead localizes the ball centre by intersecting its camera ray with $Z=r_b$, where $r_b$ is the ball radius; this avoids the strong monocular depth sensitivity of apparent size when the ball is known to be near the pitch. Contact association combines the selected ball observation with 2D anatomical landmarks and short temporal support to produce the toucher track $i_b$. The ball handoff includes its selected-frame longitudinal extent $[X_b^{\min},X_b^{\max}]$.
+
+\subsection{Game-State and Offside Reference Geometry}
+\label{subsec:reference}
+
+Let $T(i)$ denote the team assigned to track $i$. The attacking team is determined from the toucher, $T_{\mathrm{att}}=T(i_b)$, and all active non-referee tracks are partitioned into attackers $\mathcal A$ and opponents $\mathcal O$. Stage 7 also resolves the attack direction $s$, after which all longitudinal comparisons use the direction-normalized coordinate $q=sX$ defined in Eq.~\eqref{eq:problem_q}.
+
+The current system uses a legal-landmark proxy rather than an exact anatomical surface. Head/face landmarks, shoulders, hips, knees, ankles, heels, and toes are retained, whereas elbow and wrist landmarks are excluded. Each opponent's goalward extent is computed according to Eq.~\eqref{eq:problem_player_extent}. Sorting opponents by decreasing $q_i$ yields the second-last-opponent coordinate $q_{\mathrm{2nd}}$; goalkeepers are ranked identically to other opponents. From the Stage-6 ball extent,
+\begin{equation}
+q_{\mathrm{ball}}=
+\max\left(sX_b^{\min},sX_b^{\max}\right).
+\label{eq:ball_extent}
+\end{equation}
+The final reference follows Eq.~\eqref{eq:problem_reference}, with $X_{\mathrm{ref}}=s q_{\mathrm{ref}}$ and reference plane $X=X_{\mathrm{ref}}$. In the strict evaluation path, missing geometry for any opponent invalidates the reference rather than being silently ignored, because removing one opponent may alter the second-last ranking.
+
+\subsection{Offside-Position Classification}
+\label{subsec:offside_position}
+
+For each attacker $a\in\mathcal A$ other than the toucher, the goalward legal-body extent $q_a$ is computed with the same landmark policy as the opponents. The final label is then obtained from Eq.~\eqref{eq:problem_target}: an attacker must be goalward of the reference by more than the numerical tolerance $\epsilon$ and must also have a legal landmark in the opponents' half. The toucher is excluded from candidate classification.
+
+For quantitative evaluation, usable legal-landmark geometry is required; root-position fallbacks retained by the interactive visualization are not treated as equivalent legal-body measurements. Finally, the reference plane and player states are projected back to the broadcast image to provide a human-readable decision-support overlay. The output concerns \emph{offside position} only and does not infer interference, gaining an advantage, or other offside-offence semantics.
+
+
+\section{Experimental Setup and Evaluation Protocol}
+\label{sec:experiments}
+
+\subsection{Evaluation Strategy}
+\label{subsec:eval_strategy}
+The evaluation is organized at three complementary levels: (i) component-level perception and geometry, (ii) interface-level quantities that are directly consumed by downstream stages, and (iii) the final offside-position output. The present study reports completed benchmarks for the first two levels; the third remains pending. No single public dataset provides all annotations required by the complete pipeline. We therefore evaluate each available quantity only against datasets that provide independent ground truth for that quantity, and we explicitly separate predicted inputs from dataset-provided oracle inputs. Component metrics are not interpreted as end-to-end offside accuracy.
+
+The system assumes that the operator manually selects the decision frame $t_0$. Automatic detection of the instant of the pass is outside the scope of this study. The final target is the determination of whether an attacking player is in an \emph{offside position}; the broader legal judgement of an offside offence is not addressed.
+
+\subsection{Evaluation Data}
+\label{subsec:datasets}
+Table~\ref{tab:datasets} summarizes the public datasets used by the evaluation protocol. The same dataset may support different stages, but only annotations relevant to the evaluated quantity are exposed to each experiment.
+
+\begin{table*}[t]
+\caption{Datasets used by the completed component benchmarks reported in this paper.}
+\label{tab:datasets}
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}p{3.0cm}p{2.4cm}X X@{}}
+\toprule
+Dataset & Component & Ground truth used & Evaluation target \\
+\midrule
+SoccerNet Calibration-2023 & Stage 1 & Pitch markings and camera annotations & Camera and pitch geometry \\
+SoccerNet-GSR v1.3 & Stages 2 and 5 & Human boxes and track IDs; roles and teams for scoring only & Detection, local tracking, role, and team affiliation \\
+3DSP & Stage 3 & Football-player 2D posture labels & Football-domain 2D pose \\
+WorldPose & Stage-4 auxiliary & Root-relative metric 3D player pose & Frozen 3D-pose prior benchmark \\
+SoccerNet-v3D & Stage 6 & Ball boxes, camera calibration, and ball 3D position & Ball detection and longitudinal Ball-$X$ \\
+ISSIA-3D & Stage 6 & Consecutive ball observations and metric ball position & Temporal ball geometry \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+SoccerNet-GSR is reused under two distinct protocols. Stage 2 evaluates image-space perception and identity continuity without using team or pitch-position labels. Stage 5 supplies ground-truth human boxes and track IDs, collapses the input categories before inference, and hides both role and team labels until scoring; its pitch positions are dataset-provided oracle geometry. This separation prevents downstream labels from leaking into upstream inference. SoccerNet-v3D is treated as an image-level geometry benchmark because its multi-view rows are synchronized observations rather than a consecutive broadcast trajectory. WorldPose is used only for an auxiliary root-relative 3D-pose benchmark of a frozen KASportsFormer checkpoint; it does not evaluate the framework's pitch-world placement. FOOTPASS contact/toucher scoring and the independently annotated Stage-7--9 replay benchmark remain future evaluations.
+
+\subsection{Camera Geometry Evaluation}
+\label{subsec:calibration_eval}
+Stage 1 is evaluated on SoccerNet Calibration-2023 using the point/line-based calibration protocol described by PnLCalib~\cite{pnlcalib}. Model and capability thresholds are selected on the development split and frozen before held-out evaluation. We report calibration accuracy, completeness, reprojection error, and usable-geometry coverage. Ground-plane geometry and elevated-body geometry are reported separately because a camera estimate that is adequate for a ground intersection is not necessarily reliable for an elevated anatomical landmark.
+
+For a capability $q$, coverage is defined as
+\begin{equation}
+\mathrm{Coverage}_q=\frac{N_{q,\mathrm{usable}}}{N_{\mathrm{images}}}.
+\end{equation}
+Coverage is reported together with the accuracy of the successfully calibrated subset so that good performance on a small subset cannot conceal missing downstream geometry.
+
+\subsection{Human Perception and 2D Pose Evaluation}
+\label{subsec:human_eval}
+\paragraph{Detection, role, and local tracking.}
+Stage 2 is evaluated on SoccerNet-GSR v1.3~\cite{gsr} using target-frame-centred windows that reproduce the offline replay setting. Human detection is measured in image space using candidate precision/recall and AP-based metrics; role quality is reported separately. Local identity preservation is evaluated with HOTA, AssA, IDF1, anchor coverage, and target-frame continuity over a $\pm1$~s window.
+
+After Hungarian matching at $t_0$, let $v_i$ denote the number of evaluation frames in which ground-truth identity $i$ is visible, and $m_i$ the number of those frames in which the anchored predicted identity overlaps it by IoU $\geq0.5$. Target-frame continuity is
+\begin{equation}
+\mathrm{TCR}@1\mathrm{s}=\frac{1}{N}\sum_{i=1}^{N}\frac{m_i}{v_i},
+\end{equation}
+where an unmatched identity at $t_0$ contributes zero. The primary tracker is compared with a no-pose-cue ablation and an oracle-box diagnostic without exposing ground-truth identity associations to the tracker.
+
+\paragraph{Football-domain pose.}
+Stage 3 evaluates the pretrained RTMW-L WholeBody model on the available 3DSP training split~\cite{autosoccerpose}. The canonical prediction remains COCO-WholeBody133, while a derived 17-joint representation is used for compatibility with the benchmark. We report PDJ@0.5, area under the PDJ curve over $[0,0.5]$, normalized joint error, and ankle performance. Because this protocol evaluates supplied player crops, it isolates pose quality from Stage-2 detection and is not a held-out claim. Heel/toe accuracy is not claimed when corresponding independent labels are unavailable.
+
+\subsection{Longitudinal Player Geometry Evaluation}
+\label{subsec:player_geometry_eval}
+The quantity most relevant to offside geometry is the goal-to-goal coordinate $X$, rather than generic root-aligned pose accuracy. For an independently annotated player landmark,
+\begin{equation}
+E_X=|\widehat X-X^{\mathrm{GT}}|.
+\end{equation}
+For a common set $\mathcal{A}$ of supported legal candidate landmarks and independently supplied attack direction $s\in\{-1,+1\}$, we further define the goalward anchor longitudinal error
+\begin{equation}
+\mathrm{GALE}=\left|\max_{j\in\mathcal A}s\widehat X_j-
+\max_{j\in\mathcal A}sX_j^{\mathrm{GT}}\right|.
+\end{equation}
+The evaluation reports mean/median/tail longitudinal errors, valid-geometry coverage, and pairwise longitudinal-order accuracy for increasingly close player pairs. The latter is important because an apparently moderate average 3D error may still reverse the ordering of two players near the offside boundary.
+
+The repository additionally contains a completed WorldPose benchmark for a frozen KASportsFormer detected-2D checkpoint. This auxiliary experiment measures root-relative 3D articulation, not absolute pitch-world placement. The offside-specific protocol above therefore remains prospective: no independent player-$X$, GALE, or close-pair ordering benchmark has yet been completed, and the single-frame Stage-4 sanity run is excluded from accuracy claims.
+
+\subsection{Team Affiliation Evaluation}
+\label{subsec:team_eval}
+Stage 5 is evaluated at track level on SoccerNet-GSR under a role-blind held-out component protocol. Ground-truth human boxes and track IDs define the population, but input roles are collapsed and ground-truth role and team labels are hidden during inference. Dataset pitch positions are used as oracle geometry and therefore the protocol does not measure Stage-1--4 error propagation. Because the predicted team IDs are anonymous, the two clusters are aligned to the dataset labels within each sequence using assigned outfield players only; the mapping is then applied unchanged to any goalkeeper assignment.
+
+Let $N$ denote the number of team-labelled tracks, $A$ the number receiving a team assignment, and $C$ the number correctly assigned after alignment. We report
+\begin{equation}
+\mathrm{OverallAcc}=\frac{C}{N},\qquad
+\mathrm{SelectiveAcc}=\frac{C}{A},\qquad
+\mathrm{Coverage}=\frac{A}{N}.
+\end{equation}
+Goalkeeper role/team metrics and referee contamination are reported separately. Unknown assignments count as errors in overall accuracy and are excluded only from selective accuracy. The reported residual-v3 run uses pose-guided multi-region appearance and was calibrated on the training split before evaluation on all 58 validation sequences; because the full configuration was not frozen before validation, its research gate is reported together with its metrics.
+
+\subsection{Ball Localization and Contact Evaluation}
+\label{subsec:ball_eval}
+\paragraph{Ball geometry.}
+Stage 6 uses SoccerNet-v3D~\cite{snv3d} to evaluate 2D ball detection and longitudinal metric localization. Detection metrics include AP$_{50}$, mAP$_{50:95}$, recall at IoU 0.5, and centre error. The downstream geometric quantity is
+\begin{equation}
+E_X^{\mathrm{ball}}=|\widehat X_b-X_b^{\mathrm{GT}}|,
+\end{equation}
+reported using MAE, median, P90, P95, and localization coverage. Oracle-box and predicted-box conditions use the same dataset-provided camera calibration, allowing detector error to be separated from the single-frame geometry. A GT-assisted best-IoU candidate is used only as an oracle diagnostic and is not reported as a production result.
+
+ISSIA-3D is reserved for temporal geometry because it provides consecutive observations; development and held-out camera groups are kept separate. Per-method coverage and common-observation comparisons are both reported to avoid attributing an apparent error reduction to a change in the evaluable sample set.
+
+\paragraph{Contact/toucher identity.}
+FOOTPASS~\cite{footpass} is used only when event actors can be mapped independently to pipeline track IDs. Contact-track accuracy and assignment coverage are the primary quantities. Contact-region precision/recall/F1 require independent physical-contact labels; event action names are not treated as ground truth for the exact body region. FOOTPASS is therefore not used to infer metric Ball-$X$ accuracy.
+
+\subsection{End-to-End Offside Evaluation}
+\label{subsec:e2e_eval}
+The planned final evaluation requires a frozen set of independently annotated replay cases. Each fully annotated case must contain the selected $t_0$, toucher, attacking team, attack direction, attacker/opponent sets, second-last-opponent identity (or tied set), reference source (ball or opponent), and the offside-position label of each evaluated attacker. Partial labels are admissible only if every metric reports its own labelled denominator.
+
+We report attacking-team accuracy, attack-direction accuracy, participant-set F1, second-last-opponent agreement, reference-source agreement, and offside-position precision/recall/F1. Reference-$X$ error is reported only where independent metric ground truth exists. Case exact match requires every evaluated attacker in a fully annotated replay case to be classified correctly. Coverage and abstention rate are reported alongside accuracy-based metrics.
+
+To attribute downstream error, the future benchmark should compare oracle context with predicted geometry, predicted context with oracle geometry, and the fully predicted pipeline. The currently available synthetic fixtures are used only to verify deterministic logic and are never reported as evidence of real-world accuracy.
+
+\subsection{Reproducibility Protocol}
+\label{subsec:reproducibility}
+Every reported run records the dataset partition, evaluated IDs, configuration, and model fingerprint where applicable. Development data are used for threshold selection; held-out data are evaluated only after the configuration is frozen. Missing labels are never replaced by predictions from the framework itself. Sequence-level bootstrap intervals are used for GSR track-level comparisons so that temporally adjacent observations are not treated as independent samples. Cached inference is reused only when model and preprocessing provenance match the frozen run.
+
+% =========================================================
+% 6. Results
+% Suggested budget: 2.5--3 pages
+% =========================================================
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:benchmark_status} separates benchmarked components from diagnostics and synthetic checks. This distinction is central to interpreting the numerical results that follow.
+
+\begin{table*}[t]
+\caption{Evaluation status at manuscript preparation. ``Complete'' means that the cited artifact covers the stated split; it does not imply that the stage passed its predefined quality gate.}
+\label{tab:benchmark_status}
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}p{1.1cm}p{3.0cm}p{2.0cm}X@{}}
+\toprule
+Stage & Evaluation & Status & Interpretation \\
+\midrule
+1 & Calibration-2023 valid/test & Complete & Frozen thresholds; official evaluator results available \\
+2 & GSR v1.3 full valid & Complete, gate failed & 58 sequences and 290 windows; perception/continuity shortfalls remain \\
+3 & 3DSP RTMW-L & Complete, non-held-out & 4,000 supplied training crops; 17-joint pose protocol \\
+4 & WorldPose / pitch-world geometry & Auxiliary only & Root-relative prior evaluated; player-$X$/GALE/order remain unmeasured \\
+5 & GSR role-blind valid & Complete, gate failed & Oracle boxes/track IDs/pitch positions; goalkeeper team assignment absent \\
+6 & v3D test; ISSIA held-out & Complete & Ball detection and geometry only; contact/toucher benchmark not run \\
+7--9 & Real replay output & Not run & Final offside-position evaluation is reserved for the frozen annotated benchmark \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Camera Geometry}
+\label{subsec:results_camera}
+Stage~1 was used to freeze the capability policy on the SoccerNet Calibration-2023 validation split and was then executed unchanged on the held-out test split. The official evaluator gives a test final score of 71.41\%, 78.26\% completeness, 91.25\% mean accuracy, 91.88\% precision, and 98.13\% recall. The solver returns a camera for 86.72\% of test frames, but the stricter vertical/body-geometry gate accepts only 33.94\%. This gap quantifies the cost of requiring evidence suitable for elevated landmarks rather than accepting every solved camera.
+
+\begin{table}[H]
+\centering
+\caption{Stage-1 SoccerNet Calibration-2023 results. Official accuracy and final score follow the dataset evaluator; ``3D ready'' is the framework's stricter vertical-body capability gate.}
+\label{tab:camera_results}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Split & Frames & Final & Compl. & Mean acc. & 3D ready \\
+\midrule
+Valid & 3,212 & 70.68\% & 78.14\% & 90.44\% & 31.35\% \\
+Test & 3,141 & \textbf{71.41\%} & 78.26\% & 91.25\% & 33.94\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The corresponding solver coverage is 86.58\% on validation and 86.72\% on test. The similarity of validation and test metrics supports the frozen calibration thresholds, but the 3D-ready coverage also shows that roughly two thirds of broadcast frames remain unsuitable for the most demanding player-geometry stage. These are calibration metrics, not offside-position accuracy.
+
+An auxiliary held-out constraint audit further evaluates the 1,066 test frames accepted by the vertical-body gate. Across 10,576 constant-$X$ pitch-line constraints, the mean, median, and P95 longitudinal line error are 0.306, 0.074, and 0.357~m, respectively. For 4,894 elevated goal-element observations, median and P95 reprojection errors are 1.69 and 4.83~px. These quantities provide real-image geometric diagnostics, but they are line-constraint and reprojection errors rather than absolute camera-pose or player-position ground truth.
+
+\subsection{Human Perception and 2D Pose}
+\label{subsec:results_human}
+Stage~2 was evaluated on all 58 SoccerNet-GSR v1.3 validation sequences using five target-centred windows per sequence (290 windows). At the selected frames, the footballer candidate set reaches 91.57\% precision and 83.91\% recall; all-human AP$_{50}$ and mAP$_{50:95}$ are 87.55\% and 48.31\%, respectively. Referee leakage is 2.68\%, supported-role macro-F1 is 54.16\%, and consolidation reduces the any-duplicate rate to 1.96\% and the cross-class duplicate rate to 0.78\%. Over the target windows, candidate tracking reaches 67.89\% HOTA, 74.50\% AssA, and 85.61\% IDF1. Anchor coverage is 83.91\%; continuity is 92.78\% conditional on a matched anchor but 77.85\% when missing anchors are counted as failures.
+
+\begin{table}[H]
+\centering
+\caption{Stage-2 full SoccerNet-GSR v1.3 validation benchmark.}
+\label{tab:stage2_results}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Perception metric & Value & Tracking metric & Value \\
+\midrule
+Candidate precision & 91.57\% & HOTA & 67.89\% \\
+Candidate recall & 83.91\% & AssA & 74.50\% \\
+Referee leakage & 2.68\% & IDF1 & 85.61\% \\
+Role macro-F1 & 54.16\% & TCR@1s & 77.85\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The predefined Stage-2 acceptance gate fails: candidate precision and recall are below 95\%, referee leakage exceeds 2\%, and unconditional TCR is below 90\%. Removing the pose cue changes candidate HOTA from 67.89\% to 67.65\% and TCR@1s from 77.85\% to 77.54\%, whereas oracle boxes raise them to 99.39\% and 99.33\%. The small pose-cue gain and large oracle-box gap, together with the difference between conditional and unconditional continuity, identify target-frame perception and candidate recall as the dominant bottleneck rather than association after a target has been anchored.
+
+Stage~3 isolates pose quality by evaluating supplied 3DSP training crops. Across 4,000 crops and 56,000 valid joint observations, RTMW-L obtains 90.82\% PDJ@0.5 and 66.57\% area under the PDJ curve over $[0,0.5]$. Mean and median normalized joint errors are 0.215 and 0.118, respectively; ankle PDJ is 84.60\%. Because this is a non-held-out 17-joint crop-based protocol, the result neither includes Stage-2 detection failures nor validates heel/toe accuracy required by the final legal-landmark geometry.
+
+\subsection{Longitudinal Player Geometry and Team Affiliation}
+\label{subsec:results_player_team}
+The auxiliary Stage-4 model-only benchmark evaluates a frozen KASportsFormer checkpoint on the official WorldPose test split using detected 2D joints. Over 633,582 frames from 26 game/action buckets, the official macro-by-action MPJPE, P-MPJPE, and acceleration error are 34.276, 22.008, and 3.022~mm; the corresponding micro-averaged MPJPE and P-MPJPE are 34.047 and 21.865~mm. This result measures root-relative 3D pose and does not evaluate the framework's SAM3D-based pitch placement or legal-body longitudinal extent.
+
+Accordingly, no player-$X$, GALE, or close-pair ordering accuracy is reported. A cached single-frame integration QA run obtains 100\% ground-anchor coverage among ten valid body priors, a 5.04~cm median ground residual, and a 3.73~px median reprojection residual. These values test internal consistency on one frame and are not evidence of metric player-localization accuracy.
+
+Stage~5 was evaluated on all 58 SoccerNet-GSR validation sequences using the role-blind, oracle-track/pitch protocol described above. The benchmark contains 1,222 team-labelled tracks: 1,145 outfield players and 77 goalkeepers. The current residual-v3 configuration assigns 1,050 tracks and gets 1,048 of those assignments correct.
+
+\begin{table}[H]
+\centering
+\caption{Stage-5 held-out component results on SoccerNet-GSR validation. Unknown assignments count as wrong in overall accuracy.}
+\label{tab:team_results}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Population / task & Tracks & Overall & Coverage & Selective/F1 \\
+\midrule
+All team tracks & 1,222 & 85.76\% & 85.92\% & 99.81\% \\
+Outfield team & 1,145 & 91.53\% & 91.70\% & 99.81\% \\
+Goalkeeper team & 77 & 0.00\% & 0.00\% & -- \\
+Goalkeeper role & 77 & -- & -- & 93.42\% F1 \\
+Referee role & 127 & -- & -- & 0.00\% F1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The high selective accuracy demonstrates that accepted outfield colour assignments are reliable, but the lower overall score exposes substantial abstention. In particular, the configuration recognizes the goalkeeper role with 93.42\% F1 yet assigns no goalkeeper to a team; referee role recovery also remains absent. No referee is incorrectly assigned to a team, so team-contamination rate is 0\%. The held-out component gate fails because outfield performance drops more than the allowed 0.5 percentage points and the full configuration was not frozen before validation. These results use oracle boxes, track IDs, and pitch positions and therefore exclude error propagation from Stages~1--4.
+
+\subsection{Ball Localization and Contact}
+\label{subsec:results_ball}
+The completed SoccerNet-v3D test benchmark contains 810 images. The detector obtains 78.97\% AP$_{50}$, 38.75\% mAP$_{50:95}$, and 83.21\% recall at IoU 0.5. With an optimized ground-truth ball box and dataset calibration, the single-frame geometry gives 0.92~m Ball-$X$ MAE at 93.83\% coverage. Using the predicted top-1 ball candidate increases the error to 2.33~m and reduces coverage to 75.43\%, identifying candidate selection as a large part of the Stage-6 error budget.
+
+\begin{table}[H]
+\centering
+\caption{Stage-6 Ball-$X$ localization on SoccerNet-v3D test. Both geometry rows use dataset-provided calibration.}
+\label{tab:ball_results}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Ball observation & MAE (m) & Median (m) & P95 (m) & Coverage \\
+\midrule
+Optimized GT box & 0.92 & 0.82 & 2.75 & 93.83\% \\
+Predicted top-1 & 2.33 & 1.19 & 8.71 & 75.43\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The held-out ISSIA-3D temporal protocol uses annotated 2D ball observations from cameras 1 and 2, so it isolates temporal geometry from detector failure. The V044 hybrid method produces 1.37~m 3D MAE and 0.27~m Ball-$X$ MAE over 765 evaluated observations at full coverage. On the 287 observations common to every compared method, its 3D MAE is 0.96~m and Ball-$X$ MAE is 0.13~m. These errors must not be compared directly with the predicted-box SoccerNet-v3D row because the ISSIA input is annotated.
+
+The contact/toucher benchmark has not been run: the local FOOTPASS manifest remains a placeholder and lacks an independently verified mapping from event actors to pipeline track IDs. Consequently, the paper makes no quantitative contact-region or toucher-identity claim.
+
+\subsection{End-to-End Offside-Position Analysis}
+\label{subsec:results_e2e}
+The final offside-position output has not yet been evaluated. It will be measured only after a frozen replay benchmark provides independently annotated game state, reference geometry, and attacker-position labels. Existing synthetic oracle fixtures are retained as software checks and are excluded from quantitative output claims because they do not sample real perception errors, camera uncertainty, ambiguous contacts, or annotation variability.
+
+\subsection{Ablation and Failure Analysis}
+\label{subsec:results_failure}
+The completed benchmarks expose three concrete failure chains. First, only 33.94\% of test frames pass the vertical-body camera gate, so player geometry can become unavailable before pose is considered. Second, Stage~2 conditional continuity is high (92.78\%) but unconditional TCR is 77.85\%, showing that a missing anchor at the decision frame dominates many tracking failures. Third, Stage~5 accepts outfield team assignments accurately but abstains on every goalkeeper team, which prevents reliable attacker/opponent partitioning in formations where the goalkeeper is needed. For the ball, the 1.41~m increase in Ball-$X$ MAE and 18.40-point coverage loss between oracle and top-1 boxes quantify the cost of detection and candidate selection. These interface failures explain why successful oracle logic in Stages~7--9 cannot yet be converted into a real end-to-end accuracy claim.
+
+% =========================================================
+% 7. Discussion
+% Suggested budget: 0.75--1 page
+% =========================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Effect of Pose Information on Offside Geometry}
+The 3DSP result shows that a strong pretrained whole-body model can recover the principal 17-joint structure of a cropped football player, including 84.60\% ankle PDJ. The auxiliary WorldPose result likewise establishes root-relative 3D articulation for the frozen KASportsFormer checkpoint. Neither experiment yet establishes accurate offside geometry: 3DSP omits heel/toe validation and is conditioned on supplied crops, while WorldPose is reported in a root-relative protocol rather than absolute pitch coordinates. Pose is useful only when Stage~2 finds the correct player and Stage~1 supplies a camera suitable for elevated-body reasoning. The missing Stage-4 player-$X$/GALE/ordering benchmark is therefore the main gap between good articulation and a legally meaningful longitudinal body extent.
+
+\subsection{Error Propagation Across Pipeline Stages}
+The results favour an interface-centred interpretation. Stage~1 offers strong official calibration accuracy but limited vertical-geometry coverage; Stage~2 preserves identity well after a target is anchored but misses too many candidates at the decision frame; Stage~5 makes very reliable accepted outfield assignments but cannot affiliate goalkeepers; and Stage~6 loses both accuracy and coverage when it moves from an optimized ball box to the predicted top-1 candidate. Any one of these failures can invalidate the opponent ranking or ball reference. A final classifier evaluated only with oracle inputs would conceal this error propagation; consequently, synthetic Stage-7--9 checks are treated as implementation tests and not as output accuracy.
+
+\subsection{Practical Use in Interactive Replay}
+The intended workflow is an offline replay tool. An operator selects a candidate contact frame, inspects the calibrated image and pitch view, reviews the tracked players, team assignments, ball position, and 3D skeletons, and then reads the constructed reference and per-attacker label. The staged UI is useful precisely because an abstention or suspicious intermediate result can be traced to its source. The system is therefore best viewed as auditable geometric decision support for analysis and research, rather than a replacement for officiating infrastructure or a real-time VAR decision.
+
+\subsection{Limitations}
+The study remains limited by monocular broadcast evidence, manual pass-frame selection, and the lack of a public dataset that jointly annotates camera, legal body extents, team context, contact, and offside position. Small or occluded players can be missed or yield unreliable poses. Stage~4 has an auxiliary root-relative WorldPose result and internal consistency diagnostics, but absolute player-$X$ and close-pair ordering remain unverified. The Stage~5 component protocol uses oracle boxes, track IDs, and pitch positions and fails to affiliate goalkeepers. Stage~6 ball geometry uses dataset calibration, while its contact/toucher evaluation is pending. Finally, Stage~7--9 have not been evaluated on real replay labels; no claim is made about end-to-end offside precision, recall, or case-level accuracy. The landmark policy is also a project-scope approximation and does not replace a full interpretation of the Laws of the Game.
+
+
+% =========================================================
+% 8. Conclusion
+% Suggested budget: 0.4--0.6 page
+% =========================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented a modular framework that converts a manually selected monocular football replay into a direction-normalized offside-position analysis using calibrated pitch geometry, local tracking, whole-body pose, world-grounded landmarks, team affiliation, ball geometry, and explicit reference construction. Its fail-closed interfaces and stage-specific visual evidence are designed to make both predictions and abstentions inspectable.
+
+Artifact-backed component evaluations show a 71.41\% official camera-calibration score on SoccerNet Calibration-2023 test, 67.89\% HOTA and 85.61\% IDF1 on the full SoccerNet-GSR validation protocol, and 90.82\% PDJ@0.5 on 4,000 3DSP crops. The auxiliary WorldPose benchmark gives 34.276~mm root-relative MPJPE for a frozen KASportsFormer checkpoint, without claiming pitch-world accuracy. Ball detection reaches 78.97\% AP$_{50}$ on SoccerNet-v3D; geometry reaches 0.92~m Ball-$X$ MAE with optimized boxes and 2.33~m with predicted top-1 boxes. The Stage-5 selective team accuracy is 99.81\%, but its 85.92\% coverage and complete goalkeeper-team abstention show why selective accuracy alone is insufficient.
+
+The immediate research priorities are an independent metric benchmark for Stage~4 legal-body longitudinal geometry, a verified contact/toucher benchmark, and a frozen real replay benchmark for Stages~7--9. Until these are completed, the work supports claims about measured components and deterministic logic, not automatic end-to-end offside accuracy.
+
+
+% =========================================================
+% Optional acknowledgments.
+% Remove if not applicable.
+% =========================================================
+% \begin{credits}
+% \subsubsection{\ackname}
+% This work was supported by ...
+% \end{credits}
+
+
+% =========================================================
+% References
+% Springer LNCS/CCIS bibliography style
+% =========================================================
+% Use either BibTeX or the manual bibliography below, not both.
+% \bibliographystyle{splncs04}
+% \bibliography{references}
+
+\begin{thebibliography}{14}
+\bibitem{sst}
+Vandeghen, R., Cioppa, A., Van Droogenbroeck, M.: Semi-Supervised Training to Improve Player and Ball Detection in Soccer. In: CVPR Workshops, pp. 3481--3490 (2022).
+
+\bibitem{gsr}
+Somers, V., Joos, V., Cioppa, A., et al.: SoccerNet Game State Reconstruction: End-to-End Athlete Tracking and Identification on a Minimap. In: CVPR Workshops, pp. 3293--3305 (2024). https://doi.org/10.1109/CVPRW63382.2024.00334
+
+\bibitem{broadcast2pitch}
+Oo, Y.M., Hwang, Y., Robbani, M.A., et al.: Broadcast2Pitch: Game State Reconstruction from Unconstrained Soccer Videos. In: WACV, pp. 4483--4493 (2026).
+
+\bibitem{pnlcalib}
+Guti\'errez-P\'erez, M., Agudo, A.: PnLCalib: Sports Field Registration via Points and Lines Optimization. Computer Vision and Image Understanding 267, 104712 (2026). https://doi.org/10.1016/j.cviu.2026.104712
+
+\bibitem{cocowholebody}
+Jin, S., Xu, L., Xu, J., et al.: Whole-Body Human Pose Estimation in the Wild. In: ECCV (2020).
+
+\bibitem{rtmw}
+Jiang, T., Xie, X., Li, Y.: RTMW: Real-Time Multi-Person 2D and 3D Whole-body Pose Estimation. arXiv:2407.08634 (2024).
+
+\bibitem{autosoccerpose}
+Yeung, C., Ide, K., Fujii, K.: AutoSoccerPose: Automated 3D Posture Analysis of Soccer Shot Movements. In: CVPR Workshops, pp. 3214--3224 (2024).
+
+\bibitem{worldpose}
+Jiang, T., Billingham, J., M\"uksch, S., et al.: WorldPose: A World Cup Dataset for Global 3D Human Pose Estimation. In: ECCV (2024). \url{https://doi.org/10.1007/978-3-031-72655-2_20}
+
+\bibitem{sam3dbody}
+Yang, X., Kukreja, D., Pinkus, D., et al.: SAM 3D Body: Robust Full-Body Human Mesh Recovery. In: CVPR, pp. 7209--7219 (2026).
+
+\bibitem{snv3d}
+Guti\'errez-P\'erez, M., Agudo, A.: SoccerNet-v3D: Leveraging Sports Broadcast Replays for 3D Scene Understanding. In: CVPR Workshops, pp. 6024--6033 (2025).
+
+\bibitem{footpass}
+Ochin, J., Chekroun, R., Stanciulescu, B., Manitsaris, S.: FOOTPASS: A Multi-Modal Multi-Agent Tactical Context Dataset for Play-by-Play Action Spotting in Soccer Broadcast Videos. Computer Vision and Image Understanding 269, 104790 (2026). https://doi.org/10.1016/j.cviu.2026.104790
+
+\bibitem{offside2020}
+Panse, N., Mahabaleshwarkar, A.: A Dataset \& Methodology for Computer Vision Based Offside Detection in Soccer. In: MMSports, pp. 19--26 (2020). https://doi.org/10.1145/3422844.3423055
+
+\bibitem{offside2026}
+Abdel-Fattah, A.-R., Belhaouari, S.B., Ceylan, H.I., et al.: YOLOv8 Computer Vision for Automated Offside Detection in Professional Football Validated Through Supervised Learning. Scientific Reports 16, 21566 (2026). https://doi.org/10.1038/s41598-026-52668-4
+
+\bibitem{fifasaot}
+FIFA: Semi-Automated Offside Technology. \url{https://inside.fifa.com/innovation/innovating-the-game/semi-automated-offside-technology}. Accessed 30 September 2026.
+\end{thebibliography}
+\end{document}

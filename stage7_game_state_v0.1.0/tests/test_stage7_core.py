@@ -15,8 +15,8 @@ def test_valid_context_right_half():
     assert ctx.status == "VALID"
     assert ctx.attacking_team_id == 0
     assert ctx.attack_direction["s"] == 1
-    assert set(ctx.sets["attackers"]) == {"3", "4"}
-    assert set(ctx.sets["opponents"]) == {"7", "8"}
+    assert set(ctx.sets["attackers"]) == {"3"}
+    assert set(ctx.sets["opponents"]) == {"4", "7", "8"}
     assert ctx.sets["referees_excluded"] == ["9"]
     assert ctx.diagnostics["invariant_pass"] is True
 

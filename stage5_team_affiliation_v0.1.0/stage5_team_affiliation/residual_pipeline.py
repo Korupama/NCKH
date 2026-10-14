@@ -6,8 +6,7 @@ from .clustering import fit_dominant_team_prototypes
 from .features import extract_color_feature, aggregate_features
 from .regions import region_polygon
 from .role_recovery import clean_pitch_tracks, classify_residual_roles
-from .goalkeeper import assign_by_defensive_tail
-from .goalkeeper_team_v024 import assign_by_defended_half
+from .goalkeeper import forced_defending_assignment
 
 
 def recover_residual_appearance(records, config):
@@ -298,42 +297,14 @@ def infer_residual(track_ids, features, pitch_tracks, config, *, variant='V3', r
         points = clean_pitch_tracks(pitch_tracks, config)
         residuals = [t for t, r in records.items() if r['appearance_group'] == 'RESIDUAL']
         roles = classify_residual_roles(residuals, points, config, temporal=variant == 'V3')
-        player_teams = {t: r['team_id'] for t, r in records.items() if r['stage5_role'] == 'player'}
         for tid, role in roles.items():
             records[tid].update(role)
             if role['stage5_role'] == 'referee':
                 records[tid].update(team_status='NOT_APPLICABLE', assignment_method='REFEREE_EXCLUDED')
-            elif role['stage5_role'] == 'goalkeeper' and variant == 'V3':
-                tail = assign_by_defensive_tail(
-                    tid, role['goal_context']['sign'], points, player_teams, config)
-                half = assign_by_defended_half(
-                    tid, role['goal_context']['sign'], points, player_teams, config)
-                diagnostics = dict(half)
-                diagnostics['tail_deltas_m'] = tail.get('tail_deltas_m', [])
-                diagnostics['defensive_tail'] = tail
-                if config.defended_half_assignment_enabled:
-                    diagnostics['selected_policy'] = 'DEFENDED_HALF_TEAM_DISTRIBUTION'
-                    records[tid].update(team_id=half['team_id'], team_status=half['team_status'],
-                                        assignment_method=half['assignment_method'],
-                                        goalkeeper_assignment=diagnostics)
-                elif config.defensive_tail_assignment_enabled:
-                    diagnostics.update({
-                        'selected_policy': 'DEFENSIVE_TAIL',
-                        'team_id': tail.get('team_id'),
-                        'team_status': tail.get('team_status'),
-                        'assignment_method': tail.get('assignment_method'),
-                        'reason': tail.get('reason'),
-                        'suggested_team_id': tail.get('suggested_team_id', tail.get('team_id')),
-                    })
-                    records[tid].update(team_id=tail['team_id'], team_status=tail['team_status'],
-                                        assignment_method=tail['assignment_method'],
-                                        goalkeeper_assignment=diagnostics)
-                else:
-                    diagnostic = dict(diagnostics)
-                    diagnostic.update(enabled=False, selected_policy=None,
-                                      calibration_status='NOT_CALIBRATED_ON_TRAIN')
-                    records[tid].update(team_id=None, team_status='UNKNOWN',
-                                        assignment_method='DEFENSIVE_TAIL_DIAGNOSTIC_ONLY',
-                                        goalkeeper_assignment=diagnostic)
+            elif role['stage5_role'] == 'goalkeeper':
+                fixed = forced_defending_assignment()
+                records[tid].update(team_id=None, team_status=fixed['team_status'],
+                                    team_side='DEFENDING', assignment_method=fixed['method'],
+                                    goalkeeper_assignment=fixed)
     recover_residual_appearance(records, config)
     return {'tracks': list(records.values()), 'clustering': {'status': 'FITTED', **prototypes}, 'variant': variant}

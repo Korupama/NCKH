@@ -6,6 +6,18 @@ From D:\\NCKH:
 
 Frame numbers are zero-based, as in the web demo. Decode in ascending order
 from frame 0; no time-based seeking, old inference reuse, or model replacement.
+
+The shared Stage-2 handoff removes tracks outside the calibrated pitch before
+Stages 3-9. Person box bottom centres must lie inside the pitch, including GK
+and referees. Original IDs remain stable; stage2_pitch_filter.json records
+exclusions. Calibration errors or occluded feet can affect this strict filter.
+
+The shared live Stage-6 invocation uses strict-ground ball candidate filtering:
+centres must project onto the calibrated pitch (zero extra boundary margin).
+Both YOLO and SST proposals are filtered before selection. Rejection evidence
+is saved in stage6.json under detector.pitch_candidate_filter. This footprint
+constraint depends on calibration and can reject airborne balls projected
+beyond the pitch outline; it is not a full 3D airborne in-bounds test.
 """
 from __future__ import annotations
 
@@ -19,6 +31,7 @@ import math
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -28,6 +41,57 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 STAGE9 = ROOT / 'stage9_offside_position_v0.1.0'
 PROGRESS_PREFIX = '__STAGE_PROGRESS__'
+
+
+class VideoDecodeError(RuntimeError):
+    """Sequential frame identity can no longer be trusted after decode failure."""
+
+
+def validate_video_stream(video, frames, fps):
+    """Check video-stream bounds, never container/audio duration, before inference."""
+    probe = shutil.which('ffprobe')
+    if not probe:
+        print('WARNING: ffprobe unavailable; video-stream duration validation skipped.', flush=True)
+        return None
+    result = subprocess.run([
+        probe, '-v', 'error', '-select_streams', 'v:0', '-show_entries',
+        'stream=duration,nb_frames', '-of', 'json', str(video),
+    ], capture_output=True, text=True, timeout=60)
+    if result.returncode:
+        raise ValueError('Cannot inspect video stream: ' + result.stderr.strip()[:1000])
+    streams = json.loads(result.stdout).get('streams') or []
+    if not streams:
+        raise ValueError('No video stream found')
+    stream = streams[0]
+    declared_count = str(stream.get('nb_frames', ''))
+    if declared_count.isdecimal() and int(declared_count) > 0:
+        invalid = [f for f in frames if f >= int(declared_count)]
+        if invalid:
+            raise ValueError(f'Bookmarks exceed video-stream frame count {declared_count}: {invalid}. '
+                             'Use a complete source video; container frame count may be inaccurate.')
+    # This runner already maps indices to time using its fixed FPS. This check
+    # is a duration sanity bound, not a claim that every packet decodes correctly.
+    try:
+        duration = float(stream.get('duration', 'nan'))
+    except (TypeError, ValueError):
+        duration = float('nan')
+    if math.isfinite(duration) and duration > 0:
+        invalid = [f for f in frames if f / fps >= duration + 1 / fps]
+        if invalid:
+            raise ValueError(f'Bookmarks exceed video-stream duration {duration:.3f}s at {fps:g} fps: {invalid}. '
+                             'Audio/container duration does not imply available video frames. '
+                             'Use a complete source video; do not renumber these bookmarks.')
+    return stream
+
+
+def block_after_decode_error(report, row, next_frame, error):
+    row.update(status='failed', error=str(error), error_code='VIDEO_DECODE_FAILED')
+    report['decode_failure'] = dict(next_expected_frame=next_frame,
+                                   requested_frame=row['frame_index'], error=str(error))
+    for later in report['frames']:
+        if later['status'] == 'pending':
+            later.update(status='blocked', error_code='VIDEO_DECODE_FAILED',
+                         error=f'Not attempted: sequential decoding failed at expected frame {next_frame}.')
 
 
 def utc_now():
@@ -129,8 +193,8 @@ def run_pipeline(python, image, directory, frame, row, persist):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--video', type=Path, default=ROOT / 'video_bookmark/vie_kor.mp4')
-    parser.add_argument('--frames', type=Path, default=ROOT / 'video_bookmark/vie_kor.txt')
+    parser.add_argument('--video', type=Path, default=ROOT / 'video_bookmark/mixed.mp4')
+    parser.add_argument('--frames', type=Path, default=ROOT / 'video_bookmark/mixed.txt')
     parser.add_argument('--output-root', type=Path, default=STAGE9 / 'outputs/bookmark_runs')
     parser.add_argument('--python', type=Path, default=ROOT / '.venv/Scripts/python.exe',
                         help='Python interpreter for the existing pipeline')
@@ -155,6 +219,7 @@ def main(argv=None):
         invalid = [f for f in frames if f >= count]
         if invalid:
             raise ValueError(f'Frames outside video (0..{count-1}): {invalid}')
+        video_stream = validate_video_stream(video, frames, fps)
         print(f'Video: {video}\nFPS: {fps:g}; frames: {count}\n'
               f'Bookmarks: {len(frames)} (zero-based); duplicates skipped: {duplicates}', flush=True)
         print('Frames: ' + ', '.join(map(str, frames)), flush=True)
@@ -169,6 +234,7 @@ def main(argv=None):
                       created_at=utc_now(), video=str(video), bookmark_file=str(bookmarks),
                       bookmark_sha256=hashlib.sha256(bookmarks.read_bytes()).hexdigest(),
                       video_size_bytes=video.stat().st_size, fps=fps, frame_count=count,
+                      video_stream=video_stream,
                       frame_index_basis='ZERO_BASED_SEQUENTIAL_DECODE', reuse_previous_inference=False,
                       frames=[dict(frame_index=f, timestamp_sec=f/fps, status='pending', stages={},
                                    output_directory=str(output / f'frame_{f:08d}')) for f in frames])
@@ -189,11 +255,12 @@ def main(argv=None):
                 # Count decoded frames, avoiding keyframe/time-seek ambiguity.
                 while next_frame <= frame:
                     if not cap.grab():
-                        raise RuntimeError(f'Video decoding stopped at frame {next_frame}')
+                        raise VideoDecodeError(f'Video decoding stopped at expected frame {next_frame}; '
+                                               'cannot safely continue with later frame numbers.')
                     next_frame += 1
                 ok, pixels = cap.retrieve()
                 if not ok or pixels is None:
-                    raise RuntimeError(f'Cannot retrieve frame {frame}')
+                    raise VideoDecodeError(f'Cannot retrieve frame {frame}; sequential decode aborted.')
                 image = directory / f'frame_{frame}.png'
                 if not cv2.imwrite(str(image), pixels):
                     raise OSError(f'Cannot write {image}')
@@ -209,22 +276,26 @@ def main(argv=None):
             except KeyboardInterrupt:
                 row.update(status='interrupted', error='Stopped by user')
                 interrupted = True
+            except VideoDecodeError as exc:
+                block_after_decode_error(report, row, next_frame, exc)
+                print(f'  VIDEO ERROR: {exc}', flush=True)
             except Exception as exc:
                 row.update(status='failed', error=str(exc))
                 print(f'  FAILED: {str(exc).splitlines()[0]}', flush=True)
             finally:
                 row.update(finished_at=utc_now(), elapsed_sec=round(time.monotonic() - start, 2))
                 persist()
-            if interrupted or (args.stop_on_error and row['status'] == 'failed'):
+            if interrupted or report.get('decode_failure') or (args.stop_on_error and row['status'] == 'failed'):
                 break
         failures = sum(r['status'] == 'failed' for r in report['frames'])
         completed = sum(r['status'] == 'completed' for r in report['frames'])
-        report.update(status='interrupted' if interrupted else 'completed_with_errors' if failures else 'completed',
-                      finished_at=utc_now(), completed_frames=completed, failed_frames=failures)
+        blocked = sum(r['status'] == 'blocked' for r in report['frames'])
+        report.update(status='interrupted' if interrupted else 'blocked_by_video_decode_error' if report.get('decode_failure') else 'completed_with_errors' if failures else 'completed',
+                      finished_at=utc_now(), completed_frames=completed, failed_frames=failures, blocked_frames=blocked)
         persist()
-        print(f'Finished: {completed}/{len(frames)} completed; {failures} failed.\nSummary: {output / "summary.csv"}', flush=True)
+        print(f'Finished: {completed}/{len(frames)} completed; {failures} failed; {blocked} blocked.\nSummary: {output / "summary.csv"}', flush=True)
         return 130 if interrupted else 1 if failures else 0
-    except (OSError, ValueError, ImportError) as exc:
+    except (OSError, ValueError, ImportError, subprocess.TimeoutExpired) as exc:
         print(f'ERROR: {exc}', file=sys.stderr)
         return 1
     finally:

@@ -118,14 +118,41 @@ def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
     frame = cv2.imread(str(image_path))
     frame_height, frame_width = frame.shape[:2]
     
-    ball_detections = [det for det in detections if 'ball' in det['label'].lower()]
+    # Membership is enforced on the shared Stage-2 handoff, not merely hidden
+    # by the renderer. Thus web and bookmark runs cannot use off-pitch tracks
+    # for poses, team clustering, contact or last/second-last defender ranking.
+    from stage2_entities.pitch_filter import filter_tracks_to_pitch
+    stage6_root = Path(__file__).resolve().parent.parent / 'stage6_ball_localization_v0.4.4'
+    if str(stage6_root) not in sys.path:
+        sys.path.insert(0, str(stage6_root))
+    from ball_localization.camera import load_camera_state
+    tracks, pitch_filter = filter_tracks_to_pitch(
+        tracks, load_camera_state(Path(out_dir) / 'stage1.json'))
+    (Path(out_dir) / 'stage2_pitch_filter.json').write_text(
+        json.dumps(pitch_filter, indent=2), encoding='utf-8')
+    print(f"[Real Inference] Pitch filter: kept {len(tracks)}, "
+          f"excluded {pitch_filter['excluded_track_count']} tracks")
+
+    # Replace the raw detector preview with exactly the retained handoff IDs.
+    preview = frame.copy()
+    for track in tracks:
+        box = track['observations'][0]['bbox_xyxy']
+        x1, y1, x2, y2 = (int(v) for v in box)
+        cv2.rectangle(preview, (x1, y1), (x2, y2), (80, 220, 160), 2)
+        cv2.putText(preview, f"{track['track_id']} {track['role']}",
+                    (x1, max(16, y1 - 5)), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5, (80, 220, 160), 1, cv2.LINE_AA)
+    if not cv2.imwrite(str(Path(out_dir) / 'stage2_debug.jpg'), preview):
+        raise OSError('Unable to save filtered Stage-2 preview')
+
+    ball_tracks = [track for track in tracks if track['role'] == 'ball']
     auxiliary_balls = {
         str(frame_index): [
             {
-                'bbox_xyxy': det['bbox_xyxy'],
-                'score': det['score'],
-                'detection_id': f'sst_ball_{frame_index}_{j}'
-            } for j, det in enumerate(ball_detections)
+                'bbox_xyxy': track['observations'][0]['bbox_xyxy'],
+                'score': track['observations'][0]['detector_score'],
+                'detection_id': f"sst_ball_{frame_index}_{track['track_id']}"
+            } for track in ball_tracks
         ]
     }
     
@@ -142,6 +169,7 @@ def process_stage2(image_path, out_dir, device='cuda', frame_index=104):
             'coordinate_space': 'RAW_DISTORTED_PIXEL'
         },
         'tracks': tracks,
+        'pitch_filter': {key: value for key, value in pitch_filter.items() if key != 'excluded'},
         'auxiliary_ball_detections_by_frame': auxiliary_balls
     }
     
@@ -389,6 +417,8 @@ def process_stage6(image_path, out_dir, device='cuda', frame_index=104):
         '--stage1-root', str(runtime / 'stage1_bundle'),
         '--output-dir', str(result_dir),
         '--provider', 'yolo-first',
+        '--pitch-candidate-policy', 'strict-ground',
+        '--candidate-pitch-margin-m', '0',
         '--weights', str(stage6_root / 'weights' / 'yolo-sn-ball-opt.pt'),
         '--stage2-entity-tracks', str(inputs['stage2']),
         '--video', str(source_image),
@@ -423,6 +453,8 @@ def process_stage6(image_path, out_dir, device='cuda', frame_index=104):
         'pipeline_owner': str(stage6_root),
         'stage6_entry_point': str(stage6_entry),
         'provider': 'yolo-first',
+        'pitch_candidate_policy': 'strict-ground',
+        'candidate_pitch_margin_m': 0.0,
         'weights': str(stage6_root / 'weights' / 'yolo-sn-ball-opt.pt'),
         'tracker': 'viterbi',
         'localization_mode': 'contact-aware',

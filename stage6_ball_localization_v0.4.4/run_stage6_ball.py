@@ -44,6 +44,9 @@ def main() -> None:
     p.add_argument("--ball-radius-m", type=float, default=0.11)
     p.add_argument("--pitch-margin-m", type=float, default=12.0)
     p.add_argument("--pitch-far-prior", type=float, default=0.20)
+    p.add_argument("--pitch-candidate-policy", choices=["soft", "strict-ground"], default="soft",
+                   help="strict-ground rejects ball centres outside the calibrated pitch footprint before tracking")
+    p.add_argument("--candidate-pitch-margin-m", type=float, default=0.0)
     p.add_argument("--progress-every", type=int, default=10)
 
     # v0.4 temporal geometry controls. Defaults are intentionally conservative
@@ -77,6 +80,8 @@ def main() -> None:
         ball_radius_m=a.ball_radius_m,
         pitch_margin_m=a.pitch_margin_m,
         pitch_far_prior=a.pitch_far_prior,
+        pitch_candidate_policy=a.pitch_candidate_policy,
+        candidate_pitch_margin_m=a.candidate_pitch_margin_m,
         progress_every=a.progress_every,
         temporal_config=_temporal_config(a) if a.localization_mode in {"temporal-3d", "hybrid-3d", "contact-aware"} else None,
         hybrid_config=HybridGeometryConfig.from_mapping((json.loads(Path(a.hybrid_config_json).read_text(encoding="utf-8")).get("best") or {}).get("config")) if a.hybrid_config_json else None,

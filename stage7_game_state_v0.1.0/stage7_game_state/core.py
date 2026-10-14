@@ -17,13 +17,17 @@ def _unique_sorted(values: List[str]) -> List[str]:
     return sorted(set(values), key=lambda x: (len(x), x))
 
 
+def _is_goalkeeper(player):
+    return str(player.get('role') or '').strip().lower() in {'goalkeeper', 'keeper', 'gk'}
+
+
 def _evaluate_invariants(ctx: GameStateContext, players: List[Dict[str, Any]]) -> Tuple[bool, Dict[str, bool]]:
     attackers = set(ctx.sets.get("attackers", []))
     opponents = set(ctx.sets.get("opponents", []))
     referees = set(ctx.sets.get("referees_excluded", []))
     eligible_known = {
         p["track_id"] for p in players
-        if p["active"] and not p["is_referee"] and p["team_key"] is not None
+        if p["active"] and not p["is_referee"] and (p["team_key"] is not None or _is_goalkeeper(p))
     }
     toucher_id = ctx.toucher.get("track_id") if isinstance(ctx.toucher, dict) else None
     resolved = ctx.status in {"VALID", "DEGRADED"}
@@ -32,6 +36,8 @@ def _evaluate_invariants(ctx: GameStateContext, players: List[Dict[str, Any]]) -
             toucher_id in attackers if toucher_id else "ATTACKING_TEAM_INFERRED_FROM_GOALKEEPER" in ctx.reasons
         ) if resolved else True,
         "sets_disjoint": attackers.isdisjoint(opponents),
+        "goalkeepers_are_defenders": all(p['track_id'] in opponents and p['track_id'] not in attackers
+            for p in players if p['active'] and not p['is_referee'] and _is_goalkeeper(p)),
         "referees_excluded": referees.isdisjoint(attackers | opponents),
         "eligible_partition_complete": (attackers | opponents) == eligible_known if resolved else True,
         "attack_direction_binary": (
@@ -110,6 +116,8 @@ def build_game_state_context(
         reasons.append("TOUCHER_NOT_ACTIVE_AT_T0")
     if toucher is not None and toucher["team_key"] is None:
         reasons.append("TOUCHER_TEAM_UNRESOLVED")
+    if toucher is not None and _is_goalkeeper(toucher):
+        reasons.append('GOALKEEPER_TOUCHER_CONFLICT_WITH_FIXED_DEFENDING_POLICY')
 
     # Multi-tier attack direction resolution:
     # Tier 1: Primary - Stage-1 camera optical centre-ray pitch hit X coordinate
@@ -154,8 +162,8 @@ def build_game_state_context(
     elif x_view is None or abs(x_view) <= centre_ray_epsilon_m:
         reasons.append("ATTACK_DIRECTION_RESOLVED_VIA_FALLBACK")
 
-    attacking_team_key = toucher["team_key"] if toucher is not None else None
-    attacking_team_raw = toucher["team_id"] if toucher is not None else None
+    attacking_team_key = toucher["team_key"] if toucher is not None and not _is_goalkeeper(toucher) else None
+    attacking_team_raw = toucher["team_id"] if toucher is not None and not _is_goalkeeper(toucher) else None
     goalkeeper_fallback = False
     # A single visible, affiliated keeper may identify the defending team in
     # the viewed attacking half. This is an explicit demo assumption, not contact evidence.
@@ -186,6 +194,18 @@ def build_game_state_context(
     unknown_team: List[str] = []
     inactive: List[str] = []
 
+    defending_teams = {p['team_key']: p['team_id'] for p in players
+                       if p['active'] and not p['is_referee'] and not _is_goalkeeper(p)
+                       and p['team_key'] is not None and p['team_key'] != attacking_team_key}
+    defending_team_id = next(iter(defending_teams.values())) if attacking_team_key is not None and len(defending_teams) == 1 else None
+    fixed_keepers = [p for p in players if p['active'] and not p['is_referee'] and _is_goalkeeper(p)]
+    opponents.extend(p['track_id'] for p in fixed_keepers)
+    diagnostics['goalkeeper_policy'] = 'GOALKEEPER_ALWAYS_DEFENDING'
+    diagnostics['goalkeeper_assignments'] = {
+        p['track_id']: {'team_id': defending_team_id, 'team_side': 'DEFENDING',
+                        'source_team_id': p['team_id'], 'assignment_method': 'GOALKEEPER_ALWAYS_DEFENDING'}
+        for p in fixed_keepers}
+
     if attacking_team_key is not None:
         for p in players:
             if not p["active"]:
@@ -194,6 +214,8 @@ def build_game_state_context(
             if p["is_referee"]:
                 referees.append(p["track_id"])
                 continue
+            if _is_goalkeeper(p):
+                continue  # Already included in opponents, even without a cluster ID.
             if p["team_key"] is None:
                 unknown_team.append(p["track_id"])
                 continue
@@ -242,6 +264,7 @@ def build_game_state_context(
         "TOUCHER_IS_REFEREE",
         "TOUCHER_NOT_ACTIVE_AT_T0",
         "TOUCHER_TEAM_UNRESOLVED",
+        "GOALKEEPER_TOUCHER_CONFLICT_WITH_FIXED_DEFENDING_POLICY",
         "CENTRE_RAY_PITCH_HIT_MISSING",
         "CENTRE_RAY_PITCH_HIT_INVALID",
         "CENTRE_RAY_X_AMBIGUOUS",

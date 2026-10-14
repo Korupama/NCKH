@@ -156,7 +156,10 @@ def build_pipeline_context(*, paths: dict, video_path=None, image_path=None):
             raise ValueError(f'{name}: image size {(width, height)} does not match replay {(w, h)}')
     source['origin'] = 'explicit image' if image_path else 'replay video'
     maps = [_map(s) for s in [s2, s3, s4]]
-    teams = s5.get('track_team', {})
+    teams = {tid: dict(row) for tid, row in s5.get('track_team', {}).items()}
+    for tid, assignment in s7.get('diagnostics', {}).get('goalkeeper_assignments', {}).items():
+        teams.setdefault(tid, {}).update(assignment)
+        teams[tid]['team_status'] = 'VALID' if assignment.get('team_id') is not None else 'PENDING_CONTEXT'
     sets = s7.get('sets', {})
     toucher_payload = s7.get('toucher') or {}
     toucher_id = toucher_payload.get('track_id')

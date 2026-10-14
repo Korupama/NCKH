@@ -17,6 +17,8 @@ def render_selected_frame(frame, track_records: Sequence[Mapping[str, Any]], out
         color = palette.get(team, (180,180,180))
         cv2.rectangle(img, (x1,y1), (x2,y2), color, 2)
         label = f"{rec.get('track_id')} {rec.get('role')} T={team if team is not None else 'UNK'}"
+        if rec.get('team_side') == 'DEFENDING':
+            label = f"{rec.get('track_id')} GK DEF"
         cv2.putText(img, label, (x1, max(16, y1-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA)
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -49,7 +49,7 @@ def test_defended_half_distribution_assigns_goalkeeper_team():
         {'p0a': 0, 'p0b': 0, 'p1a': 1, 'p1b': 1},
         ResidualConfig(),
     )
-    assert result['team_status'] == 'VALID'
-    assert result['team_id'] == 0
-    assert len(result['half_deltas_m']) == 8
+    assert result['team_status'] == 'PENDING_CONTEXT'
+    assert result['team_id'] is None
+    assert result['team_side'] == 'DEFENDING'
 
