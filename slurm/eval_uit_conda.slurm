@@ -51,4 +51,28 @@ echo "Working directory: $(pwd)"
 echo "Python interpreter: $(which python)"
 nvidia-smi
 
-python -u evaluate_cascaded_pipeline.py
+export TORCH_CUDNN_V8_API_ENABLED=1
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export SAM3D_PERSON_BATCH_SIZE=16
+
+EVAL_MODE="${EVAL_MODE:-bookmarks}"
+echo "Evaluation mode: ${EVAL_MODE}"
+
+if [ "${EVAL_MODE}" = "cascaded" ]; then
+    echo "Running Cascaded Benchmark (Stages 2 -> 5 -> 7 -> 8)..."
+    python -u evaluate_cascaded_pipeline.py
+else
+    echo "Running Accelerated 9-Stage Video Pipeline..."
+    VIDEO_FILE="${VIDEO_FILE:-video_bookmark/mixed.mp4}"
+    BOOKMARKS_FILE="${BOOKMARKS_FILE:-video_bookmark/mixed.txt}"
+    OUTPUT_DIR="${OUTPUT_DIR:-/datastore/thangcpd/outputs/run_${SLURM_JOB_ID:-manual}}"
+    mkdir -p "${OUTPUT_DIR}"
+
+    python -u video_bookmark/run_accelerated_pipeline.py \
+        --video "${VIDEO_FILE}" \
+        --frames "${BOOKMARKS_FILE}" \
+        --output-root "${OUTPUT_DIR}" \
+        --device cuda \
+        --sam3d-batch-size 16
+fi
+

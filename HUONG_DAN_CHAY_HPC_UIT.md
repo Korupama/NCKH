@@ -103,6 +103,21 @@ EVAL_MODE=cascaded sbatch slurm/eval_uit_array.slurm
 sbatch slurm/eval_uit_normal.slurm
 ```
 
+### Chạy trực tiếp qua môi trường Conda của Lab (Nhanh nhất, không cần Docker/SIF)
+
+Nếu không muốn build/chuyển file container `.tar` lớn qua WinSCP, có thể dùng trực tiếp môi trường Conda `env_ai` có sẵn trên server:
+
+```bash
+# 1. Tự động tìm và liên kết các file weights có sẵn trên server
+bash scripts/link_server_weights.sh
+
+# 2. Chạy pipeline 9 stage trên video qua Slurm
+sbatch slurm/eval_uit_conda.slurm
+
+# Hoặc chạy cascaded benchmark trên tập SoccerNet:
+EVAL_MODE=cascaded sbatch slurm/eval_uit_conda.slurm
+```
+
 ### Chạy debug (Partition small)
 
 ```bash
