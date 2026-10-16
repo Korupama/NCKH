@@ -25,21 +25,24 @@ if [ -f "/datastore/thangcpd/miniconda3/bin/activate" ]; then
     source "/datastore/thangcpd/miniconda3/bin/activate" env_ai 2>/dev/null || true
 fi
 
-# Tim thu muc code cua ban tren datastore
+# Tim thu muc code tren datastore
 PROJECT_DIR=""
 for candidate in \
-    "/datastore/thangcpd/NCKH_SoICT" \
+    "${SLURM_SUBMIT_DIR:-}" \
+    "$(pwd)" \
+    "/datastore/thangcpd/KLTN_HungHuynh" \
+    "/datastore/thangcpd/NCKH_HungHuynh" \
     "/datastore/thangcpd/NCKH_TonDaiQuoc" \
-    "/datastore/thangcpd/NCKH_TonDaiQuoc/NCKH_SoICT" \
-    "$(pwd)"; do
-    if [ -f "${candidate}/evaluate_cascaded_pipeline.py" ]; then
+    "/datastore/thangcpd/NCKH_SoICT" \
+    "/datastore/thangcpd/NCKH_TonDaiQuoc/NCKH_SoICT"; do
+    if [ -n "${candidate}" ] && [ -f "${candidate}/evaluate_cascaded_pipeline.py" ]; then
         PROJECT_DIR="${candidate}"
         break
     fi
 done
 
 if [ -z "$PROJECT_DIR" ]; then
-    echo "Khong tim thay thu muc code NCKH_SoICT tren /datastore/thangcpd!"
+    echo "Khong tim thay thu muc code tren /datastore/thangcpd!"
     exit 1
 fi
 
